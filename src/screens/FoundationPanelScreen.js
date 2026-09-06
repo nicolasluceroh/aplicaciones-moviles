@@ -86,16 +86,15 @@ export default function FoundationPanelScreen() {
       style={styles.container}
       contentContainerStyle={styles.content}
     >
-      <Text style={styles.title}>Panel de la Fundación</Text>
-
-      <Text style={styles.subtitle}>
-        Registrá la recepción de donaciones con una foto y la ubicación de tu
-        sede
+      <Text style={styles.title}>
+        Fundación Juguemos y Caminemos Juntos
       </Text>
+
+      <Text style={styles.subtitle}>Panel de organización</Text>
 
       {/* Sección cámara */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Foto de la donación</Text>
+        <Text style={styles.cardTitle}>Cámara</Text>
 
         {photoUri ? (
           <Image source={{ uri: photoUri }} style={styles.photo} />
@@ -119,7 +118,7 @@ export default function FoundationPanelScreen() {
 
       {/* Sección ubicación */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Ubicación de la sede</Text>
+        <Text style={styles.cardTitle}>Ubicación</Text>
 
         {location ? (
           <View style={styles.locationBox}>
@@ -132,7 +131,7 @@ export default function FoundationPanelScreen() {
           </View>
         ) : (
           <Text style={styles.cardText}>
-            Todavía no registraste la ubicación.
+            Todavía no obtuviste la ubicación.
           </Text>
         )}
 

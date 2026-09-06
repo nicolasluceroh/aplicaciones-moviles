@@ -19,17 +19,17 @@ export default function LoginScreen({ navigation }) {
       return;
     }
 
-    // Login simulado: cualquier credencial válida ingresa al panel.
-    // navigation.replace evita volver al login con el botón "atrás".
-    navigation.replace("FoundationPanel");
+    // Login simulado mientras se desarrolla.
+    // Nicolás reemplaza esta acción por Firebase Auth al integrar.
+    navigation.navigate("FoundationPanel");
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Acceso Fundación</Text>
+      <Text style={styles.title}>Acceso para organizaciones</Text>
 
       <Text style={styles.subtitle}>
-        Ingresá con la cuenta de tu fundación para administrar tus datos
+        Ingresá con la cuenta de tu organización para administrar tus datos
       </Text>
 
       <Text style={styles.label}>Email</Text>
@@ -57,6 +57,10 @@ export default function LoginScreen({ navigation }) {
       <Pressable style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Ingresar</Text>
       </Pressable>
+
+      <Text style={styles.note}>
+        Acceso reservado para fundaciones registradas
+      </Text>
     </View>
   );
 }
@@ -112,5 +116,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
     color: COLORS.text,
+  },
+
+  note: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    textAlign: "center",
+    marginTop: 18,
   },
 });
