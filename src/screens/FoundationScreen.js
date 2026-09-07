@@ -1,45 +1,38 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-
-// Importar products desde src/data/products.js (Punto 4)
 import { products } from '../data/products';
+import { COLORS } from '../theme';
 
 export default function FoundationScreen({ navigation }) {
+  const renderProduct = ({ item }) => (
+    <View style={styles.card}>
+      <Text style={styles.productName}>{item.name}</Text>
+      <Text style={styles.productPrice}>${item.price}</Text>
+      
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate("Product", { productId: item.id })}
+      >
+        <Text style={styles.buttonText}>Ver producto</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      {/* 1. Nombre de la fundación */}
       <Text style={styles.title}>Fundación Juguemos y Caminemos Juntos</Text>
-
-      {/* 2. Subtítulo y descripción corta */}
       <Text style={styles.subtitle}>La Casita del Milagro</Text>
       <Text style={styles.description}>
         Espacio dedicado a brindar apoyo, contención y oportunidades a niños y familias de la comunidad.
       </Text>
 
-      {/* 3. Título del catálogo */}
       <Text style={styles.sectionTitle}>Necesidades actuales</Text>
 
-      {/* 5. Listado de productos usando FlatList */}
       <FlatList
-        data={products || []}
-        keyExtractor={(item, index) => (item.id ? item.id.toString() : index.toString())}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No se encontraron necesidades registradas.</Text>
-        }
-        renderItem={({ item }) => (
-          /* 6. Cada tarjeta muestra nombre, precio y botón Ver producto */
-          <View style={styles.card}>
-            <Text style={styles.productName}>{item.name}</Text>
-            <Text style={styles.productPrice}>${item.price}</Text>
-            
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => navigation.navigate("Product", { productId: item.id })}
-            >
-              <Text style={styles.buttonText}>Ver producto</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        data={products}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderProduct}
+        contentContainerStyle={styles.listContainer}
       />
     </View>
   );
@@ -49,61 +42,63 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS?.background || '#FFF9F3',
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS?.text || '#262626',
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#666',
-    marginBottom: 4,
+    color: COLORS?.primary || '#F2A65A',
+    marginBottom: 8,
   },
   description: {
-    fontSize: 14,
-    color: '#888',
+    fontSize: 12,
+    color: COLORS?.textSecondary || '#666666',
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 12,
+    color: COLORS?.text || '#262626',
+    marginBottom: 8,
+  },
+  listContainer: {
+    paddingBottom: 16,
   },
   card: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: COLORS?.surface || '#FFFFFF',
     padding: 16,
     borderRadius: 8,
-    marginBottom: 12,
+    marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#E2E8F0',
   },
   productName: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: COLORS?.text || '#262626',
   },
   productPrice: {
     fontSize: 14,
-    color: '#2e7d32',
+    color: COLORS?.textSecondary || '#666666',
     marginVertical: 4,
   },
   button: {
-    backgroundColor: '#007bff',
+    backgroundColor: COLORS?.primary || '#F2A65A',
     paddingVertical: 8,
-    borderRadius: 6,
-    marginTop: 8,
+    paddingHorizontal: 16,
+    borderRadius: 4,
     alignItems: 'center',
+    marginTop: 4,
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  emptyText: {
-    color: '#999',
-    fontStyle: 'italic',
-    marginTop: 10,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });

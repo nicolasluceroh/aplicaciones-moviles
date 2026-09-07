@@ -1,36 +1,29 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { products } from '../data/products';
+import { COLORS } from '../theme';
 
 export default function ProductScreen({ route, navigation }) {
-  // 1. Obtener el ID enviado desde la pantalla anterior
   const { productId } = route.params || {};
+  const product = products.find((p) => p.id === productId);
 
-  // 2. Buscar el producto correspondiente en los datos
-  const product = products.find((item) => item.id === productId);
-
-  // Mensaje de respaldo por si no encuentra el producto
   if (!product) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Producto no encontrado.</Text>
+        <Text style={styles.title}>Producto no encontrado</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {/* Detalle del producto */}
       <Text style={styles.title}>{product.name}</Text>
-      <Text style={styles.price}>Precio: ${product.price}</Text>
-      <Text style={styles.description}>
-        {product.description || 'Sin descripción disponible.'}
-      </Text>
+      <Text style={styles.price}>${product.price}</Text>
+      <Text style={styles.description}>{product.description}</Text>
 
-      {/* Botón para simular pedido */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('Cart', { product })}
+        onPress={() => navigation.navigate("Cart", { productId: product.id })}
       >
         <Text style={styles.buttonText}>Donar este producto</Text>
       </TouchableOpacity>
@@ -41,41 +34,37 @@ export default function ProductScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#fff',
+    padding: 16,
+    backgroundColor: COLORS?.background || '#FFF9F3',
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 8,
+    color: COLORS?.text || '#262626',
+    marginBottom: 4,
   },
   price: {
-    fontSize: 18,
-    color: '#2e7d32',
-    fontWeight: '600',
-    marginBottom: 12,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS?.primary || '#F2A65A',
+    marginBottom: 16,
   },
   description: {
-    fontSize: 15,
-    color: '#555',
+    fontSize: 14,
+    color: COLORS?.textSecondary || '#666666',
     marginBottom: 24,
     lineHeight: 20,
   },
   button: {
-    backgroundColor: '#28a745',
+    backgroundColor: COLORS?.success || '#5DA271',
     paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#FFFFFF',
     fontWeight: 'bold',
-  },
-  errorText: {
     fontSize: 16,
-    color: 'red',
-    textAlign: 'center',
-    marginTop: 20,
   },
 });
