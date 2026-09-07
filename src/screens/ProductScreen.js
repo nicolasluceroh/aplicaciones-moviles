@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { products } from '../data/products';
-import { COLORS } from '../theme';
+import { COLORS } from '../constants/theme';
 
 export default function ProductScreen({ route, navigation }) {
   const { productId } = route.params || {};
