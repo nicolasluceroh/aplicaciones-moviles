@@ -1,55 +1,63 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { COLORS } from '../constants/theme';
-import { products } from '../data/products';
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { COLORS, RADIUS, SPACING } from "../constants/theme";
+import { foundations } from "../data/foundations";
+import { useCart } from "../context/CartContext";
 
-export default function CheckoutScreen({ route, navigation }) {
-  const productId = route.params?.productId || "1";
-  const product = products.find((p) => p.id === productId);
-
-  const handleConfirmar = () => {
-    navigation.navigate("Confirmation");
-  };
+export default function CheckoutScreen({ navigation }) {
+  const { cart, totalPrice } = useCart();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Finalizar donación</Text>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <Text style={styles.title}>Resumen de la donación</Text>
+      <Text style={styles.subtitle}>Revisá los productos y sus destinos.</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.nombre}>{product.name}</Text>
-        <View style={styles.filaTotal}>
-          <Text style={styles.tituloTotal}>Total</Text>
-          <Text style={styles.montoTotal}>${product.price}</Text>
-        </View>
+      {cart.map((item) => {
+        const foundation = foundations.find((f) => f.id === item.foundationId);
+        return (
+          <View key={item.product.id} style={styles.card}>
+            <Text style={styles.productName}>{item.product.name}</Text>
+            <Text style={styles.detail}>Cantidad: {item.quantity}</Text>
+            <Text style={styles.detail}>Destino: {foundation?.name || "Sin seleccionar"}</Text>
+            <Text style={styles.price}>
+              ${(item.product.price * item.quantity).toLocaleString("es-AR")}
+            </Text>
+          </View>
+        );
+      })}
+
+      <View style={styles.paymentCard}>
+        <Text style={styles.paymentTitle}>Método de pago</Text>
+        <Text style={styles.detail}>Tarjeta de crédito/débito</Text>
+        <Text style={styles.note}>Pago simulado para esta etapa del proyecto.</Text>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.subtitulo}>Método de pago</Text>
-        <Text style={styles.dato}>Tarjeta de crédito/débito</Text>
-        <Text style={styles.aviso}>Pago simulado para esta versión del prototipo</Text>
+      <View style={styles.totalRow}>
+        <Text style={styles.totalLabel}>Total</Text>
+        <Text style={styles.total}>${totalPrice.toLocaleString("es-AR")}</Text>
       </View>
 
-      <TouchableOpacity style={styles.boton} onPress={handleConfirmar}>
-        <Text style={styles.textoBoton}>Confirmar donación</Text>
-      </TouchableOpacity>
-    </View>
+      <Pressable style={styles.button} onPress={() => navigation.replace("Confirmation")}>
+        <Text style={styles.buttonText}>Confirmar donación</Text>
+      </Pressable>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: COLORS.background },
-  titulo: { fontSize: 26, fontWeight: 'bold', marginBottom: 20, color: COLORS.text },
-  card: {
-    backgroundColor: COLORS.surface, borderRadius: 16, padding: 20, marginBottom: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
-  },
-  nombre: { fontSize: 18, fontWeight: '700', marginBottom: 12, color: COLORS.text },
-  filaTotal: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  tituloTotal: { fontSize: 16, fontWeight: 'bold', color: COLORS.text },
-  montoTotal: { fontSize: 22, fontWeight: 'bold', color: COLORS.primary },
-  subtitulo: { fontSize: 16, fontWeight: '600', marginBottom: 8, color: COLORS.text },
-  dato: { fontSize: 15, marginBottom: 8, color: COLORS.textSecondary },
-  aviso: { fontSize: 13, fontStyle: 'italic', color: COLORS.textSecondary },
-  boton: { backgroundColor: COLORS.primary, padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 8 },
-  textoBoton: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },
+  screen: { flex: 1, backgroundColor: COLORS.background },
+  content: { padding: SPACING.md, paddingBottom: 36 },
+  title: { fontSize: 24, fontWeight: "800", color: COLORS.text },
+  subtitle: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4, marginBottom: 20 },
+  card: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 15, marginBottom: 10 },
+  productName: { fontSize: 15, fontWeight: "800", color: COLORS.text },
+  detail: { fontSize: 13, color: COLORS.textSecondary, marginTop: 5 },
+  price: { fontSize: 16, fontWeight: "800", color: COLORS.primary, marginTop: 8 },
+  paymentCard: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 15, marginTop: 8 },
+  paymentTitle: { fontSize: 15, fontWeight: "800", color: COLORS.text },
+  note: { fontSize: 11, color: COLORS.textSecondary, marginTop: 8 },
+  totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 20 },
+  totalLabel: { fontSize: 17, fontWeight: "700", color: COLORS.text },
+  total: { fontSize: 23, fontWeight: "800", color: COLORS.primary },
+  button: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 16, alignItems: "center" },
+  buttonText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16 },
 });
