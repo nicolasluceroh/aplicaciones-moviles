@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { COLORS, RADIUS, SPACING } from "../constants/theme";
+import { login } from "../state/session";
 
 // Azul suave para la caja de acceso de organizaciones.
 // Se define acá para no modificar theme.js, que es un archivo compartido.
@@ -33,7 +34,9 @@ export default function LoginScreen({ route, navigation }) {
       return;
     }
 
-    Alert.alert("Ingreso simulado", "La autenticación real se conectará con Supabase.");
+    // El nombre se deriva del email hasta que Supabase devuelva el perfil real.
+    const name = email.trim().split("@")[0];
+    login({ name: name.charAt(0).toUpperCase() + name.slice(1), email: email.trim() });
     navigation.navigate("Account");
   };
 

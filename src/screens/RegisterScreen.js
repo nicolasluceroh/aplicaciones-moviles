@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { COLORS, RADIUS, SPACING } from "../constants/theme";
+import { login } from "../state/session";
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState("");
@@ -34,7 +35,13 @@ export default function RegisterScreen({ navigation }) {
     }
 
     Alert.alert("Registro simulado", "El alta real se conectará con Supabase Auth.", [
-      { text: "Continuar", onPress: () => navigation.navigate("Account") },
+      {
+        text: "Continuar",
+        onPress: () => {
+          login({ name: name.trim(), email: email.trim() });
+          navigation.navigate("Account");
+        },
+      },
     ]);
   };
 
