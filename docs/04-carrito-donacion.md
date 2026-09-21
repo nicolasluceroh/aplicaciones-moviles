@@ -1,53 +1,62 @@
 # Carrito y donación
 
-**Responsable:** Joaquín Pajon
-**Requisitos relacionados:** RF-004, RF-005, RF-009
+**Responsable:** Joaquín Pajon  
+**Requisitos relacionados:** RF-004, RF-005, RF-009, RF-010
 
 ## Archivos principales
 
+- `src/screens/ProductScreen.js`
 - `src/screens/CartScreen.js`
 - `src/screens/CheckoutScreen.js`
 - `src/screens/ConfirmationScreen.js`
-- `src/screens/ProductScreen.js` *(fuera de este módulo, pero se ajustó el botón "Donar este producto" para conectarlo con el carrito)*
-- Contexto utilizado: `src/context/EstadoCarrito.js`
+- `src/context/CartContext.js`
+- `src/config/supabase.js`
 
 ## Qué hace el módulo
 
-Implementa el flujo completo de donación de la app: desde que el usuario agrega un producto, pasando por la selección de una fundación destinataria por cada producto, hasta el checkout (pago simulado) y la pantalla de confirmación con el detalle de fundaciones beneficiadas.
+Implementa el flujo de donación desde la selección de productos hasta la confirmación. El usuario puede definir cantidades, asignar una fundación distinta a cada producto, revisar el resumen y confirmar una donación. Al confirmar, la donación y sus ítems se persisten en Supabase y luego quedan disponibles en `Mis donaciones`.
 
 ## Funciones principales
 
 | Función | Archivo | Qué hace | Datos que usa/cambia |
 |---|---|---|---|
-| `addToCart(product, quantity)` | `EstadoCarrito.js` | Agrega un producto nuevo o suma cantidad si ya existe | `cart` |
-| `increaseQuantity(productId)` | `EstadoCarrito.js` | Incrementa cantidad de un producto | `cart` |
-| `decreaseQuantity(productId)` | `EstadoCarrito.js` | Decrementa cantidad; si llega a 0, elimina el producto | `cart` |
-| `removeFromCart(productId)` | `EstadoCarrito.js` | Elimina un producto del carrito | `cart` |
-| `assignFoundation(productId, foundationId)` | `EstadoCarrito.js` | Asigna/cambia la fundación destinataria de un producto puntual | `cart` |
-| `confirmOrder()` | `EstadoCarrito.js` | Genera un snapshot en `lastOrder` y vacía `cart` | `cart`, `lastOrder` |
+| `addToCart(product, quantity)` | `CartContext.js` | Agrega un producto o suma la cantidad seleccionada si ya existe | `cart` |
+| `increaseQuantity(productId)` | `CartContext.js` | Incrementa la cantidad de un producto | `cart` |
+| `decreaseQuantity(productId)` | `CartContext.js` | Disminuye la cantidad sin bajar de 1 | `cart` |
+| `removeFromCart(productId)` | `CartContext.js` | Elimina un producto del carrito | `cart` |
+| `assignFoundation(productId, foundationId)` | `CartContext.js` | Asigna o cambia la fundación destinataria de un producto | `cart` |
+| `clearCart()` | `CartContext.js` | Vacía el carrito después de una confirmación exitosa | `cart` |
+| `handleConfirm()` | `CheckoutScreen.js` | Valida sesión/carrito y guarda la donación mediante `create_donation` | Supabase + `cart` |
 
 ## Selección de fundación
 
-Cada producto del carrito permite elegir su propia fundación destinataria de forma independiente, mediante un selector modal en `CartScreen`. Dos productos distintos pueden donarse a fundaciones diferentes dentro de la misma compra. La asignación se guarda en el campo `foundationId` de cada ítem del carrito.
+Cada producto del carrito puede tener una fundación destinataria diferente. `CartScreen` abre un selector modal y guarda la elección en `foundationId` mediante `assignFoundation`.
 
 ## Validaciones
 
-- Si algún producto del carrito no tiene fundación asignada (`hasMissingFoundation === true`), se muestra una advertencia y se bloquea el botón "Continuar al checkout".
+- El carrito debe contener al menos un producto.
+- Cada producto debe tener una fundación asignada antes de continuar.
+- Para confirmar y guardar la donación el usuario debe iniciar sesión.
+- Si Supabase devuelve un error, el carrito no se vacía y la app informa el problema.
 
 ## Checkout y confirmación
 
-En `CheckoutScreen` se muestra el resumen completo: cada producto con su fundación asignada, cantidad, subtotal y el total general, junto con la leyenda "Pago simulado". Al confirmar, se simula un procesamiento breve y se llama a `confirmOrder()`, que genera un snapshot (`lastOrder`) y vacía el carrito.
+`CheckoutScreen` muestra los productos, cantidades, fundaciones destinatarias, subtotales, total y la leyenda de pago simulado. Al confirmar, llama a la función RPC `create_donation` de Supabase. Si el guardado finaliza correctamente, se vacía el carrito y se navega a `ConfirmationScreen` con el ID y total de la donación.
 
-En `ConfirmationScreen` se lee ese `lastOrder` (no el carrito, que ya está vacío) y se muestra el mensaje "¡Gracias por tu donación!", el estado "Donación confirmada", el detalle agrupado por fundación beneficiada y el total. El botón "Volver al inicio" navega a `Home`.
+`ConfirmationScreen` muestra el mensaje de éxito, el total, un identificador corto de la donación y accesos para ir a `Mis donaciones` o volver al inicio.
 
 ## Prueba manual
 
-1. Agregar dos productos al carrito desde `ProductScreen`.
-2. Cambiar cantidades con los controles `+`/`−`.
-3. Seleccionar una fundación distinta para cada producto.
-4. Continuar al checkout y verificar que el resumen coincide con el carrito.
-5. Confirmar la donación.
-6. Resultado esperado: se navega a `ConfirmationScreen`, se muestra el detalle agrupado por fundación con los montos correctos, el total coincide, y el carrito queda vacío al volver a entrar.
+1. Abrir un producto y seleccionar una cantidad mayor a 1.
+2. Agregarlo al carrito y verificar que se conserve la cantidad elegida.
+3. Agregar otro producto si se desea.
+4. Cambiar cantidades con `+` y `-`.
+5. Asignar una fundación a cada producto.
+6. Verificar que no se pueda continuar mientras falte una fundación.
+7. Continuar al checkout y revisar el resumen.
+8. Confirmar la donación con una cuenta iniciada.
+9. Verificar la pantalla de confirmación.
+10. Abrir `Mis donaciones` y comprobar que la donación recién creada aparezca en el historial.
 
 ## Capturas
 

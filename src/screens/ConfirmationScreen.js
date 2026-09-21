@@ -44,108 +44,16 @@ export default function ConfirmationScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: 'center',
-    backgroundColor: COLORS.background,
-  },
-  iconoContainer: {
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  icono: {
-    fontSize: 56,
-  },
-  titulo: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: COLORS.text,
-    marginBottom: 6,
-  },
-  estado: {
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-    color: COLORS.success || '#5DA271',
-    marginBottom: 24,
-  },
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  cardTitulo: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 12,
-  },
-  filaFundacion: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  nombreFundacion: {
-    fontSize: 14,
-    color: COLORS.text,
-    flexShrink: 1,
-  },
-  montoFundacion: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.primary,
-  },
-  separador: {
-    height: 1,
-    backgroundColor: COLORS.background,
-    marginVertical: 12,
-  },
-  fila: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  etiqueta: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-  },
-  valor: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  filaTotal: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  tituloTotal: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.text,
-  },
-  montoTotal: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  boton: {
-    backgroundColor: COLORS.primary,
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  textoBoton: {
-    color: COLORS.surface,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  screen: { flex: 1, backgroundColor: COLORS.background, padding: SPACING.lg, justifyContent: "center" },
+  card: { backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, padding: 28, alignItems: "center", borderWidth: 1, borderColor: COLORS.border },
+  iconCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: COLORS.success, alignItems: "center", justifyContent: "center", marginBottom: 16 },
+  icon: { color: "#FFFFFF", fontSize: 34, fontWeight: "800" },
+  title: { fontSize: 23, fontWeight: "800", color: COLORS.text, textAlign: "center" },
+  text: { fontSize: 14, lineHeight: 21, color: COLORS.textSecondary, textAlign: "center", marginTop: 10 },
+  total: { fontSize: 25, fontWeight: "800", color: COLORS.primary, marginTop: 18 },
+  id: { fontSize: 11, color: COLORS.textSecondary, marginTop: 8 },
+  button: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 16, alignItems: "center", marginTop: 18 },
+  buttonText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16 },
+  secondaryButton: { borderWidth: 1, borderColor: COLORS.primary, borderRadius: RADIUS.md, padding: 16, alignItems: "center", marginTop: 10 },
+  secondaryButtonText: { color: COLORS.primary, fontWeight: "800", fontSize: 16 },
 });
