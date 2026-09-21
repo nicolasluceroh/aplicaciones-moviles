@@ -4,6 +4,7 @@ const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
+  const [lastOrder, setLastOrder] = useState(null);
 
   const addToCart = (product) => {
     setCart((current) => {
@@ -78,6 +79,20 @@ export function CartProvider({ children }) {
 
   const clearCart = () => setCart([]);
 
+  // Confirma la donación: guarda un snapshot en lastOrder y vacía el carrito
+  const confirmOrder = () => {
+    setLastOrder({
+      items: cart,
+      totalItems: cart.reduce((total, item) => total + item.quantity, 0),
+      totalPrice: cart.reduce(
+        (total, item) => total + item.product.price * item.quantity,
+        0
+      ),
+      confirmedAt: new Date().toISOString(),
+    });
+    setCart([]);
+  };
+
   const totalItems = useMemo(
     () => cart.reduce((total, item) => total + item.quantity, 0),
     [cart]
@@ -99,6 +114,7 @@ export function CartProvider({ children }) {
 
   const value = {
     cart,
+    lastOrder,
     addToCart,
     removeFromCart,
     updateQuantity,
@@ -106,6 +122,7 @@ export function CartProvider({ children }) {
     decreaseQuantity,
     assignFoundation,
     clearCart,
+    confirmOrder,
     totalItems,
     totalPrice,
     hasMissingFoundation,

@@ -7,11 +7,9 @@ import { products } from '../data/products';
 export default function ProductScreen({ route, navigation }) {
   // 2. Extraemos tanto el objeto de CatalogScreen
   const { product: productParam, productId } = route.params || {};
-
   // 3. Buscamos el producto
   const product = productParam || products.find(p => p.id === productId) || {};
   const { addToCart } = useCart();
-
   // Estado local para manejar la cantidad de unidades (comienza en 1)
   const [quantity, setQuantity] = useState(1);
 
@@ -58,7 +56,6 @@ export default function ProductScreen({ route, navigation }) {
           </Pressable>
         </View>
       </View>
-
       <Pressable style={styles.button} onPress={handleAdd}>
         <Text style={styles.buttonText}>Agregar al carrito</Text>
       </Pressable>

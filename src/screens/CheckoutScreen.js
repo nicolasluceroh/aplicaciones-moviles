@@ -173,3 +173,4 @@ const styles = StyleSheet.create({
   disabledButton: { opacity: 0.6 },
   buttonText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16 },
 });
+>>>>>>> origin/main
