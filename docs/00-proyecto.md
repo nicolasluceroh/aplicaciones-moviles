@@ -6,34 +6,40 @@
 
 Pilar de Sonrisas es una aplicación móvil orientada a facilitar la donación de productos a fundaciones y organizaciones sociales. El usuario puede recorrer un catálogo de productos, agregarlos al carrito y seleccionar a qué fundación desea destinar cada uno.
 
-La aplicación busca que el proceso sea similar al de un e-commerce: se puede explorar sin iniciar sesión y el acceso a la cuenta aparece como una opción dentro de la navegación. El pago del proyecto académico se mantiene simulado mientras se desarrolla la integración con el backend.
+La experiencia sigue una lógica de e-commerce: el catálogo puede explorarse sin iniciar sesión y la cuenta se solicita cuando es necesaria para registrar una donación y asociarla a un usuario. El pago se mantiene simulado dentro del alcance académico, mientras que la donación confirmada sí se persiste en Supabase.
 
 ## Objetivo
 
-Facilitar el vínculo entre personas que quieren colaborar y las necesidades concretas de las fundaciones, mediante una experiencia móvil simple y trazable.
+Facilitar el vínculo entre personas que quieren colaborar y las necesidades concretas de las fundaciones mediante una experiencia móvil simple, organizada y trazable.
 
 ## Alcance de la versión actual
 
 - Inicio con productos y fundaciones.
-- Catálogo y búsqueda de productos.
-- Detalle de producto.
+- Catálogo, búsqueda y filtros de productos.
+- Detalle de producto y selección de cantidad.
 - Carrito compartido entre pantallas.
 - Selección de fundación destinataria por producto.
-- Checkout y confirmación simulados.
-- Cuenta, login y registro de donantes.
-- Acceso diferenciado para fundaciones.
+- Checkout con pago simulado.
+- Registro real de donaciones e ítems en Supabase.
+- Registro, login, logout y persistencia de sesión.
+- Edición de datos básicos del usuario.
+- Historial y detalle de donaciones reales.
+- Acceso diferenciado para cuentas de fundación.
+- Gestión de necesidades de una fundación.
 - Cámara y geolocalización en el panel de fundación.
-- Preparación para persistencia y autenticación con Supabase.
 
 ## Tecnologías
 
 - Expo
 - React Native
 - JavaScript
+- React Navigation
+- Supabase Auth y PostgreSQL
+- Expo Camera
+- Expo Location
 - Git / GitHub
 - Trello
 - Figma
-- Supabase (backend previsto/integración en desarrollo)
 
 ## Organización del trabajo
 

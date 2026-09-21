@@ -25,7 +25,7 @@ export default function ProductScreen({ route, navigation }) {
 
   // Función para agregar el producto al carrito global enviando la cantidad seleccionada
   const handleAdd = () => {
-    addToCart({ ...product, quantity });
+    addToCart(product, quantity);
     Alert.alert("Producto agregado", `Se agregaron ${quantity} unidad(es) al carrito de donaciones.`, [
       { text: "Seguir mirando" },
       { text: "Ver carrito", onPress: () => navigation.navigate("Cart") },
