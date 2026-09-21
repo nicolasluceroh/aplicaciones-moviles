@@ -60,8 +60,6 @@ Cada producto del carrito puede tener una fundación destinataria diferente. `Ca
 
 ## Capturas
 
-```md
-![Carrito](./img/carrito.png)
-![Checkout](./img/checkout.png)
-![Confirmación](./img/confirmacion.png)
-```
+![Carrito](./img/carrito.jpg)
+![Checkout](./img/checkout.jpg)
+![Confirmación](./img/confirmacion.jpg)
