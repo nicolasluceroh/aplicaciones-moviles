@@ -1,29 +1,51 @@
-import { useEffect, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { COLORS, RADIUS, SPACING } from "../constants/theme";
 import BottomNav from "../components/BottomNav";
-import { getUser, logout, subscribe } from "../state/session";
+import { useAuth } from "../context/AuthContext";
 
 // Azul suave para la caja de organizaciones.
 // Se define acá para no modificar theme.js, que es un archivo compartido.
 const SOFT_BLUE = "#E8F0F7";
 
 export default function AccountScreen({ navigation }) {
-  // La sesión vive en src/state/session.js para que no se pierda al navegar.
-  const [user, setUser] = useState(getUser);
+  const { user, profile, loading, signOut } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
 
-  useEffect(() => subscribe(setUser), []);
+  const name =
+    profile?.full_name ||
+    user?.user_metadata?.full_name ||
+    user?.email?.split("@")[0] ||
+    "Usuario";
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      setLoggingOut(true);
+      await signOut();
+    } catch (error) {
+      Alert.alert("Error", "No se pudo cerrar la sesión.");
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   const handleMyData = () => {
-    Alert.alert("Mis datos", "La edición de datos se habilitará junto con Supabase.");
+    navigation.navigate("Profile");
   };
 
   const handleInfo = (title) => {
-    Alert.alert(title, "Esta sección se completará en una etapa posterior.");
+    if (title === "Cómo funciona") {
+      Alert.alert(
+        "Cómo funciona",
+        "Elegís productos, los agregás al carrito, asignás una fundación a cada uno y confirmás la donación. Si iniciás sesión, la donación queda guardada en tu historial."
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Privacidad y contacto",
+      "Tu cuenta se usa para autenticarte y asociar tus donaciones. La información de sesión se administra con Supabase Auth."
+    );
   };
 
   return (
@@ -32,15 +54,20 @@ export default function AccountScreen({ navigation }) {
         <Text style={styles.title}>Mi cuenta</Text>
         <Text style={styles.subtitle}>Guardá y consultá tus donaciones.</Text>
 
-        {user ? (
-          // ---------- Con sesión ----------
+        {loading ? (
+          <View style={styles.loadingCard}>
+            <ActivityIndicator color={COLORS.primary} />
+            <Text style={styles.loadingText}>Cargando sesión...</Text>
+          </View>
+        ) : user ? (
+          // ---------- Con sesión real de Supabase ----------
           <View style={styles.card}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
-                {user.name.trim().charAt(0).toUpperCase()}
+                {name.trim().charAt(0).toUpperCase()}
               </Text>
             </View>
-            <Text style={styles.greeting}>Hola, {user.name}</Text>
+            <Text style={styles.greeting}>Hola, {name}</Text>
             {!!user.email && <Text style={styles.email}>{user.email}</Text>}
 
             <Pressable style={[styles.row, styles.firstRowSession]} onPress={handleMyData}>
@@ -53,8 +80,14 @@ export default function AccountScreen({ navigation }) {
               <Text style={styles.rowArrow}>›</Text>
             </Pressable>
 
-            <Pressable style={styles.secondaryButton} onPress={handleLogout}>
-              <Text style={styles.secondaryButtonText}>Cerrar sesión</Text>
+            <Pressable
+              style={[styles.secondaryButton, loggingOut && styles.disabledButton]}
+              onPress={handleLogout}
+              disabled={loggingOut}
+            >
+              <Text style={styles.secondaryButtonText}>
+                {loggingOut ? "Cerrando sesión..." : "Cerrar sesión"}
+              </Text>
             </Pressable>
           </View>
         ) : (
@@ -142,6 +175,15 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
   },
+  loadingCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 28,
+    alignItems: "center",
+  },
+  loadingText: { fontSize: 13, color: COLORS.textSecondary, marginTop: 10 },
 
   avatar: {
     width: 64,
@@ -201,6 +243,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   secondaryButtonText: { color: COLORS.primary, fontSize: 16, fontWeight: "800" },
+  disabledButton: { opacity: 0.6 },
 
   sectionTitle: {
     fontSize: 19,

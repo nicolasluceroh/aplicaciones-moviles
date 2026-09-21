@@ -1,6 +1,7 @@
 # Cuenta, autenticación y fundación
 
 **Responsables:** Facundo (UI) + Nicolás (integración Supabase)
+**Responsables:** Facundo (UI) + Nicolás (integración Supabase)  
 **Requisitos relacionados:** RF-007, RF-008, RF-010, RF-011, RF-012, RF-013, RF-014, RF-015, RF-016
 
 ## Qué hace el módulo
@@ -157,6 +158,15 @@ Las imágenes están en `docs/img/`.
 **Gestionar necesidades** — alta, edición de pendientes y baja de necesidades de la fundación.
 
 ![Gestionar necesidades](img/gestionar-necesidades.png)
+### FoundationNeedsScreen
+
+Permite a una Fundación:
+
+- agregar necesidades;
+- modificar la cantidad pendiente;
+- eliminar necesidades.
+
+RLS restringe esas operaciones a la Fundación asociada al usuario.
 
 ## Prueba manual
 

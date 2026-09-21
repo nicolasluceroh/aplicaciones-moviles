@@ -1,10 +1,15 @@
 import { StyleSheet, TextInput, View, Text } from "react-native";
 import { COLORS, RADIUS } from "../constants/theme";
 
-export default function SearchBar({ value, onChangeText, placeholder = "Buscar productos..." }) {
+export default function SearchBar({
+  value,
+  onChangeText,
+  placeholder = "Buscar productos para donar...",
+}) {
   return (
     <View style={styles.container}>
       <Text style={styles.icon}>⌕</Text>
+
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -20,21 +25,24 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    minHeight: 48,
+    height: 40,
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: COLORS.border,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
   },
+
   icon: {
     fontSize: 22,
     color: COLORS.textSecondary,
     marginRight: 8,
   },
+
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 13,
     color: COLORS.text,
+    paddingVertical: 0,
   },
 });
