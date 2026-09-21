@@ -1,0 +1,2343 @@
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/App.js /mnt/data/Pilar_de_Sonrisas_Base_V2/App.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/App.js	2026-09-07 23:36:03.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/App.js	2026-09-18 22:18:04.741345595 +0000
+@@ -1,69 +1,47 @@
+ import { NavigationContainer } from "@react-navigation/native";
+ import { createNativeStackNavigator } from "@react-navigation/native-stack";
+ 
++import { CartProvider } from "./src/context/CartContext";
++
+ import HomeScreen from "./src/screens/HomeScreen";
++import FoundationsScreen from "./src/screens/FoundationsScreen";
+ import FoundationScreen from "./src/screens/FoundationScreen";
++import CatalogScreen from "./src/screens/CatalogScreen";
+ import ProductScreen from "./src/screens/ProductScreen";
+ import CartScreen from "./src/screens/CartScreen";
+ import CheckoutScreen from "./src/screens/CheckoutScreen";
+ import ConfirmationScreen from "./src/screens/ConfirmationScreen";
++import DonationsScreen from "./src/screens/DonationsScreen";
++import AccountScreen from "./src/screens/AccountScreen";
+ import LoginScreen from "./src/screens/LoginScreen";
++import RegisterScreen from "./src/screens/RegisterScreen";
+ import FoundationPanelScreen from "./src/screens/FoundationPanelScreen";
+ 
+ const Stack = createNativeStackNavigator();
+ 
+ export default function App() {
+   return (
+-    <NavigationContainer>
+-      <Stack.Navigator initialRouteName="Home">
+-        <Stack.Screen
+-          name="Home"
+-          component={HomeScreen}
+-          options={{ title: "Pilar de Sonrisas" }}
+-        />
+-
+-        <Stack.Screen
+-          name="Foundation"
+-          component={FoundationScreen}
+-          options={{ title: "Fundación" }}
+-        />
+-
+-        <Stack.Screen
+-          name="Product"
+-          component={ProductScreen}
+-          options={{ title: "Producto" }}
+-        />
+-
+-        <Stack.Screen
+-          name="Cart"
+-          component={CartScreen}
+-          options={{ title: "Carrito" }}
+-        />
+-
+-        <Stack.Screen
+-          name="Checkout"
+-          component={CheckoutScreen}
+-          options={{ title: "Finalizar donación" }}
+-        />
+-
+-        <Stack.Screen
+-          name="Confirmation"
+-          component={ConfirmationScreen}
+-          options={{ title: "Donación realizada" }}
+-        />
+-
+-        <Stack.Screen
+-          name="Login"
+-          component={LoginScreen}
+-          options={{ title: "Acceso Fundación" }}
+-        />
+-
+-        <Stack.Screen
+-          name="FoundationPanel"
+-          component={FoundationPanelScreen}
+-          options={{ title: "Panel Fundación" }}
+-        />
+-      </Stack.Navigator>
+-    </NavigationContainer>
++    <CartProvider>
++      <NavigationContainer>
++        <Stack.Navigator initialRouteName="Home">
++          {/* Secciones principales: muestran el menu inferior propio del proyecto */}
++          <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
++          <Stack.Screen name="Foundations" component={FoundationsScreen} options={{ headerShown: false }} />
++          <Stack.Screen name="Cart" component={CartScreen} options={{ headerShown: false }} />
++          <Stack.Screen name="Donations" component={DonationsScreen} options={{ headerShown: false }} />
++          <Stack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
++
++          {/* Pantallas internas */}
++          <Stack.Screen name="Catalog" component={CatalogScreen} options={{ title: "Productos" }} />
++          <Stack.Screen name="Product" component={ProductScreen} options={{ title: "Producto" }} />
++          <Stack.Screen name="Foundation" component={FoundationScreen} options={{ title: "Fundación" }} />
++          <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: "Finalizar donación" }} />
++          <Stack.Screen name="Confirmation" component={ConfirmationScreen} options={{ headerShown: false }} />
++          <Stack.Screen name="Login" component={LoginScreen} options={{ title: "Iniciar sesión" }} />
++          <Stack.Screen name="Register" component={RegisterScreen} options={{ title: "Crear cuenta" }} />
++          <Stack.Screen name="FoundationPanel" component={FoundationPanelScreen} options={{ title: "Panel Fundación" }} />
++        </Stack.Navigator>
++      </NavigationContainer>
++    </CartProvider>
+   );
+-}
+\ No newline at end of file
++}
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/BASE_V2_README.md /mnt/data/Pilar_de_Sonrisas_Base_V2/BASE_V2_README.md
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/BASE_V2_README.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/BASE_V2_README.md	2026-09-18 22:17:32.655567891 +0000
+@@ -0,0 +1,39 @@
++# Pilar de Sonrisas - Base V2
++
++Esta versión reorganiza el MVP original para que el equipo pueda trabajar en paralelo sobre una estructura común.
++
++## Cambios de la base
++
++- La app abre directamente en Inicio; no exige login para explorar.
++- Se incorpora un menú inferior propio con: Inicio, Fundaciones, Carrito, Donaciones y Cuenta.
++- Los productos son generales. La fundación destinataria se asigna en el carrito.
++- Se agrega `CartContext` para compartir el carrito entre pantallas.
++- Se preparan pantallas de Cuenta, Registro, Historial y listado de Fundaciones.
++- Login y Registro siguen simulados hasta conectar Supabase.
++- Cámara y GPS del primer MVP se conservan en `FoundationPanelScreen.js`.
++
++## Archivos centrales que NO deben modificarse sin coordinar con Nicolás
++
++- `App.js`
++- `src/context/CartContext.js`
++- `src/constants/theme.js`
++- `src/components/BottomNav.js`
++- `src/data/products.js`
++- `src/data/foundations.js`
++
++## Reparto sugerido
++
++- Micaela: Home + componentes visuales (`SearchBar`, `ProductCard`, `FoundationCard`).
++- Juan: catálogo/búsqueda, filtros y detalle de producto.
++- Joaquín: carrito, selector de fundación, checkout y confirmación.
++- Facundo: Cuenta, Login, Registro, Panel Fundación, cámara/GPS.
++- Nicolás: arquitectura, contexto global, integración, Figma y luego Supabase.
++
++## Antes de crear una rama
++
++```bash
++git checkout main
++git pull origin main
++```
++
++Luego crear la rama asignada para el sprint.
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/DOCUMENTACION_TECNICA.md /mnt/data/Pilar_de_Sonrisas_Base_V2/DOCUMENTACION_TECNICA.md
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/DOCUMENTACION_TECNICA.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/DOCUMENTACION_TECNICA.md	2026-09-18 22:18:38.245468273 +0000
+@@ -0,0 +1,39 @@
++# Documentación técnica - Pilar de Sonrisas
++
++La documentación del sprint debe ser corta y basada en el código real. No hace falta explicar cada línea ni copiar código completo.
++
++## Formato para cada pantalla o componente
++
++### Nombre
++- Archivo:
++- Responsable:
++- Requisitos relacionados:
++
++### Qué hace
++Explicar en 2 o 3 frases para qué existe la pantalla/componente y qué puede hacer el usuario.
++
++### Funciones principales
++| Función | Qué hace | Datos que usa/cambia |
++|---|---|---|
++| `nombreFuncion()` | Descripción breve | Estado, contexto, parámetros, navegación, etc. |
++
++### Estados y datos
++- `estado`: para qué se usa.
++- `otroEstado`: para qué se usa.
++- Datos externos/locales usados: `products`, `foundations`, `CartContext`, etc.
++
++### Navegación
++- Llega desde:
++- Puede ir a:
++- Parámetros que recibe/envía:
++
++### Validaciones
++Anotar solamente las validaciones que existan realmente en el código.
++
++### Prueba manual
++1. Paso de prueba.
++2. Acción.
++3. Resultado esperado.
++
++## Regla
++Documentar funciones y comportamientos que existan en el código. Si una función todavía no está implementada, debe quedar como pendiente y no describirse como terminada.
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/TRELLO_SPRINT_V2.md /mnt/data/Pilar_de_Sonrisas_Base_V2/TRELLO_SPRINT_V2.md
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/TRELLO_SPRINT_V2.md	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/TRELLO_SPRINT_V2.md	2026-09-18 22:18:38.247046449 +0000
+@@ -0,0 +1,60 @@
++# Trello - Sprint V2
++
++## Listas
++1. Backlog
++2. Sprint actual
++3. En desarrollo
++4. En revisión / PR
++5. Testing
++6. Hecho
++
++## Cómo usar las tarjetas
++Cada tarjeta debe tener:
++- Título concreto.
++- Responsable.
++- Descripción corta de qué debe quedar funcionando.
++- Checklist de 3 a 6 puntos.
++- Rama de Git.
++- Link al Pull Request cuando exista.
++- Requisitos relacionados (RF) cuando corresponda.
++
++## Trabajo anterior
++Las tareas que ya se realizaron en el primer MVP pueden agregarse a **Hecho**, siempre basadas en trabajo real. Usar los commits y PR existentes como referencia; no inventar fechas ni tareas.
++
++## Tarjetas del sprint actual
++
++### Nicolás
++- Preparar base V2 y navegación global.
++- Implementar CartContext.
++- Integrar Pull Requests.
++- Diseñar Figma V2.
++- Preparar integración Supabase (siguiente etapa).
++
++### Micaela
++- Rediseñar Home según Figma.
++- Mejorar SearchBar.
++- Mejorar ProductCard.
++- Mejorar FoundationCard.
++- Revisión visual general.
++
++### Juan
++- Mejorar catálogo.
++- Búsqueda de productos.
++- Filtros por categoría.
++- Mejorar detalle de producto.
++- Integrar detalle con CartContext.
++
++### Joaquín
++- Mejorar carrito.
++- Cantidades y eliminación.
++- Selector de fundación por producto.
++- Validación antes de checkout.
++- Mejorar checkout y confirmación.
++
++### Facundo
++- Mejorar pantalla Cuenta.
++- Login de donantes.
++- Registro de donantes.
++- Mejorar panel Fundación.
++- Mantener cámara y GPS.
++- Preparar Mis donaciones para la futura base de datos.
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/base_v2.patch /mnt/data/Pilar_de_Sonrisas_Base_V2/base_v2.patch
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/base_v2.patch	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/base_v2.patch	2026-09-18 22:18:38.249325613 +0000
+@@ -0,0 +1,254 @@
++diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/App.js /mnt/data/Pilar_de_Sonrisas_Base_V2/App.js
++--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/App.js	2026-09-07 23:36:03.000000000 +0000
+++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/App.js	2026-09-18 22:18:04.741345595 +0000
++@@ -1,69 +1,47 @@
++ import { NavigationContainer } from "@react-navigation/native";
++ import { createNativeStackNavigator } from "@react-navigation/native-stack";
++ 
+++import { CartProvider } from "./src/context/CartContext";
+++
++ import HomeScreen from "./src/screens/HomeScreen";
+++import FoundationsScreen from "./src/screens/FoundationsScreen";
++ import FoundationScreen from "./src/screens/FoundationScreen";
+++import CatalogScreen from "./src/screens/CatalogScreen";
++ import ProductScreen from "./src/screens/ProductScreen";
++ import CartScreen from "./src/screens/CartScreen";
++ import CheckoutScreen from "./src/screens/CheckoutScreen";
++ import ConfirmationScreen from "./src/screens/ConfirmationScreen";
+++import DonationsScreen from "./src/screens/DonationsScreen";
+++import AccountScreen from "./src/screens/AccountScreen";
++ import LoginScreen from "./src/screens/LoginScreen";
+++import RegisterScreen from "./src/screens/RegisterScreen";
++ import FoundationPanelScreen from "./src/screens/FoundationPanelScreen";
++ 
++ const Stack = createNativeStackNavigator();
++ 
++ export default function App() {
++   return (
++-    <NavigationContainer>
++-      <Stack.Navigator initialRouteName="Home">
++-        <Stack.Screen
++-          name="Home"
++-          component={HomeScreen}
++-          options={{ title: "Pilar de Sonrisas" }}
++-        />
++-
++-        <Stack.Screen
++-          name="Foundation"
++-          component={FoundationScreen}
++-          options={{ title: "Fundación" }}
++-        />
++-
++-        <Stack.Screen
++-          name="Product"
++-          component={ProductScreen}
++-          options={{ title: "Producto" }}
++-        />
++-
++-        <Stack.Screen
++-          name="Cart"
++-          component={CartScreen}
++-          options={{ title: "Carrito" }}
++-        />
++-
++-        <Stack.Screen
++-          name="Checkout"
++-          component={CheckoutScreen}
++-          options={{ title: "Finalizar donación" }}
++-        />
++-
++-        <Stack.Screen
++-          name="Confirmation"
++-          component={ConfirmationScreen}
++-          options={{ title: "Donación realizada" }}
++-        />
++-
++-        <Stack.Screen
++-          name="Login"
++-          component={LoginScreen}
++-          options={{ title: "Acceso Fundación" }}
++-        />
++-
++-        <Stack.Screen
++-          name="FoundationPanel"
++-          component={FoundationPanelScreen}
++-          options={{ title: "Panel Fundación" }}
++-        />
++-      </Stack.Navigator>
++-    </NavigationContainer>
+++    <CartProvider>
+++      <NavigationContainer>
+++        <Stack.Navigator initialRouteName="Home">
+++          {/* Secciones principales: muestran el menu inferior propio del proyecto */}
+++          <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+++          <Stack.Screen name="Foundations" component={FoundationsScreen} options={{ headerShown: false }} />
+++          <Stack.Screen name="Cart" component={CartScreen} options={{ headerShown: false }} />
+++          <Stack.Screen name="Donations" component={DonationsScreen} options={{ headerShown: false }} />
+++          <Stack.Screen name="Account" component={AccountScreen} options={{ headerShown: false }} />
+++
+++          {/* Pantallas internas */}
+++          <Stack.Screen name="Catalog" component={CatalogScreen} options={{ title: "Productos" }} />
+++          <Stack.Screen name="Product" component={ProductScreen} options={{ title: "Producto" }} />
+++          <Stack.Screen name="Foundation" component={FoundationScreen} options={{ title: "Fundación" }} />
+++          <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: "Finalizar donación" }} />
+++          <Stack.Screen name="Confirmation" component={ConfirmationScreen} options={{ headerShown: false }} />
+++          <Stack.Screen name="Login" component={LoginScreen} options={{ title: "Iniciar sesión" }} />
+++          <Stack.Screen name="Register" component={RegisterScreen} options={{ title: "Crear cuenta" }} />
+++          <Stack.Screen name="FoundationPanel" component={FoundationPanelScreen} options={{ title: "Panel Fundación" }} />
+++        </Stack.Navigator>
+++      </NavigationContainer>
+++    </CartProvider>
++   );
++-}
++\ No newline at end of file
+++}
++diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/BASE_V2_README.md /mnt/data/Pilar_de_Sonrisas_Base_V2/BASE_V2_README.md
++--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/BASE_V2_README.md	1970-01-01 00:00:00.000000000 +0000
+++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/BASE_V2_README.md	2026-09-18 22:17:32.655567891 +0000
++@@ -0,0 +1,39 @@
+++# Pilar de Sonrisas - Base V2
+++
+++Esta versión reorganiza el MVP original para que el equipo pueda trabajar en paralelo sobre una estructura común.
+++
+++## Cambios de la base
+++
+++- La app abre directamente en Inicio; no exige login para explorar.
+++- Se incorpora un menú inferior propio con: Inicio, Fundaciones, Carrito, Donaciones y Cuenta.
+++- Los productos son generales. La fundación destinataria se asigna en el carrito.
+++- Se agrega `CartContext` para compartir el carrito entre pantallas.
+++- Se preparan pantallas de Cuenta, Registro, Historial y listado de Fundaciones.
+++- Login y Registro siguen simulados hasta conectar Supabase.
+++- Cámara y GPS del primer MVP se conservan en `FoundationPanelScreen.js`.
+++
+++## Archivos centrales que NO deben modificarse sin coordinar con Nicolás
+++
+++- `App.js`
+++- `src/context/CartContext.js`
+++- `src/constants/theme.js`
+++- `src/components/BottomNav.js`
+++- `src/data/products.js`
+++- `src/data/foundations.js`
+++
+++## Reparto sugerido
+++
+++- Micaela: Home + componentes visuales (`SearchBar`, `ProductCard`, `FoundationCard`).
+++- Juan: catálogo/búsqueda, filtros y detalle de producto.
+++- Joaquín: carrito, selector de fundación, checkout y confirmación.
+++- Facundo: Cuenta, Login, Registro, Panel Fundación, cámara/GPS.
+++- Nicolás: arquitectura, contexto global, integración, Figma y luego Supabase.
+++
+++## Antes de crear una rama
+++
+++```bash
+++git checkout main
+++git pull origin main
+++```
+++
+++Luego crear la rama asignada para el sprint.
++diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/DOCUMENTACION_TECNICA.md /mnt/data/Pilar_de_Sonrisas_Base_V2/DOCUMENTACION_TECNICA.md
++--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/DOCUMENTACION_TECNICA.md	1970-01-01 00:00:00.000000000 +0000
+++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/DOCUMENTACION_TECNICA.md	2026-09-18 22:18:38.245468273 +0000
++@@ -0,0 +1,39 @@
+++# Documentación técnica - Pilar de Sonrisas
+++
+++La documentación del sprint debe ser corta y basada en el código real. No hace falta explicar cada línea ni copiar código completo.
+++
+++## Formato para cada pantalla o componente
+++
+++### Nombre
+++- Archivo:
+++- Responsable:
+++- Requisitos relacionados:
+++
+++### Qué hace
+++Explicar en 2 o 3 frases para qué existe la pantalla/componente y qué puede hacer el usuario.
+++
+++### Funciones principales
+++| Función | Qué hace | Datos que usa/cambia |
+++|---|---|---|
+++| `nombreFuncion()` | Descripción breve | Estado, contexto, parámetros, navegación, etc. |
+++
+++### Estados y datos
+++- `estado`: para qué se usa.
+++- `otroEstado`: para qué se usa.
+++- Datos externos/locales usados: `products`, `foundations`, `CartContext`, etc.
+++
+++### Navegación
+++- Llega desde:
+++- Puede ir a:
+++- Parámetros que recibe/envía:
+++
+++### Validaciones
+++Anotar solamente las validaciones que existan realmente en el código.
+++
+++### Prueba manual
+++1. Paso de prueba.
+++2. Acción.
+++3. Resultado esperado.
+++
+++## Regla
+++Documentar funciones y comportamientos que existan en el código. Si una función todavía no está implementada, debe quedar como pendiente y no describirse como terminada.
++diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/TRELLO_SPRINT_V2.md /mnt/data/Pilar_de_Sonrisas_Base_V2/TRELLO_SPRINT_V2.md
++--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/TRELLO_SPRINT_V2.md	1970-01-01 00:00:00.000000000 +0000
+++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/TRELLO_SPRINT_V2.md	2026-09-18 22:18:38.247046449 +0000
++@@ -0,0 +1,60 @@
+++# Trello - Sprint V2
+++
+++## Listas
+++1. Backlog
+++2. Sprint actual
+++3. En desarrollo
+++4. En revisión / PR
+++5. Testing
+++6. Hecho
+++
+++## Cómo usar las tarjetas
+++Cada tarjeta debe tener:
+++- Título concreto.
+++- Responsable.
+++- Descripción corta de qué debe quedar funcionando.
+++- Checklist de 3 a 6 puntos.
+++- Rama de Git.
+++- Link al Pull Request cuando exista.
+++- Requisitos relacionados (RF) cuando corresponda.
+++
+++## Trabajo anterior
+++Las tareas que ya se realizaron en el primer MVP pueden agregarse a **Hecho**, siempre basadas en trabajo real. Usar los commits y PR existentes como referencia; no inventar fechas ni tareas.
+++
+++## Tarjetas del sprint actual
+++
+++### Nicolás
+++- Preparar base V2 y navegación global.
+++- Implementar CartContext.
+++- Integrar Pull Requests.
+++- Diseñar Figma V2.
+++- Preparar integración Supabase (siguiente etapa).
+++
+++### Micaela
+++- Rediseñar Home según Figma.
+++- Mejorar SearchBar.
+++- Mejorar ProductCard.
+++- Mejorar FoundationCard.
+++- Revisión visual general.
+++
+++### Juan
+++- Mejorar catálogo.
+++- Búsqueda de productos.
+++- Filtros por categoría.
+++- Mejorar detalle de producto.
+++- Integrar detalle con CartContext.
+++
+++### Joaquín
+++- Mejorar carrito.
+++- Cantidades y eliminación.
+++- Selector de fundación por producto.
+++- Validación antes de checkout.
+++- Mejorar checkout y confirmación.
+++
+++### Facundo
+++- Mejorar pantalla Cuenta.
+++- Login de donantes.
+++- Registro de donantes.
+++- Mejorar panel Fundación.
+++- Mantener cámara y GPS.
+++- Preparar Mis donaciones para la futura base de datos.
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/components/BottomNav.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/components/BottomNav.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/components/BottomNav.js	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/components/BottomNav.js	2026-09-18 22:17:24.550830126 +0000
+@@ -0,0 +1,96 @@
++import { Pressable, StyleSheet, Text, View } from "react-native";
++import { COLORS } from "../constants/theme";
++import { useCart } from "../context/CartContext";
++
++const ITEMS = [
++  { key: "Home", label: "Inicio", icon: "⌂" },
++  { key: "Foundations", label: "Fundaciones", icon: "♡" },
++  { key: "Cart", label: "Carrito", icon: "▣" },
++  { key: "Donations", label: "Donaciones", icon: "✓" },
++  { key: "Account", label: "Cuenta", icon: "○" },
++];
++
++export default function BottomNav({ navigation, active }) {
++  const { totalItems } = useCart();
++
++  return (
++    <View style={styles.container}>
++      {ITEMS.map((item) => {
++        const selected = item.key === active;
++        const showBadge = item.key === "Cart" && totalItems > 0;
++
++        return (
++          <Pressable
++            key={item.key}
++            style={styles.item}
++            onPress={() => navigation.navigate(item.key)}
++          >
++            <View style={styles.iconWrap}>
++              <Text style={[styles.icon, selected && styles.selectedText]}>
++                {item.icon}
++              </Text>
++              {showBadge && (
++                <View style={styles.badge}>
++                  <Text style={styles.badgeText}>{totalItems}</Text>
++                </View>
++              )}
++            </View>
++            <Text style={[styles.label, selected && styles.selectedText]}>
++              {item.label}
++            </Text>
++          </Pressable>
++        );
++      })}
++    </View>
++  );
++}
++
++const styles = StyleSheet.create({
++  container: {
++    flexDirection: "row",
++    backgroundColor: COLORS.surface,
++    borderTopWidth: 1,
++    borderTopColor: COLORS.border,
++    paddingTop: 8,
++    paddingBottom: 10,
++  },
++  item: {
++    flex: 1,
++    minHeight: 48,
++    alignItems: "center",
++    justifyContent: "center",
++  },
++  iconWrap: {
++    position: "relative",
++  },
++  icon: {
++    fontSize: 20,
++    color: COLORS.textSecondary,
++  },
++  label: {
++    marginTop: 3,
++    fontSize: 10,
++    color: COLORS.textSecondary,
++  },
++  selectedText: {
++    color: COLORS.primary,
++    fontWeight: "700",
++  },
++  badge: {
++    position: "absolute",
++    top: -5,
++    right: -11,
++    minWidth: 17,
++    height: 17,
++    borderRadius: 9,
++    paddingHorizontal: 4,
++    alignItems: "center",
++    justifyContent: "center",
++    backgroundColor: COLORS.danger,
++  },
++  badgeText: {
++    color: "#FFFFFF",
++    fontSize: 10,
++    fontWeight: "700",
++  },
++});
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/components/FoundationCard.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/components/FoundationCard.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/components/FoundationCard.js	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/components/FoundationCard.js	2026-09-18 22:17:24.555514322 +0000
+@@ -0,0 +1,43 @@
++import { Pressable, StyleSheet, Text, View } from "react-native";
++import { COLORS, RADIUS } from "../constants/theme";
++
++export default function FoundationCard({ foundation, onPress }) {
++  return (
++    <Pressable style={styles.card} onPress={onPress}>
++      <View style={styles.logo}>
++        <Text style={styles.logoText}>{foundation.shortName || "FS"}</Text>
++      </View>
++      <View style={styles.info}>
++        <Text style={styles.name}>{foundation.name}</Text>
++        <Text style={styles.location}>{foundation.location}</Text>
++        <Text style={styles.action}>Ver fundación →</Text>
++      </View>
++    </Pressable>
++  );
++}
++
++const styles = StyleSheet.create({
++  card: {
++    flexDirection: "row",
++    backgroundColor: COLORS.surface,
++    borderRadius: RADIUS.md,
++    borderWidth: 1,
++    borderColor: COLORS.border,
++    padding: 14,
++    marginBottom: 12,
++  },
++  logo: {
++    width: 52,
++    height: 52,
++    borderRadius: 26,
++    backgroundColor: COLORS.primarySoft,
++    alignItems: "center",
++    justifyContent: "center",
++    marginRight: 12,
++  },
++  logoText: { fontWeight: "800", color: COLORS.primary },
++  info: { flex: 1 },
++  name: { fontSize: 15, fontWeight: "700", color: COLORS.text },
++  location: { fontSize: 12, color: COLORS.textSecondary, marginTop: 3 },
++  action: { fontSize: 12, fontWeight: "700", color: COLORS.primary, marginTop: 7 },
++});
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/components/ProductCard.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/components/ProductCard.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/components/ProductCard.js	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/components/ProductCard.js	2026-09-18 22:17:24.554033390 +0000
+@@ -0,0 +1,39 @@
++import { Pressable, StyleSheet, Text, View } from "react-native";
++import { COLORS, RADIUS } from "../constants/theme";
++
++export default function ProductCard({ product, onPress }) {
++  return (
++    <Pressable style={styles.card} onPress={onPress}>
++      <View style={styles.imagePlaceholder}>
++        <Text style={styles.emoji}>{product.emoji || "🎁"}</Text>
++      </View>
++      <Text style={styles.name} numberOfLines={2}>{product.name}</Text>
++      <Text style={styles.category}>{product.category}</Text>
++      <Text style={styles.price}>${product.price.toLocaleString("es-AR")}</Text>
++    </Pressable>
++  );
++}
++
++const styles = StyleSheet.create({
++  card: {
++    width: "48%",
++    backgroundColor: COLORS.surface,
++    borderRadius: RADIUS.md,
++    borderWidth: 1,
++    borderColor: COLORS.border,
++    padding: 12,
++    marginBottom: 12,
++  },
++  imagePlaceholder: {
++    height: 100,
++    borderRadius: RADIUS.sm,
++    backgroundColor: COLORS.surfaceAlt,
++    alignItems: "center",
++    justifyContent: "center",
++    marginBottom: 10,
++  },
++  emoji: { fontSize: 38 },
++  name: { fontSize: 15, fontWeight: "700", color: COLORS.text, minHeight: 38 },
++  category: { fontSize: 12, color: COLORS.textSecondary, marginTop: 4 },
++  price: { fontSize: 17, fontWeight: "800", color: COLORS.primary, marginTop: 6 },
++});
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/components/SearchBar.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/components/SearchBar.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/components/SearchBar.js	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/components/SearchBar.js	2026-09-18 22:17:24.552289580 +0000
+@@ -0,0 +1,40 @@
++import { StyleSheet, TextInput, View, Text } from "react-native";
++import { COLORS, RADIUS } from "../constants/theme";
++
++export default function SearchBar({ value, onChangeText, placeholder = "Buscar productos..." }) {
++  return (
++    <View style={styles.container}>
++      <Text style={styles.icon}>⌕</Text>
++      <TextInput
++        value={value}
++        onChangeText={onChangeText}
++        placeholder={placeholder}
++        placeholderTextColor={COLORS.textSecondary}
++        style={styles.input}
++      />
++    </View>
++  );
++}
++
++const styles = StyleSheet.create({
++  container: {
++    flexDirection: "row",
++    alignItems: "center",
++    minHeight: 48,
++    backgroundColor: COLORS.surface,
++    borderRadius: RADIUS.md,
++    borderWidth: 1,
++    borderColor: COLORS.border,
++    paddingHorizontal: 14,
++  },
++  icon: {
++    fontSize: 22,
++    color: COLORS.textSecondary,
++    marginRight: 8,
++  },
++  input: {
++    flex: 1,
++    fontSize: 15,
++    color: COLORS.text,
++  },
++});
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/constants/theme.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/constants/theme.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/constants/theme.js	2026-09-07 23:36:03.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/constants/theme.js	2026-09-18 22:17:24.557035084 +0000
+@@ -1,9 +1,28 @@
+ export const COLORS = {
+-  primary: "#F2A65A",
+-  secondary: "#6C9BCF",
+-  background: "#FFF9F3",
++  primary: "#E98A2E",
++  primarySoft: "#FFF0DF",
++  secondary: "#4078A8",
++  background: "#F5F5F5",
+   surface: "#FFFFFF",
+-  text: "#262626",
+-  textSecondary: "#666666",
+-  success: "#5DA271",
+-};
+\ No newline at end of file
++  surfaceAlt: "#F1F3F5",
++  text: "#222222",
++  textSecondary: "#6B7280",
++  border: "#E3E5E8",
++  success: "#3C9A5F",
++  warning: "#C27A16",
++  danger: "#C94848",
++};
++
++export const SPACING = {
++  xs: 4,
++  sm: 8,
++  md: 16,
++  lg: 24,
++  xl: 32,
++};
++
++export const RADIUS = {
++  sm: 8,
++  md: 12,
++  lg: 18,
++};
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/context/CartContext.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/context/CartContext.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/context/CartContext.js	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/context/CartContext.js	2026-09-18 22:17:24.549177133 +0000
+@@ -0,0 +1,125 @@
++import { createContext, useContext, useMemo, useState } from "react";
++
++const CartContext = createContext(null);
++
++export function CartProvider({ children }) {
++  const [cart, setCart] = useState([]);
++
++  const addToCart = (product) => {
++    setCart((current) => {
++      const existing = current.find((item) => item.product.id === product.id);
++
++      if (existing) {
++        return current.map((item) =>
++          item.product.id === product.id
++            ? { ...item, quantity: item.quantity + 1 }
++            : item
++        );
++      }
++
++      return [
++        ...current,
++        {
++          product,
++          quantity: 1,
++          foundationId: null,
++        },
++      ];
++    });
++  };
++
++  const removeFromCart = (productId) => {
++    setCart((current) =>
++      current.filter((item) => item.product.id !== productId)
++    );
++  };
++
++  const updateQuantity = (productId, quantity) => {
++    const safeQuantity = Math.max(1, Number(quantity) || 1);
++
++    setCart((current) =>
++      current.map((item) =>
++        item.product.id === productId
++          ? { ...item, quantity: safeQuantity }
++          : item
++      )
++    );
++  };
++
++  const increaseQuantity = (productId) => {
++    setCart((current) =>
++      current.map((item) =>
++        item.product.id === productId
++          ? { ...item, quantity: item.quantity + 1 }
++          : item
++      )
++    );
++  };
++
++  const decreaseQuantity = (productId) => {
++    setCart((current) =>
++      current.map((item) =>
++        item.product.id === productId
++          ? { ...item, quantity: Math.max(1, item.quantity - 1) }
++          : item
++      )
++    );
++  };
++
++  const assignFoundation = (productId, foundationId) => {
++    setCart((current) =>
++      current.map((item) =>
++        item.product.id === productId
++          ? { ...item, foundationId }
++          : item
++      )
++    );
++  };
++
++  const clearCart = () => setCart([]);
++
++  const totalItems = useMemo(
++    () => cart.reduce((total, item) => total + item.quantity, 0),
++    [cart]
++  );
++
++  const totalPrice = useMemo(
++    () =>
++      cart.reduce(
++        (total, item) => total + item.product.price * item.quantity,
++        0
++      ),
++    [cart]
++  );
++
++  const hasMissingFoundation = useMemo(
++    () => cart.some((item) => !item.foundationId),
++    [cart]
++  );
++
++  const value = {
++    cart,
++    addToCart,
++    removeFromCart,
++    updateQuantity,
++    increaseQuantity,
++    decreaseQuantity,
++    assignFoundation,
++    clearCart,
++    totalItems,
++    totalPrice,
++    hasMissingFoundation,
++  };
++
++  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
++}
++
++export function useCart() {
++  const context = useContext(CartContext);
++
++  if (!context) {
++    throw new Error("useCart debe utilizarse dentro de CartProvider");
++  }
++
++  return context;
++}
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/data/foundations.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/data/foundations.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/data/foundations.js	2026-09-07 23:36:03.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/data/foundations.js	2026-09-18 22:17:24.560976277 +0000
+@@ -2,9 +2,10 @@
+   {
+     id: "1",
+     name: "Fundación Juguemos y Caminemos Juntos",
++    shortName: "JC",
+     home: "La Casita del Milagro",
+     location: "Pilar, Buenos Aires",
+     description:
+-      "Fundación dedicada al acompañamiento de niños y adolescentes.",
++      "Fundación dedicada al acompañamiento de niños y adolescentes de la comunidad.",
+   },
+-];
+\ No newline at end of file
++];
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/data/products.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/data/products.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/data/products.js	2026-09-07 23:36:03.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/data/products.js	2026-09-18 22:17:24.559155555 +0000
+@@ -2,25 +2,35 @@
+   {
+     id: "1",
+     name: "Kit escolar",
+-    description: "Kit de útiles escolares para los chicos de la fundación.",
++    description: "Kit de útiles escolares para acompañar el inicio de clases.",
+     price: 15000,
++    category: "Escolar",
++    emoji: "✏️",
+   },
+   {
+     id: "2",
+     name: "Mochila escolar",
+-    description: "Mochila para uso escolar.",
++    description: "Mochila para uso escolar y actividades cotidianas.",
+     price: 22000,
++    category: "Escolar",
++    emoji: "🎒",
+   },
+   {
+     id: "3",
+     name: "Pelota",
+-    description: "Pelota para actividades recreativas.",
++    description: "Pelota para actividades deportivas y recreativas.",
+     price: 12000,
++    category: "Juguetes",
++    emoji: "⚽",
+   },
+   {
+     id: "4",
+     name: "Juego didáctico",
+-    description: "Juego educativo y recreativo.",
++    description: "Juego educativo pensado para aprender y compartir.",
+     price: 18000,
++    category: "Juguetes",
++    emoji: "🧩",
+   },
+-];
+\ No newline at end of file
++];
++
++export const categories = ["Todos", "Escolar", "Juguetes"];
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/AccountScreen.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/AccountScreen.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/AccountScreen.js	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/AccountScreen.js	2026-09-18 22:17:24.577392554 +0000
+@@ -0,0 +1,49 @@
++import { Pressable, StyleSheet, Text, View } from "react-native";
++import { COLORS, RADIUS, SPACING } from "../constants/theme";
++import BottomNav from "../components/BottomNav";
++
++export default function AccountScreen({ navigation }) {
++  return (
++    <View style={styles.screen}>
++      <View style={styles.content}>
++        <Text style={styles.title}>Mi cuenta</Text>
++        <Text style={styles.subtitle}>
++          Podés recorrer la aplicación sin iniciar sesión. La cuenta se utiliza al donar y consultar el historial.
++        </Text>
++
++        <View style={styles.card}>
++          <Text style={styles.cardTitle}>Donantes</Text>
++          <Pressable style={styles.primaryButton} onPress={() => navigation.navigate("Login", { userType: "donor" })}>
++            <Text style={styles.primaryButtonText}>Iniciar sesión</Text>
++          </Pressable>
++          <Pressable style={styles.secondaryButton} onPress={() => navigation.navigate("Register")}>
++            <Text style={styles.secondaryButtonText}>Crear cuenta</Text>
++          </Pressable>
++        </View>
++
++        <View style={styles.card}>
++          <Text style={styles.cardTitle}>Organizaciones</Text>
++          <Text style={styles.cardText}>Acceso reservado para fundaciones registradas.</Text>
++          <Pressable style={styles.secondaryButton} onPress={() => navigation.navigate("Login", { userType: "foundation" })}>
++            <Text style={styles.secondaryButtonText}>Acceso para fundaciones</Text>
++          </Pressable>
++        </View>
++      </View>
++      <BottomNav navigation={navigation} active="Account" />
++    </View>
++  );
++}
++
++const styles = StyleSheet.create({
++  screen: { flex: 1, backgroundColor: COLORS.background, paddingTop: 46 },
++  content: { flex: 1, padding: SPACING.md },
++  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
++  subtitle: { fontSize: 13, color: COLORS.textSecondary, lineHeight: 19, marginTop: 5, marginBottom: 20 },
++  card: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 18, marginBottom: 14 },
++  cardTitle: { fontSize: 17, fontWeight: "800", color: COLORS.text },
++  cardText: { fontSize: 13, color: COLORS.textSecondary, marginTop: 5, marginBottom: 12 },
++  primaryButton: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 13, alignItems: "center", marginTop: 14 },
++  primaryButtonText: { color: "#FFFFFF", fontWeight: "800" },
++  secondaryButton: { borderWidth: 1, borderColor: COLORS.primary, borderRadius: RADIUS.md, padding: 13, alignItems: "center", marginTop: 10 },
++  secondaryButtonText: { color: COLORS.primary, fontWeight: "800" },
++});
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/CartScreen.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/CartScreen.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/CartScreen.js	2026-09-07 23:36:03.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/CartScreen.js	2026-09-18 22:17:24.570596989 +0000
+@@ -1,128 +1,148 @@
+-import React from 'react';
+-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+-import { COLORS } from '../constants/theme';
+-import { products } from '../data/products';
+-
+-export default function CartScreen({ route, navigation }) {
+-  const productId = route.params?.productId || "1";
+-  const product = products.find((p) => p.id === productId);
++import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
++import { COLORS, RADIUS, SPACING } from "../constants/theme";
++import { foundations } from "../data/foundations";
++import { useCart } from "../context/CartContext";
++import BottomNav from "../components/BottomNav";
++
++export default function CartScreen({ navigation }) {
++  const {
++    cart,
++    increaseQuantity,
++    decreaseQuantity,
++    removeFromCart,
++    assignFoundation,
++    totalPrice,
++    hasMissingFoundation,
++  } = useCart();
++
++  const handleContinue = () => {
++    if (cart.length === 0) {
++      Alert.alert("Carrito vacío", "Agregá al menos un producto para continuar.");
++      return;
++    }
++
++    if (hasMissingFoundation) {
++      Alert.alert(
++        "Falta elegir una fundación",
++        "Cada producto debe tener una fundación destinataria antes de continuar."
++      );
++      return;
++    }
+ 
+-  const handleContinuar = () => {
+-    navigation.navigate("Checkout", { productId: product.id });
++    navigation.navigate("Checkout");
+   };
+ 
+   return (
+-    <View style={styles.container}>
+-      <Text style={styles.titulo}>Tu carrito</Text>
+-
+-      <View style={styles.card}>
+-        <Text style={styles.nombre}>{product.name}</Text>
+-
+-        <View style={styles.fila}>
+-          <Text style={styles.etiqueta}>Cantidad</Text>
+-          <Text style={styles.valor}>1</Text>
+-        </View>
+-
+-        <View style={styles.fila}>
+-          <Text style={styles.etiqueta}>Precio</Text>
+-          <Text style={styles.valor}>${product.price}</Text>
+-        </View>
+-
+-        <View style={styles.fila}>
+-          <Text style={styles.etiqueta}>Fundación</Text>
+-          <Text style={styles.valor}>Juguemos y Caminemos Juntos</Text>
+-        </View>
+-
+-        <View style={styles.separador} />
+-
+-        <View style={styles.filaTotal}>
+-          <Text style={styles.tituloTotal}>Total</Text>
+-          <Text style={styles.montoTotal}>${product.price}</Text>
+-        </View>
+-      </View>
+-
+-      <TouchableOpacity style={styles.boton} onPress={handleContinuar}>
+-        <Text style={styles.textoBoton}>Continuar</Text>
+-      </TouchableOpacity>
++    <View style={styles.screen}>
++      <ScrollView contentContainerStyle={styles.content}>
++        <Text style={styles.title}>Tu carrito</Text>
++        <Text style={styles.subtitle}>
++          Acá se define a qué fundación se destina cada producto.
++        </Text>
++
++        {cart.length === 0 ? (
++          <View style={styles.empty}>
++            <Text style={styles.emptyTitle}>Todavía no agregaste productos</Text>
++            <Text style={styles.emptyText}>Explorá el inicio y sumá productos para donar.</Text>
++            <Pressable style={styles.secondaryButton} onPress={() => navigation.navigate("Home")}>
++              <Text style={styles.secondaryButtonText}>Ver productos</Text>
++            </Pressable>
++          </View>
++        ) : (
++          cart.map((item) => {
++            const foundation = foundations.find((f) => f.id === item.foundationId);
++            return (
++              <View key={item.product.id} style={styles.card}>
++                <View style={styles.rowBetween}>
++                  <View style={styles.flex}>
++                    <Text style={styles.productName}>{item.product.name}</Text>
++                    <Text style={styles.price}>${item.product.price.toLocaleString("es-AR")} c/u</Text>
++                  </View>
++                  <Pressable onPress={() => removeFromCart(item.product.id)}>
++                    <Text style={styles.remove}>Eliminar</Text>
++                  </Pressable>
++                </View>
++
++                <View style={styles.quantityRow}>
++                  <Text style={styles.label}>Cantidad</Text>
++                  <View style={styles.quantityControls}>
++                    <Pressable style={styles.quantityButton} onPress={() => decreaseQuantity(item.product.id)}>
++                      <Text style={styles.quantityButtonText}>-</Text>
++                    </Pressable>
++                    <Text style={styles.quantity}>{item.quantity}</Text>
++                    <Pressable style={styles.quantityButton} onPress={() => increaseQuantity(item.product.id)}>
++                      <Text style={styles.quantityButtonText}>+</Text>
++                    </Pressable>
++                  </View>
++                </View>
++
++                <Text style={styles.label}>Fundación destinataria</Text>
++                {foundation ? (
++                  <Text style={styles.foundationSelected}>{foundation.name}</Text>
++                ) : (
++                  <Text style={styles.missing}>Sin seleccionar</Text>
++                )}
++
++                {/* Base temporal. Joaquín reemplazará este botón por un selector real. */}
++                <Pressable
++                  style={styles.foundationButton}
++                  onPress={() => assignFoundation(item.product.id, foundations[0].id)}
++                >
++                  <Text style={styles.foundationButtonText}>
++                    {foundation ? "Cambiar fundación" : "Elegir fundación"}
++                  </Text>
++                </Pressable>
++              </View>
++            );
++          })
++        )}
++
++        {cart.length > 0 && (
++          <>
++            <View style={styles.totalBox}>
++              <Text style={styles.totalLabel}>Total</Text>
++              <Text style={styles.total}>${totalPrice.toLocaleString("es-AR")}</Text>
++            </View>
++            <Pressable style={styles.primaryButton} onPress={handleContinue}>
++              <Text style={styles.primaryButtonText}>Continuar</Text>
++            </Pressable>
++          </>
++        )}
++      </ScrollView>
++      <BottomNav navigation={navigation} active="Cart" />
+     </View>
+   );
+ }
+ 
+ const styles = StyleSheet.create({
+-  container: {
+-    flex: 1,
+-    padding: 20,
+-    justifyContent: 'center',
+-    backgroundColor: COLORS.background,
+-  },
+-  titulo: {
+-    fontSize: 26,
+-    fontWeight: 'bold',
+-    marginBottom: 20,
+-    color: COLORS.text,
+-  },
+-  card: {
+-    backgroundColor: COLORS.surface,
+-    borderRadius: 16,
+-    padding: 20,
+-    marginBottom: 24,
+-    shadowColor: '#000',
+-    shadowOffset: { width: 0, height: 4 },
+-    shadowOpacity: 0.1,
+-    shadowRadius: 8,
+-    elevation: 4,
+-  },
+-  nombre: {
+-    fontSize: 20,
+-    fontWeight: '700',
+-    marginBottom: 16,
+-    color: COLORS.text,
+-  },
+-  fila: {
+-    flexDirection: 'row',
+-    justifyContent: 'space-between',
+-    marginBottom: 10,
+-  },
+-  etiqueta: {
+-    fontSize: 14,
+-    color: COLORS.textSecondary,
+-  },
+-  valor: {
+-    fontSize: 14,
+-    fontWeight: '600',
+-    color: COLORS.text,
+-    flexShrink: 1,
+-    textAlign: 'right',
+-  },
+-  separador: {
+-    height: 1,
+-    backgroundColor: COLORS.background,
+-    marginVertical: 12,
+-  },
+-  filaTotal: {
+-    flexDirection: 'row',
+-    justifyContent: 'space-between',
+-    alignItems: 'center',
+-  },
+-  tituloTotal: {
+-    fontSize: 16,
+-    fontWeight: 'bold',
+-    color: COLORS.text,
+-  },
+-  montoTotal: {
+-    fontSize: 22,
+-    fontWeight: 'bold',
+-    color: COLORS.primary,
+-  },
+-  boton: {
+-    backgroundColor: COLORS.primary,
+-    padding: 15,
+-    borderRadius: 8,
+-    alignItems: 'center',
+-  },
+-  textoBoton: {
+-    color: COLORS.surface,
+-    fontSize: 16,
+-    fontWeight: 'bold',
+-  },
+-});
+\ No newline at end of file
++  screen: { flex: 1, backgroundColor: COLORS.background, paddingTop: 46 },
++  content: { padding: SPACING.md, paddingBottom: 24 },
++  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
++  subtitle: { fontSize: 13, color: COLORS.textSecondary, marginTop: 5, marginBottom: 20 },
++  empty: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, padding: 22, borderWidth: 1, borderColor: COLORS.border, alignItems: "center" },
++  emptyTitle: { fontSize: 17, fontWeight: "700", color: COLORS.text },
++  emptyText: { fontSize: 13, color: COLORS.textSecondary, textAlign: "center", marginTop: 6 },
++  card: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, padding: 16, borderWidth: 1, borderColor: COLORS.border, marginBottom: 12 },
++  rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
++  flex: { flex: 1, paddingRight: 10 },
++  productName: { fontSize: 16, fontWeight: "800", color: COLORS.text },
++  price: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4 },
++  remove: { color: COLORS.danger, fontSize: 12, fontWeight: "700" },
++  quantityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 18, marginBottom: 16 },
++  label: { fontSize: 12, fontWeight: "700", color: COLORS.textSecondary },
++  quantityControls: { flexDirection: "row", alignItems: "center" },
++  quantityButton: { width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.surfaceAlt, alignItems: "center", justifyContent: "center" },
++  quantityButtonText: { fontSize: 20, color: COLORS.text },
++  quantity: { minWidth: 36, textAlign: "center", fontWeight: "800", color: COLORS.text },
++  foundationSelected: { color: COLORS.text, fontWeight: "700", marginTop: 6 },
++  missing: { color: COLORS.warning, fontWeight: "700", marginTop: 6 },
++  foundationButton: { alignSelf: "flex-start", marginTop: 10, paddingVertical: 8, paddingHorizontal: 12, borderRadius: RADIUS.sm, backgroundColor: COLORS.primarySoft },
++  foundationButtonText: { color: COLORS.primary, fontWeight: "800", fontSize: 12 },
++  totalBox: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 16 },
++  totalLabel: { fontSize: 17, fontWeight: "700", color: COLORS.text },
++  total: { fontSize: 22, fontWeight: "800", color: COLORS.primary },
++  primaryButton: { backgroundColor: COLORS.primary, padding: 16, borderRadius: RADIUS.md, alignItems: "center" },
++  primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
++  secondaryButton: { marginTop: 16, borderWidth: 1, borderColor: COLORS.primary, borderRadius: RADIUS.md, paddingVertical: 10, paddingHorizontal: 16 },
++  secondaryButtonText: { color: COLORS.primary, fontWeight: "800" },
++});
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/CatalogScreen.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/CatalogScreen.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/CatalogScreen.js	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/CatalogScreen.js	2026-09-18 22:18:04.883257703 +0000
+@@ -0,0 +1,75 @@
++import { useMemo, useState } from "react";
++import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
++import { COLORS, RADIUS, SPACING } from "../constants/theme";
++import { categories, products } from "../data/products";
++import SearchBar from "../components/SearchBar";
++import ProductCard from "../components/ProductCard";
++
++export default function CatalogScreen({ navigation }) {
++  const [search, setSearch] = useState("");
++  const [category, setCategory] = useState("Todos");
++
++  const visibleProducts = useMemo(() => {
++    const term = search.trim().toLowerCase();
++
++    return products.filter((product) => {
++      const matchesSearch =
++        !term ||
++        `${product.name} ${product.description} ${product.category}`
++          .toLowerCase()
++          .includes(term);
++      const matchesCategory = category === "Todos" || product.category === category;
++      return matchesSearch && matchesCategory;
++    });
++  }, [search, category]);
++
++  return (
++    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
++      <SearchBar value={search} onChangeText={setSearch} />
++
++      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categories}>
++        {categories.map((item) => {
++          const selected = item === category;
++          return (
++            <Pressable
++              key={item}
++              style={[styles.category, selected && styles.categorySelected]}
++              onPress={() => setCategory(item)}
++            >
++              <Text style={[styles.categoryText, selected && styles.categoryTextSelected]}>{item}</Text>
++            </Pressable>
++          );
++        })}
++      </ScrollView>
++
++      <View style={styles.headerRow}>
++        <Text style={styles.title}>Productos</Text>
++        <Text style={styles.count}>{visibleProducts.length} resultados</Text>
++      </View>
++
++      <View style={styles.grid}>
++        {visibleProducts.map((product) => (
++          <ProductCard
++            key={product.id}
++            product={product}
++            onPress={() => navigation.navigate("Product", { productId: product.id })}
++          />
++        ))}
++      </View>
++    </ScrollView>
++  );
++}
++
++const styles = StyleSheet.create({
++  screen: { flex: 1, backgroundColor: COLORS.background },
++  content: { padding: SPACING.md, paddingBottom: 40 },
++  categories: { gap: 8, paddingVertical: 14 },
++  category: { paddingVertical: 8, paddingHorizontal: 13, borderRadius: RADIUS.lg, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border },
++  categorySelected: { backgroundColor: COLORS.primarySoft, borderColor: COLORS.primary },
++  categoryText: { color: COLORS.textSecondary, fontWeight: "700", fontSize: 12 },
++  categoryTextSelected: { color: COLORS.primary },
++  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
++  title: { fontSize: 22, fontWeight: "800", color: COLORS.text },
++  count: { fontSize: 12, color: COLORS.textSecondary },
++  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
++});
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/CheckoutScreen.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/CheckoutScreen.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/CheckoutScreen.js	2026-09-07 23:36:03.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/CheckoutScreen.js	2026-09-18 22:17:24.572307741 +0000
+@@ -1,55 +1,63 @@
+-import React from 'react';
+-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+-import { COLORS } from '../constants/theme';
+-import { products } from '../data/products';
+-
+-export default function CheckoutScreen({ route, navigation }) {
+-  const productId = route.params?.productId || "1";
+-  const product = products.find((p) => p.id === productId);
+-
+-  const handleConfirmar = () => {
+-    navigation.navigate("Confirmation");
+-  };
++import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
++import { COLORS, RADIUS, SPACING } from "../constants/theme";
++import { foundations } from "../data/foundations";
++import { useCart } from "../context/CartContext";
+ 
+-  return (
+-    <View style={styles.container}>
+-      <Text style={styles.titulo}>Finalizar donación</Text>
++export default function CheckoutScreen({ navigation }) {
++  const { cart, totalPrice } = useCart();
+ 
+-      <View style={styles.card}>
+-        <Text style={styles.nombre}>{product.name}</Text>
+-        <View style={styles.filaTotal}>
+-          <Text style={styles.tituloTotal}>Total</Text>
+-          <Text style={styles.montoTotal}>${product.price}</Text>
+-        </View>
++  return (
++    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
++      <Text style={styles.title}>Resumen de la donación</Text>
++      <Text style={styles.subtitle}>Revisá los productos y sus destinos.</Text>
++
++      {cart.map((item) => {
++        const foundation = foundations.find((f) => f.id === item.foundationId);
++        return (
++          <View key={item.product.id} style={styles.card}>
++            <Text style={styles.productName}>{item.product.name}</Text>
++            <Text style={styles.detail}>Cantidad: {item.quantity}</Text>
++            <Text style={styles.detail}>Destino: {foundation?.name || "Sin seleccionar"}</Text>
++            <Text style={styles.price}>
++              ${(item.product.price * item.quantity).toLocaleString("es-AR")}
++            </Text>
++          </View>
++        );
++      })}
++
++      <View style={styles.paymentCard}>
++        <Text style={styles.paymentTitle}>Método de pago</Text>
++        <Text style={styles.detail}>Tarjeta de crédito/débito</Text>
++        <Text style={styles.note}>Pago simulado para esta etapa del proyecto.</Text>
+       </View>
+ 
+-      <View style={styles.card}>
+-        <Text style={styles.subtitulo}>Método de pago</Text>
+-        <Text style={styles.dato}>Tarjeta de crédito/débito</Text>
+-        <Text style={styles.aviso}>Pago simulado para esta versión del prototipo</Text>
++      <View style={styles.totalRow}>
++        <Text style={styles.totalLabel}>Total</Text>
++        <Text style={styles.total}>${totalPrice.toLocaleString("es-AR")}</Text>
+       </View>
+ 
+-      <TouchableOpacity style={styles.boton} onPress={handleConfirmar}>
+-        <Text style={styles.textoBoton}>Confirmar donación</Text>
+-      </TouchableOpacity>
+-    </View>
++      <Pressable style={styles.button} onPress={() => navigation.replace("Confirmation")}>
++        <Text style={styles.buttonText}>Confirmar donación</Text>
++      </Pressable>
++    </ScrollView>
+   );
+ }
+ 
+ const styles = StyleSheet.create({
+-  container: { flex: 1, padding: 20, justifyContent: 'center', backgroundColor: COLORS.background },
+-  titulo: { fontSize: 26, fontWeight: 'bold', marginBottom: 20, color: COLORS.text },
+-  card: {
+-    backgroundColor: COLORS.surface, borderRadius: 16, padding: 20, marginBottom: 16,
+-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
+-  },
+-  nombre: { fontSize: 18, fontWeight: '700', marginBottom: 12, color: COLORS.text },
+-  filaTotal: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+-  tituloTotal: { fontSize: 16, fontWeight: 'bold', color: COLORS.text },
+-  montoTotal: { fontSize: 22, fontWeight: 'bold', color: COLORS.primary },
+-  subtitulo: { fontSize: 16, fontWeight: '600', marginBottom: 8, color: COLORS.text },
+-  dato: { fontSize: 15, marginBottom: 8, color: COLORS.textSecondary },
+-  aviso: { fontSize: 13, fontStyle: 'italic', color: COLORS.textSecondary },
+-  boton: { backgroundColor: COLORS.primary, padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 8 },
+-  textoBoton: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },
+-});
+\ No newline at end of file
++  screen: { flex: 1, backgroundColor: COLORS.background },
++  content: { padding: SPACING.md, paddingBottom: 36 },
++  title: { fontSize: 24, fontWeight: "800", color: COLORS.text },
++  subtitle: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4, marginBottom: 20 },
++  card: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 15, marginBottom: 10 },
++  productName: { fontSize: 15, fontWeight: "800", color: COLORS.text },
++  detail: { fontSize: 13, color: COLORS.textSecondary, marginTop: 5 },
++  price: { fontSize: 16, fontWeight: "800", color: COLORS.primary, marginTop: 8 },
++  paymentCard: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 15, marginTop: 8 },
++  paymentTitle: { fontSize: 15, fontWeight: "800", color: COLORS.text },
++  note: { fontSize: 11, color: COLORS.textSecondary, marginTop: 8 },
++  totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 20 },
++  totalLabel: { fontSize: 17, fontWeight: "700", color: COLORS.text },
++  total: { fontSize: 23, fontWeight: "800", color: COLORS.primary },
++  button: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 16, alignItems: "center" },
++  buttonText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16 },
++});
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/ConfirmationScreen.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/ConfirmationScreen.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/ConfirmationScreen.js	2026-09-07 23:36:03.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/ConfirmationScreen.js	2026-09-18 22:17:24.574206166 +0000
+@@ -1,49 +1,40 @@
+-import React from 'react';
+-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+-import { COLORS } from '../constants/theme';
++import { Pressable, StyleSheet, Text, View } from "react-native";
++import { COLORS, RADIUS, SPACING } from "../constants/theme";
++import { useCart } from "../context/CartContext";
+ 
+ export default function ConfirmationScreen({ navigation }) {
+-  const handleVolver = () => {
+-    navigation.navigate("Home");
++  const { clearCart } = useCart();
++
++  const handleFinish = () => {
++    clearCart();
++    navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+   };
+ 
+   return (
+-    <View style={styles.container}>
++    <View style={styles.screen}>
+       <View style={styles.card}>
+-        <View style={styles.iconoCirculo}>
+-          <Text style={styles.icono}>✓</Text>
++        <View style={styles.iconCircle}>
++          <Text style={styles.icon}>✓</Text>
+         </View>
+-
+-        <Text style={styles.titulo}>¡Gracias por tu donación!</Text>
+-
+-        <Text style={styles.dato}>
+-          Tu aporte será destinado a la Fundación Juguemos y Caminemos Juntos.
++        <Text style={styles.title}>¡Gracias por tu donación!</Text>
++        <Text style={styles.text}>
++          La donación fue confirmada. En la próxima etapa este movimiento quedará guardado en la base de datos.
+         </Text>
+-
+-        <View style={styles.estadoContainer}>
+-          <Text style={styles.estado}>Donación confirmada</Text>
+-        </View>
+       </View>
+-
+-      <TouchableOpacity style={styles.boton} onPress={handleVolver}>
+-        <Text style={styles.textoBoton}>Volver al inicio</Text>
+-      </TouchableOpacity>
++      <Pressable style={styles.button} onPress={handleFinish}>
++        <Text style={styles.buttonText}>Volver al inicio</Text>
++      </Pressable>
+     </View>
+   );
+ }
+ 
+ const styles = StyleSheet.create({
+-  container: { flex: 1, padding: 20, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background },
+-  card: {
+-    backgroundColor: COLORS.surface, borderRadius: 16, padding: 30, alignItems: 'center', width: '100%', marginBottom: 24,
+-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
+-  },
+-  iconoCirculo: { width: 64, height: 64, borderRadius: 32, backgroundColor: COLORS.success, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+-  icono: { fontSize: 32, color: COLORS.surface, fontWeight: 'bold' },
+-  titulo: { fontSize: 22, fontWeight: 'bold', marginBottom: 12, color: COLORS.text, textAlign: 'center' },
+-  dato: { fontSize: 15, marginBottom: 20, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 21 },
+-  estadoContainer: { backgroundColor: COLORS.background, paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20 },
+-  estado: { fontSize: 14, fontWeight: 'bold', color: COLORS.success },
+-  boton: { backgroundColor: COLORS.primary, padding: 15, borderRadius: 8, alignItems: 'center', width: '100%' },
+-  textoBoton: { color: COLORS.surface, fontSize: 16, fontWeight: 'bold' },
+-});
+\ No newline at end of file
++  screen: { flex: 1, backgroundColor: COLORS.background, padding: SPACING.lg, justifyContent: "center" },
++  card: { backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, padding: 28, alignItems: "center", borderWidth: 1, borderColor: COLORS.border },
++  iconCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: COLORS.success, alignItems: "center", justifyContent: "center", marginBottom: 16 },
++  icon: { color: "#FFFFFF", fontSize: 34, fontWeight: "800" },
++  title: { fontSize: 23, fontWeight: "800", color: COLORS.text, textAlign: "center" },
++  text: { fontSize: 14, lineHeight: 21, color: COLORS.textSecondary, textAlign: "center", marginTop: 10 },
++  button: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 16, alignItems: "center", marginTop: 18 },
++  buttonText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16 },
++});
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/DonationsScreen.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/DonationsScreen.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/DonationsScreen.js	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/DonationsScreen.js	2026-09-18 22:17:24.575820185 +0000
+@@ -0,0 +1,39 @@
++import { Pressable, StyleSheet, Text, View } from "react-native";
++import { COLORS, RADIUS, SPACING } from "../constants/theme";
++import BottomNav from "../components/BottomNav";
++
++export default function DonationsScreen({ navigation }) {
++  return (
++    <View style={styles.screen}>
++      <View style={styles.content}>
++        <Text style={styles.title}>Mis donaciones</Text>
++        <Text style={styles.subtitle}>
++          Esta pantalla quedará conectada al usuario autenticado y a Supabase.
++        </Text>
++
++        <View style={styles.empty}>
++          <Text style={styles.emptyTitle}>Todavía no hay historial</Text>
++          <Text style={styles.emptyText}>
++            Facundo y Nicolás completarán esta parte al incorporar autenticación y persistencia.
++          </Text>
++          <Pressable style={styles.button} onPress={() => navigation.navigate("Home")}>
++            <Text style={styles.buttonText}>Explorar productos</Text>
++          </Pressable>
++        </View>
++      </View>
++      <BottomNav navigation={navigation} active="Donations" />
++    </View>
++  );
++}
++
++const styles = StyleSheet.create({
++  screen: { flex: 1, backgroundColor: COLORS.background, paddingTop: 46 },
++  content: { flex: 1, padding: SPACING.md },
++  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
++  subtitle: { fontSize: 13, color: COLORS.textSecondary, marginTop: 5, marginBottom: 20 },
++  empty: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 22, alignItems: "center" },
++  emptyTitle: { fontSize: 17, fontWeight: "800", color: COLORS.text },
++  emptyText: { fontSize: 13, color: COLORS.textSecondary, lineHeight: 19, textAlign: "center", marginTop: 7 },
++  button: { borderWidth: 1, borderColor: COLORS.primary, borderRadius: RADIUS.md, paddingVertical: 10, paddingHorizontal: 16, marginTop: 16 },
++  buttonText: { color: COLORS.primary, fontWeight: "800" },
++});
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/FoundationScreen.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/FoundationScreen.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/FoundationScreen.js	2026-09-07 23:36:03.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/FoundationScreen.js	2026-09-18 22:17:24.566914554 +0000
+@@ -1,104 +1,63 @@
+-import React from 'react';
+-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+-import { products } from '../data/products';
+-import { COLORS } from '../constants/theme';
+-
+-export default function FoundationScreen({ navigation }) {
+-  const renderProduct = ({ item }) => (
+-    <View style={styles.card}>
+-      <Text style={styles.productName}>{item.name}</Text>
+-      <Text style={styles.productPrice}>${item.price}</Text>
+-      
+-      <TouchableOpacity
+-        style={styles.button}
+-        onPress={() => navigation.navigate("Product", { productId: item.id })}
+-      >
+-        <Text style={styles.buttonText}>Ver producto</Text>
+-      </TouchableOpacity>
+-    </View>
+-  );
++import { ScrollView, StyleSheet, Text, View } from "react-native";
++import { COLORS, RADIUS, SPACING } from "../constants/theme";
++import { foundations } from "../data/foundations";
++import { products } from "../data/products";
++import ProductCard from "../components/ProductCard";
++
++export default function FoundationScreen({ route, navigation }) {
++  const foundationId = route.params?.foundationId || foundations[0]?.id;
++  const foundation = foundations.find((item) => item.id === foundationId);
++
++  if (!foundation) {
++    return (
++      <View style={styles.center}>
++        <Text>Fundación no encontrada.</Text>
++      </View>
++    );
++  }
+ 
+   return (
+-    <View style={styles.container}>
+-      <Text style={styles.title}>Fundación Juguemos y Caminemos Juntos</Text>
+-      <Text style={styles.subtitle}>La Casita del Milagro</Text>
+-      <Text style={styles.description}>
+-        Espacio dedicado a brindar apoyo, contención y oportunidades a niños y familias de la comunidad.
+-      </Text>
++    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
++      <View style={styles.hero}>
++        <View style={styles.logo}>
++          <Text style={styles.logoText}>{foundation.shortName}</Text>
++        </View>
++        <Text style={styles.title}>{foundation.name}</Text>
++        <Text style={styles.home}>{foundation.home}</Text>
++        <Text style={styles.location}>{foundation.location}</Text>
++      </View>
+ 
+-      <Text style={styles.sectionTitle}>Necesidades actuales</Text>
++      <Text style={styles.description}>{foundation.description}</Text>
++      <Text style={styles.sectionTitle}>Necesidades publicadas</Text>
++      <Text style={styles.note}>
++        Por ahora se utilizan productos locales. Esta sección quedará preparada para Supabase.
++      </Text>
+ 
+-      <FlatList
+-        data={products}
+-        keyExtractor={(item) => item.id.toString()}
+-        renderItem={renderProduct}
+-        contentContainerStyle={styles.listContainer}
+-      />
+-    </View>
++      <View style={styles.grid}>
++        {products.map((product) => (
++          <ProductCard
++            key={product.id}
++            product={product}
++            onPress={() => navigation.navigate("Product", { productId: product.id })}
++          />
++        ))}
++      </View>
++    </ScrollView>
+   );
+ }
+ 
+ const styles = StyleSheet.create({
+-  container: {
+-    flex: 1,
+-    padding: 16,
+-    backgroundColor: COLORS?.background || '#FFF9F3',
+-  },
+-  title: {
+-    fontSize: 20,
+-    fontWeight: 'bold',
+-    color: COLORS?.text || '#262626',
+-    marginBottom: 4,
+-  },
+-  subtitle: {
+-    fontSize: 14,
+-    fontWeight: '600',
+-    color: COLORS?.primary || '#F2A65A',
+-    marginBottom: 8,
+-  },
+-  description: {
+-    fontSize: 12,
+-    color: COLORS?.textSecondary || '#666666',
+-    marginBottom: 16,
+-  },
+-  sectionTitle: {
+-    fontSize: 16,
+-    fontWeight: 'bold',
+-    color: COLORS?.text || '#262626',
+-    marginBottom: 8,
+-  },
+-  listContainer: {
+-    paddingBottom: 16,
+-  },
+-  card: {
+-    backgroundColor: COLORS?.surface || '#FFFFFF',
+-    padding: 16,
+-    borderRadius: 8,
+-    marginBottom: 8,
+-    borderWidth: 1,
+-    borderColor: '#E2E8F0',
+-  },
+-  productName: {
+-    fontSize: 16,
+-    fontWeight: 'bold',
+-    color: COLORS?.text || '#262626',
+-  },
+-  productPrice: {
+-    fontSize: 14,
+-    color: COLORS?.textSecondary || '#666666',
+-    marginVertical: 4,
+-  },
+-  button: {
+-    backgroundColor: COLORS?.primary || '#F2A65A',
+-    paddingVertical: 8,
+-    paddingHorizontal: 16,
+-    borderRadius: 4,
+-    alignItems: 'center',
+-    marginTop: 4,
+-  },
+-  buttonText: {
+-    color: '#FFFFFF',
+-    fontWeight: 'bold',
+-    fontSize: 14,
+-  },
+-});
+\ No newline at end of file
++  screen: { flex: 1, backgroundColor: COLORS.background },
++  content: { padding: SPACING.md, paddingBottom: 40 },
++  center: { flex: 1, alignItems: "center", justifyContent: "center" },
++  hero: { backgroundColor: COLORS.surface, padding: 18, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: COLORS.border },
++  logo: { width: 58, height: 58, borderRadius: 29, backgroundColor: COLORS.primarySoft, alignItems: "center", justifyContent: "center", marginBottom: 12 },
++  logoText: { fontSize: 18, fontWeight: "800", color: COLORS.primary },
++  title: { fontSize: 22, fontWeight: "800", color: COLORS.text },
++  home: { fontSize: 14, fontWeight: "700", color: COLORS.secondary, marginTop: 5 },
++  location: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4 },
++  description: { fontSize: 14, lineHeight: 21, color: COLORS.text, marginTop: 18 },
++  sectionTitle: { fontSize: 18, fontWeight: "800", color: COLORS.text, marginTop: 24 },
++  note: { fontSize: 12, color: COLORS.textSecondary, marginTop: 4, marginBottom: 12 },
++  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
++});
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/FoundationsScreen.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/FoundationsScreen.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/FoundationsScreen.js	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/FoundationsScreen.js	2026-09-18 22:17:24.565020195 +0000
+@@ -0,0 +1,34 @@
++import { StyleSheet, Text, View, ScrollView } from "react-native";
++import { COLORS, SPACING } from "../constants/theme";
++import { foundations } from "../data/foundations";
++import BottomNav from "../components/BottomNav";
++import FoundationCard from "../components/FoundationCard";
++
++export default function FoundationsScreen({ navigation }) {
++  return (
++    <View style={styles.screen}>
++      <ScrollView contentContainerStyle={styles.content}>
++        <Text style={styles.title}>Fundaciones</Text>
++        <Text style={styles.subtitle}>
++          Conocé las organizaciones que participan de Pilar de Sonrisas.
++        </Text>
++
++        {foundations.map((foundation) => (
++          <FoundationCard
++            key={foundation.id}
++            foundation={foundation}
++            onPress={() => navigation.navigate("Foundation", { foundationId: foundation.id })}
++          />
++        ))}
++      </ScrollView>
++      <BottomNav navigation={navigation} active="Foundations" />
++    </View>
++  );
++}
++
++const styles = StyleSheet.create({
++  screen: { flex: 1, backgroundColor: COLORS.background, paddingTop: 46 },
++  content: { padding: SPACING.md },
++  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
++  subtitle: { fontSize: 14, color: COLORS.textSecondary, marginTop: 5, marginBottom: 22 },
++});
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/HomeScreen.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/HomeScreen.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/HomeScreen.js	2026-09-07 23:36:03.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/HomeScreen.js	2026-09-18 22:18:05.552054359 +0000
+@@ -1,109 +1,76 @@
+-
+-import {
+-  View,
+-  Text,
+-  Pressable,
+-  StyleSheet,
+-} from "react-native";
+-import { COLORS } from "../constants/theme";
++import { useMemo, useState } from "react";
++import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
++import { COLORS, SPACING } from "../constants/theme";
++import { products } from "../data/products";
++import { foundations } from "../data/foundations";
++import BottomNav from "../components/BottomNav";
++import SearchBar from "../components/SearchBar";
++import ProductCard from "../components/ProductCard";
++import FoundationCard from "../components/FoundationCard";
+ 
+ export default function HomeScreen({ navigation }) {
++  const [search, setSearch] = useState("");
++
++  const visibleProducts = useMemo(() => {
++    const term = search.trim().toLowerCase();
++    if (!term) return products;
++
++    return products.filter((product) =>
++      `${product.name} ${product.category}`.toLowerCase().includes(term)
++    );
++  }, [search]);
++
+   return (
+-    <View style={styles.container}>
+-      <Text style={styles.title}>Pilar de Sonrisas</Text>
++    <View style={styles.screen}>
++      <ScrollView contentContainerStyle={styles.content}>
++        <Text style={styles.brand}>Pilar de Sonrisas</Text>
++        <Text style={styles.subtitle}>Transformá una compra en una ayuda concreta.</Text>
++
++        <SearchBar value={search} onChangeText={setSearch} />
++
++        <View style={styles.sectionHeader}>
++          <View>
++            <Text style={styles.sectionTitle}>Productos para donar</Text>
++            <Text style={styles.sectionHint}>Base visual - mejorar según Figma</Text>
++          </View>
++          <Pressable onPress={() => navigation.navigate("Catalog")}>
++            <Text style={styles.seeAll}>Ver todos</Text>
++          </Pressable>
++        </View>
++
++        <View style={styles.grid}>
++          {visibleProducts.map((product) => (
++            <ProductCard
++              key={product.id}
++              product={product}
++              onPress={() => navigation.navigate("Product", { productId: product.id })}
++            />
++          ))}
++        </View>
++
++        <Text style={styles.sectionTitle}>Fundaciones</Text>
++        {foundations.map((foundation) => (
++          <FoundationCard
++            key={foundation.id}
++            foundation={foundation}
++            onPress={() => navigation.navigate("Foundation", { foundationId: foundation.id })}
++          />
++        ))}
++      </ScrollView>
+ 
+-      <Text style={styles.subtitle}>
+-        Convertí una compra en una ayuda concreta
+-      </Text>
+-
+-      <Pressable
+-        style={styles.foundationCard}
+-        onPress={() => navigation.navigate("Foundation")}
+-      >
+-        <Text style={styles.foundationTitle}>
+-          Fundación Juguemos y Caminemos Juntos
+-        </Text>
+-
+-        <Text style={styles.foundationText}>
+-          La Casita del Milagro
+-        </Text>
+-
+-        <Text style={styles.foundationAction}>
+-          Ver necesidades →
+-        </Text>
+-      </Pressable>
+-
+-      <Pressable
+-        style={styles.secondaryButton}
+-        onPress={() => navigation.navigate("Login")}
+-      >
+-        <Text style={styles.secondaryButtonText}>
+-          Acceso para fundaciones
+-        </Text>
+-      </Pressable>
++      <BottomNav navigation={navigation} active="Home" />
+     </View>
+   );
+ }
+ 
+ const styles = StyleSheet.create({
+-  container: {
+-    flex: 1,
+-    backgroundColor: COLORS.background,
+-    padding: 24,
+-    justifyContent: "center",
+-  },
+-
+-  title: {
+-    fontSize: 30,
+-    fontWeight: "bold",
+-    color: COLORS.text,
+-    marginBottom: 10,
+-  },
+-
+-  subtitle: {
+-    fontSize: 16,
+-    color: COLORS.textSecondary,
+-    marginBottom: 30,
+-  },
+-
+-  foundationCard: {
+-    backgroundColor: COLORS.surface,
+-    padding: 20,
+-    borderRadius: 14,
+-    marginBottom: 18,
+-    borderWidth: 1,
+-    borderColor: COLORS.primary,
+-  },
+-
+-  foundationTitle: {
+-    fontSize: 18,
+-    fontWeight: "bold",
+-    color: COLORS.text,
+-    marginBottom: 8,
+-  },
+-
+-  foundationText: {
+-    fontSize: 15,
+-    color: COLORS.textSecondary,
+-    marginBottom: 16,
+-  },
+-
+-  foundationAction: {
+-    fontSize: 15,
+-    fontWeight: "bold",
+-    color: COLORS.primary,
+-  },
+-
+-  secondaryButton: {
+-    padding: 16,
+-    borderWidth: 1,
+-    borderColor: COLORS.secondary,
+-    borderRadius: 10,
+-    alignItems: "center",
+-  },
+-
+-  secondaryButtonText: {
+-    color: COLORS.text,
+-    fontWeight: "bold",
+-  },
++  screen: { flex: 1, backgroundColor: COLORS.background, paddingTop: 46 },
++  content: { paddingHorizontal: SPACING.md, paddingBottom: SPACING.lg },
++  brand: { fontSize: 28, fontWeight: "800", color: COLORS.text },
++  subtitle: { fontSize: 14, color: COLORS.textSecondary, marginTop: 4, marginBottom: 18 },
++  sectionHeader: { marginTop: 24, marginBottom: 10, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
++  sectionTitle: { fontSize: 18, fontWeight: "800", color: COLORS.text, marginTop: 20, marginBottom: 10 },
++  sectionHint: { fontSize: 11, color: COLORS.textSecondary },
++  seeAll: { fontSize: 13, color: COLORS.primary, fontWeight: "800", marginBottom: 10 },
++  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
+ });
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/LoginScreen.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/LoginScreen.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/LoginScreen.js	2026-09-07 23:36:03.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/LoginScreen.js	2026-09-18 22:17:24.578996033 +0000
+@@ -1,35 +1,36 @@
+ import { useState } from "react";
+-import {
+-  View,
+-  Text,
+-  TextInput,
+-  Pressable,
+-  StyleSheet,
+-  Alert,
+-} from "react-native";
+-import { COLORS } from "../constants/theme";
++import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
++import { COLORS, RADIUS, SPACING } from "../constants/theme";
+ 
+-export default function LoginScreen({ navigation }) {
++export default function LoginScreen({ route, navigation }) {
++  const userType = route.params?.userType || "donor";
++  const isFoundation = userType === "foundation";
+   const [email, setEmail] = useState("");
+   const [password, setPassword] = useState("");
+ 
+   const handleLogin = () => {
+     if (!email.trim() || !password.trim()) {
+-      Alert.alert("Datos incompletos", "Ingresá tu email y contraseña.");
++      Alert.alert("Datos incompletos", "Ingresá email y contraseña.");
+       return;
+     }
+ 
+-    // Login simulado mientras se desarrolla.
+-    // Nicolás reemplaza esta acción por Firebase Auth al integrar.
+-    navigation.navigate("FoundationPanel");
++    // Autenticación simulada. Facundo dejará la interfaz final y Nicolás conectará Supabase Auth.
++    if (isFoundation) {
++      navigation.replace("FoundationPanel");
++      return;
++    }
++
++    Alert.alert("Ingreso simulado", "La autenticación real se conectará con Supabase.");
++    navigation.navigate("Account");
+   };
+ 
+   return (
+-    <View style={styles.container}>
+-      <Text style={styles.title}>Acceso para organizaciones</Text>
+-
++    <View style={styles.screen}>
++      <Text style={styles.title}>{isFoundation ? "Acceso para fundaciones" : "Iniciar sesión"}</Text>
+       <Text style={styles.subtitle}>
+-        Ingresá con la cuenta de tu organización para administrar tus datos
++        {isFoundation
++          ? "Ingresá con la cuenta de la organización."
++          : "Ingresá para finalizar donaciones y consultar tu historial."}
+       </Text>
+ 
+       <Text style={styles.label}>Email</Text>
+@@ -37,11 +38,10 @@
+         style={styles.input}
+         value={email}
+         onChangeText={setEmail}
+-        placeholder="fundacion@ejemplo.org"
+-        placeholderTextColor={COLORS.textSecondary}
+         keyboardType="email-address"
+         autoCapitalize="none"
+-        autoCorrect={false}
++        placeholder="nombre@correo.com"
++        placeholderTextColor={COLORS.textSecondary}
+       />
+ 
+       <Text style={styles.label}>Contraseña</Text>
+@@ -49,79 +49,31 @@
+         style={styles.input}
+         value={password}
+         onChangeText={setPassword}
+-        placeholder="••••••••"
+-        placeholderTextColor={COLORS.textSecondary}
+         secureTextEntry
++        placeholder="Contraseña"
++        placeholderTextColor={COLORS.textSecondary}
+       />
+ 
+       <Pressable style={styles.button} onPress={handleLogin}>
+         <Text style={styles.buttonText}>Ingresar</Text>
+       </Pressable>
+ 
+-      <Text style={styles.note}>
+-        Acceso reservado para fundaciones registradas
+-      </Text>
++      {!isFoundation && (
++        <Pressable onPress={() => navigation.navigate("Register")}>
++          <Text style={styles.link}>¿No tenés cuenta? Registrate</Text>
++        </Pressable>
++      )}
+     </View>
+   );
+ }
+ 
+ const styles = StyleSheet.create({
+-  container: {
+-    flex: 1,
+-    padding: 24,
+-    justifyContent: "center",
+-    backgroundColor: COLORS.background,
+-  },
+-
+-  title: {
+-    fontSize: 26,
+-    fontWeight: "bold",
+-    color: COLORS.text,
+-    marginBottom: 8,
+-  },
+-
+-  subtitle: {
+-    fontSize: 15,
+-    color: COLORS.textSecondary,
+-    marginBottom: 28,
+-  },
+-
+-  label: {
+-    fontSize: 14,
+-    fontWeight: "600",
+-    color: COLORS.text,
+-    marginBottom: 6,
+-  },
+-
+-  input: {
+-    backgroundColor: COLORS.surface,
+-    borderWidth: 1,
+-    borderColor: "#E0D8CE",
+-    borderRadius: 10,
+-    padding: 14,
+-    fontSize: 15,
+-    color: COLORS.text,
+-    marginBottom: 18,
+-  },
+-
+-  button: {
+-    backgroundColor: COLORS.primary,
+-    padding: 16,
+-    borderRadius: 10,
+-    alignItems: "center",
+-    marginTop: 8,
+-  },
+-
+-  buttonText: {
+-    fontWeight: "bold",
+-    fontSize: 16,
+-    color: COLORS.text,
+-  },
+-
+-  note: {
+-    fontSize: 12,
+-    color: COLORS.textSecondary,
+-    textAlign: "center",
+-    marginTop: 18,
+-  },
++  screen: { flex: 1, padding: SPACING.lg, justifyContent: "center", backgroundColor: COLORS.background },
++  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
++  subtitle: { fontSize: 14, lineHeight: 20, color: COLORS.textSecondary, marginTop: 6, marginBottom: 24 },
++  label: { fontSize: 13, fontWeight: "700", color: COLORS.text, marginBottom: 6 },
++  input: { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, padding: 14, fontSize: 15, color: COLORS.text, marginBottom: 16 },
++  button: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 15, alignItems: "center", marginTop: 4 },
++  buttonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
++  link: { color: COLORS.secondary, fontWeight: "700", textAlign: "center", marginTop: 18 },
+ });
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/ProductScreen.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/ProductScreen.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/ProductScreen.js	2026-09-07 23:36:03.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/ProductScreen.js	2026-09-18 22:17:24.568693073 +0000
+@@ -1,70 +1,61 @@
+-import React from 'react';
+-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+-import { products } from '../data/products';
+-import { COLORS } from '../constants/theme';
++import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
++import { products } from "../data/products";
++import { COLORS, RADIUS, SPACING } from "../constants/theme";
++import { useCart } from "../context/CartContext";
+ 
+ export default function ProductScreen({ route, navigation }) {
+   const { productId } = route.params || {};
+-  const product = products.find((p) => p.id === productId);
++  const product = products.find((item) => item.id === productId);
++  const { addToCart } = useCart();
+ 
+   if (!product) {
+     return (
+-      <View style={styles.container}>
++      <View style={styles.center}>
+         <Text style={styles.title}>Producto no encontrado</Text>
+       </View>
+     );
+   }
+ 
++  const handleAdd = () => {
++    addToCart(product);
++    Alert.alert("Producto agregado", "Se agregó al carrito de donaciones.", [
++      { text: "Seguir mirando" },
++      { text: "Ver carrito", onPress: () => navigation.navigate("Cart") },
++    ]);
++  };
++
+   return (
+-    <View style={styles.container}>
++    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
++      <View style={styles.imagePlaceholder}>
++        <Text style={styles.emoji}>{product.emoji || "🎁"}</Text>
++      </View>
++      <Text style={styles.category}>{product.category}</Text>
+       <Text style={styles.title}>{product.name}</Text>
+-      <Text style={styles.price}>${product.price}</Text>
++      <Text style={styles.price}>${product.price.toLocaleString("es-AR")}</Text>
+       <Text style={styles.description}>{product.description}</Text>
+ 
+-      <TouchableOpacity
+-        style={styles.button}
+-        onPress={() => navigation.navigate("Cart", { productId: product.id })}
+-      >
+-        <Text style={styles.buttonText}>Donar este producto</Text>
+-      </TouchableOpacity>
+-    </View>
++      <Pressable style={styles.button} onPress={handleAdd}>
++        <Text style={styles.buttonText}>Agregar al carrito</Text>
++      </Pressable>
++
++      <Text style={styles.note}>
++        La fundación destinataria se selecciona después, desde el carrito.
++      </Text>
++    </ScrollView>
+   );
+ }
+ 
+ const styles = StyleSheet.create({
+-  container: {
+-    flex: 1,
+-    padding: 16,
+-    backgroundColor: COLORS?.background || '#FFF9F3',
+-  },
+-  title: {
+-    fontSize: 24,
+-    fontWeight: 'bold',
+-    color: COLORS?.text || '#262626',
+-    marginBottom: 4,
+-  },
+-  price: {
+-    fontSize: 20,
+-    fontWeight: 'bold',
+-    color: COLORS?.primary || '#F2A65A',
+-    marginBottom: 16,
+-  },
+-  description: {
+-    fontSize: 14,
+-    color: COLORS?.textSecondary || '#666666',
+-    marginBottom: 24,
+-    lineHeight: 20,
+-  },
+-  button: {
+-    backgroundColor: COLORS?.success || '#5DA271',
+-    paddingVertical: 12,
+-    paddingHorizontal: 16,
+-    borderRadius: 8,
+-    alignItems: 'center',
+-  },
+-  buttonText: {
+-    color: '#FFFFFF',
+-    fontWeight: 'bold',
+-    fontSize: 16,
+-  },
+-});
+\ No newline at end of file
++  screen: { flex: 1, backgroundColor: COLORS.background },
++  content: { padding: SPACING.md },
++  center: { flex: 1, alignItems: "center", justifyContent: "center" },
++  imagePlaceholder: { height: 230, borderRadius: RADIUS.lg, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, alignItems: "center", justifyContent: "center", marginBottom: 18 },
++  emoji: { fontSize: 78 },
++  category: { fontSize: 12, color: COLORS.secondary, fontWeight: "700" },
++  title: { fontSize: 26, fontWeight: "800", color: COLORS.text, marginTop: 4 },
++  price: { fontSize: 24, fontWeight: "800", color: COLORS.primary, marginTop: 10 },
++  description: { fontSize: 15, lineHeight: 22, color: COLORS.textSecondary, marginTop: 16 },
++  button: { backgroundColor: COLORS.primary, padding: 16, borderRadius: RADIUS.md, alignItems: "center", marginTop: 26 },
++  buttonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
++  note: { fontSize: 12, color: COLORS.textSecondary, textAlign: "center", marginTop: 12 },
++});
+diff -ruN '--exclude=.git' '--exclude=node_modules' /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/RegisterScreen.js /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/RegisterScreen.js
+--- /mnt/data/pilar_v2_work/aplicaciones-moviles-main/src/screens/RegisterScreen.js	1970-01-01 00:00:00.000000000 +0000
++++ /mnt/data/Pilar_de_Sonrisas_Base_V2/src/screens/RegisterScreen.js	2026-09-18 22:17:24.580750298 +0000
+@@ -0,0 +1,57 @@
++import { useState } from "react";
++import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput } from "react-native";
++import { COLORS, RADIUS, SPACING } from "../constants/theme";
++
++export default function RegisterScreen({ navigation }) {
++  const [name, setName] = useState("");
++  const [email, setEmail] = useState("");
++  const [password, setPassword] = useState("");
++  const [confirmPassword, setConfirmPassword] = useState("");
++
++  const handleRegister = () => {
++    if (!name.trim() || !email.trim() || !password.trim()) {
++      Alert.alert("Datos incompletos", "Completá todos los campos.");
++      return;
++    }
++
++    if (password !== confirmPassword) {
++      Alert.alert("Contraseñas diferentes", "Las contraseñas deben coincidir.");
++      return;
++    }
++
++    Alert.alert("Registro simulado", "El alta real se conectará con Supabase Auth.", [
++      { text: "Continuar", onPress: () => navigation.navigate("Account") },
++    ]);
++  };
++
++  return (
++    <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
++      <Text style={styles.title}>Crear cuenta</Text>
++      <Text style={styles.subtitle}>La cuenta de donante permitirá guardar y consultar las donaciones realizadas.</Text>
++
++      <Text style={styles.label}>Nombre</Text>
++      <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Nombre y apellido" placeholderTextColor={COLORS.textSecondary} />
++      <Text style={styles.label}>Email</Text>
++      <TextInput style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholder="nombre@correo.com" placeholderTextColor={COLORS.textSecondary} />
++      <Text style={styles.label}>Contraseña</Text>
++      <TextInput style={styles.input} value={password} onChangeText={setPassword} secureTextEntry placeholder="Contraseña" placeholderTextColor={COLORS.textSecondary} />
++      <Text style={styles.label}>Repetir contraseña</Text>
++      <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry placeholder="Repetir contraseña" placeholderTextColor={COLORS.textSecondary} />
++
++      <Pressable style={styles.button} onPress={handleRegister}>
++        <Text style={styles.buttonText}>Crear cuenta</Text>
++      </Pressable>
++    </ScrollView>
++  );
++}
++
++const styles = StyleSheet.create({
++  screen: { flex: 1, backgroundColor: COLORS.background },
++  content: { padding: SPACING.lg, paddingBottom: 40 },
++  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
++  subtitle: { fontSize: 14, lineHeight: 20, color: COLORS.textSecondary, marginTop: 6, marginBottom: 24 },
++  label: { fontSize: 13, fontWeight: "700", color: COLORS.text, marginBottom: 6 },
++  input: { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, padding: 14, fontSize: 15, color: COLORS.text, marginBottom: 16 },
++  button: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 15, alignItems: "center", marginTop: 8 },
++  buttonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
++});

@@ -1,35 +1,147 @@
 import { useState } from "react";
 import {
-  View,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
-  Pressable,
-  StyleSheet,
-  Alert,
+  View,
 } from "react-native";
-import { COLORS } from "../constants/theme";
+import { COLORS, RADIUS, SPACING } from "../constants/theme";
+import { supabase } from "../config/supabase";
 
-export default function LoginScreen({ navigation }) {
+const SOFT_BLUE = "#E8F0F7";
+
+export default function LoginScreen({ route, navigation }) {
+  const userType = route.params?.userType || "donor";
+  const returnTo = route.params?.returnTo || "Account";
+  const isFoundation = userType === "foundation";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
-  const handleLogin = () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert("Datos incompletos", "Ingresá tu email y contraseña.");
+  const resendConfirmation = async (cleanEmail = email.trim().toLowerCase()) => {
+    if (!cleanEmail) {
+      Alert.alert("Ingresá tu email", "Escribí el correo de tu cuenta para reenviar la confirmación.");
       return;
     }
 
-    // Login simulado mientras se desarrolla.
-    // Nicolás reemplaza esta acción por Firebase Auth al integrar.
-    navigation.navigate("FoundationPanel");
+    try {
+      setResending(true);
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: cleanEmail,
+      });
+
+      if (error) throw error;
+
+      Alert.alert(
+        "Email enviado",
+        "Te enviamos un nuevo correo de confirmación. Abrilo y después volvé a iniciar sesión."
+      );
+    } catch (error) {
+      Alert.alert(
+        "No se pudo reenviar",
+        error?.message || "Intentá nuevamente en unos minutos."
+      );
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail || !password.trim()) {
+      Alert.alert("Datos incompletos", "Ingresá email y contraseña.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
+
+      if (error) {
+        const code = error.code || "";
+        const message = (error.message || "").toLowerCase();
+
+        if (code === "email_not_confirmed" || message.includes("email not confirmed")) {
+          Alert.alert(
+            "Falta confirmar el email",
+            "Tu cuenta existe, pero todavía tenés que confirmar el correo antes de ingresar.",
+            [
+              { text: "Cancelar", style: "cancel" },
+              { text: "Reenviar email", onPress: () => resendConfirmation(cleanEmail) },
+            ]
+          );
+          return;
+        }
+
+        if (code === "invalid_credentials" || message.includes("invalid login credentials")) {
+          Alert.alert(
+            "No se pudo iniciar sesión",
+            "El email o la contraseña no coinciden. Si recreaste la cuenta, asegurate también de haber confirmado el nuevo email."
+          );
+          return;
+        }
+
+        Alert.alert("No se pudo iniciar sesión", error.message || "Intentá nuevamente.");
+        return;
+      }
+
+      if (isFoundation) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role, foundation_id")
+          .eq("id", data.user.id)
+          .single();
+
+        if (
+          profileError ||
+          !profile ||
+          !["foundation", "admin"].includes(profile.role) ||
+          (profile.role === "foundation" && !profile.foundation_id)
+        ) {
+          await supabase.auth.signOut();
+          Alert.alert(
+            "Acceso restringido",
+            "Esta cuenta no está habilitada como fundación."
+          );
+          return;
+        }
+
+        navigation.replace("FoundationPanel");
+        return;
+      }
+
+      navigation.navigate(returnTo);
+    } catch (error) {
+      Alert.alert("Error", error?.message || "Ocurrió un problema al iniciar sesión.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Acceso para organizaciones</Text>
-
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <Text style={styles.title}>
+        {isFoundation ? "Acceso para fundaciones" : "Bienvenido de nuevo"}
+      </Text>
       <Text style={styles.subtitle}>
-        Ingresá con la cuenta de tu organización para administrar tus datos
+        {isFoundation
+          ? "Ingresá con la cuenta de la organización."
+          : "Ingresá para consultar tus donaciones."}
       </Text>
 
       <Text style={styles.label}>Email</Text>
@@ -37,11 +149,12 @@ export default function LoginScreen({ navigation }) {
         style={styles.input}
         value={email}
         onChangeText={setEmail}
-        placeholder="fundacion@ejemplo.org"
-        placeholderTextColor={COLORS.textSecondary}
         keyboardType="email-address"
         autoCapitalize="none"
         autoCorrect={false}
+        placeholder="nombre@correo.com"
+        placeholderTextColor={COLORS.textSecondary}
+        editable={!loading && !resending}
       />
 
       <Text style={styles.label}>Contraseña</Text>
@@ -49,79 +162,112 @@ export default function LoginScreen({ navigation }) {
         style={styles.input}
         value={password}
         onChangeText={setPassword}
-        placeholder="••••••••"
-        placeholderTextColor={COLORS.textSecondary}
         secureTextEntry
+        placeholder="Contraseña"
+        placeholderTextColor={COLORS.textSecondary}
+        editable={!loading && !resending}
       />
 
-      <Pressable style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Ingresar</Text>
+      {!isFoundation && (
+        <Pressable onPress={() => resendConfirmation()} disabled={loading || resending}>
+          <Text style={styles.forgot}>
+            {resending ? "Reenviando..." : "¿No confirmaste tu cuenta? Reenviar email"}
+          </Text>
+        </Pressable>
+      )}
+
+      <Pressable
+        style={[styles.primaryButton, (loading || resending) && styles.disabledButton]}
+        onPress={handleLogin}
+        disabled={loading || resending}
+      >
+        <Text style={styles.primaryButtonText}>
+          {loading ? "Ingresando..." : "Ingresar"}
+        </Text>
       </Pressable>
 
-      <Text style={styles.note}>
-        Acceso reservado para fundaciones registradas
-      </Text>
-    </View>
+      {!isFoundation && (
+        <>
+          <Text style={styles.helper}>¿Todavía no tenés cuenta?</Text>
+
+          <Pressable
+            style={styles.secondaryButton}
+            onPress={() => navigation.navigate("Register", { returnTo })}
+            disabled={loading || resending}
+          >
+            <Text style={styles.secondaryButtonText}>Crear cuenta</Text>
+          </Pressable>
+
+          <View style={styles.separator}>
+            <View style={styles.separatorLine} />
+            <Text style={styles.separatorText}>o</Text>
+            <View style={styles.separatorLine} />
+          </View>
+
+          <Pressable
+            style={styles.foundationBox}
+            onPress={() => navigation.push("Login", { userType: "foundation" })}
+            disabled={loading || resending}
+          >
+            <Text style={styles.foundationTitle}>Acceso para fundaciones</Text>
+            <View style={styles.foundationRow}>
+              <Text style={styles.foundationText}>Ingresar como organización</Text>
+              <Text style={styles.foundationArrow}>›</Text>
+            </View>
+          </Pressable>
+        </>
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    justifyContent: "center",
-    backgroundColor: COLORS.background,
-  },
-
-  title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: COLORS.text,
-    marginBottom: 8,
-  },
-
-  subtitle: {
-    fontSize: 15,
-    color: COLORS.textSecondary,
-    marginBottom: 28,
-  },
-
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.text,
-    marginBottom: 6,
-  },
-
+  screen: { flex: 1, backgroundColor: COLORS.background },
+  content: { padding: SPACING.lg, paddingBottom: 40 },
+  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
+  subtitle: { fontSize: 14, lineHeight: 20, color: COLORS.textSecondary, marginTop: 6, marginBottom: 24 },
+  label: { fontSize: 13, fontWeight: "700", color: COLORS.text, marginBottom: 6 },
   input: {
     backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: "#E0D8CE",
-    borderRadius: 10,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.md,
     padding: 14,
     fontSize: 15,
     color: COLORS.text,
-    marginBottom: 18,
+    marginBottom: 16,
   },
-
-  button: {
+  forgot: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: COLORS.primary,
+    textAlign: "right",
+    marginBottom: 20,
+  },
+  primaryButton: {
     backgroundColor: COLORS.primary,
-    padding: 16,
-    borderRadius: 10,
+    borderRadius: RADIUS.md,
+    padding: 15,
     alignItems: "center",
-    marginTop: 8,
   },
-
-  buttonText: {
-    fontWeight: "bold",
-    fontSize: 16,
-    color: COLORS.text,
+  primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
+  disabledButton: { opacity: 0.6 },
+  helper: { fontSize: 13, color: COLORS.textSecondary, textAlign: "center", marginTop: 22 },
+  secondaryButton: {
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: RADIUS.md,
+    padding: 15,
+    alignItems: "center",
+    marginTop: 10,
   },
-
-  note: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    textAlign: "center",
-    marginTop: 18,
-  },
+  secondaryButtonText: { color: COLORS.primary, fontSize: 16, fontWeight: "800" },
+  separator: { flexDirection: "row", alignItems: "center", marginVertical: 24 },
+  separatorLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
+  separatorText: { fontSize: 12, color: COLORS.textSecondary, marginHorizontal: 12 },
+  foundationBox: { backgroundColor: SOFT_BLUE, borderRadius: RADIUS.md, padding: 18 },
+  foundationTitle: { fontSize: 15, fontWeight: "800", color: COLORS.secondary },
+  foundationRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 10 },
+  foundationText: { fontSize: 14, fontWeight: "700", color: COLORS.text },
+  foundationArrow: { fontSize: 24, color: COLORS.secondary },
 });

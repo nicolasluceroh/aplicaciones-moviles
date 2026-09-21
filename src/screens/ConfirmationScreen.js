@@ -1,91 +1,44 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
-import { COLORS } from '../constants/theme';
-import { useCart } from '../context/EstadoCarrito';
-import { foundations } from '../data/foundations';
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { COLORS, RADIUS, SPACING } from "../constants/theme";
 
-export default function ConfirmationScreen({ navigation }) {
-  const { lastOrder } = useCart();
+const formatPrice = (value) => `$${Number(value || 0).toLocaleString("es-AR")}`;
 
-  const nombreFundacion = (foundationId) =>
-    foundations.find((f) => f.id === foundationId)?.name ?? 'Sin asignar';
+export default function ConfirmationScreen({ route, navigation }) {
+  const donationId = route.params?.donationId;
+  const total = route.params?.total;
 
-  // Agrupar montos donados por fundación, para el resumen final
-  const resumenPorFundacion = React.useMemo(() => {
-    if (!lastOrder) return [];
-    const mapa = {};
-    lastOrder.items.forEach((item) => {
-      const key = item.foundationId;
-      const monto = item.price * item.quantity;
-      if (!mapa[key]) {
-        mapa[key] = { foundationId: key, total: 0 };
-      }
-      mapa[key].total += monto;
-    });
-    return Object.values(mapa);
-  }, [lastOrder]);
-
-  const handleVolverInicio = () => {
-    navigation.navigate('Home');
+  const handleHome = () => {
+    navigation.reset({ index: 0, routes: [{ name: "Home" }] });
   };
 
-  if (!lastOrder) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.titulo}>No hay donaciones recientes</Text>
-        <TouchableOpacity style={styles.boton} onPress={handleVolverInicio}>
-          <Text style={styles.textoBoton}>Volver al inicio</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  const handleHistory = () => {
+    navigation.reset({ index: 0, routes: [{ name: "Donations" }] });
+  };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.iconoContainer}>
-        <Text style={styles.icono}>✅</Text>
-      </View>
-
-      <Text style={styles.titulo}>¡Gracias por tu donación!</Text>
-      <Text style={styles.estado}>Donación confirmada</Text>
-
+    <View style={styles.screen}>
       <View style={styles.card}>
-        <Text style={styles.cardTitulo}>Fundaciones beneficiadas</Text>
-
-        <FlatList
-          data={resumenPorFundacion}
-          keyExtractor={(item) => String(item.foundationId)}
-          scrollEnabled={false}
-          renderItem={({ item }) => (
-            <View style={styles.filaFundacion}>
-              <Text style={styles.nombreFundacion}>
-                {nombreFundacion(item.foundationId)}
-              </Text>
-              <Text style={styles.montoFundacion}>
-                ${item.total.toFixed(2)}
-              </Text>
-            </View>
-          )}
-        />
-
-        <View style={styles.separador} />
-
-        <View style={styles.fila}>
-          <Text style={styles.etiqueta}>Productos donados</Text>
-          <Text style={styles.valor}>{lastOrder.totalItems}</Text>
+        <View style={styles.iconCircle}>
+          <Text style={styles.icon}>✓</Text>
         </View>
+        <Text style={styles.title}>¡Gracias por tu donación!</Text>
+        <Text style={styles.text}>
+          La donación quedó confirmada y guardada en tu cuenta.
+        </Text>
 
-        <View style={styles.filaTotal}>
-          <Text style={styles.tituloTotal}>Total donado</Text>
-          <Text style={styles.montoTotal}>
-            ${lastOrder.totalPrice.toFixed(2)}
-          </Text>
-        </View>
+        {!!total && <Text style={styles.total}>{formatPrice(total)}</Text>}
+        {!!donationId && (
+          <Text style={styles.id}>ID {String(donationId).slice(0, 8).toUpperCase()}</Text>
+        )}
       </View>
 
-      <TouchableOpacity style={styles.boton} onPress={handleVolverInicio}>
-        <Text style={styles.textoBoton}>Volver al inicio</Text>
-      </TouchableOpacity>
+      <Pressable style={styles.button} onPress={handleHistory}>
+        <Text style={styles.buttonText}>Ver mis donaciones</Text>
+      </Pressable>
+
+      <Pressable style={styles.secondaryButton} onPress={handleHome}>
+        <Text style={styles.secondaryButtonText}>Volver al inicio</Text>
+      </Pressable>
     </View>
   );
 }

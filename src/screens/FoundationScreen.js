@@ -1,104 +1,63 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { products } from '../data/products';
-import { COLORS } from '../constants/theme';
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { COLORS, RADIUS, SPACING } from "../constants/theme";
+import { foundations } from "../data/foundations";
+import { products } from "../data/products";
+import ProductCard from "../components/ProductCard";
 
-export default function FoundationScreen({ navigation }) {
-  const renderProduct = ({ item }) => (
-    <View style={styles.card}>
-      <Text style={styles.productName}>{item.name}</Text>
-      <Text style={styles.productPrice}>${item.price}</Text>
-      
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("Product", { productId: item.id })}
-      >
-        <Text style={styles.buttonText}>Ver producto</Text>
-      </TouchableOpacity>
-    </View>
-  );
+export default function FoundationScreen({ route, navigation }) {
+  const foundationId = route.params?.foundationId || foundations[0]?.id;
+  const foundation = foundations.find((item) => item.id === foundationId);
+
+  if (!foundation) {
+    return (
+      <View style={styles.center}>
+        <Text>Fundación no encontrada.</Text>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Fundación Juguemos y Caminemos Juntos</Text>
-      <Text style={styles.subtitle}>La Casita del Milagro</Text>
-      <Text style={styles.description}>
-        Espacio dedicado a brindar apoyo, contención y oportunidades a niños y familias de la comunidad.
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <View style={styles.hero}>
+        <View style={styles.logo}>
+          <Text style={styles.logoText}>{foundation.shortName}</Text>
+        </View>
+        <Text style={styles.title}>{foundation.name}</Text>
+        <Text style={styles.home}>{foundation.home}</Text>
+        <Text style={styles.location}>{foundation.location}</Text>
+      </View>
+
+      <Text style={styles.description}>{foundation.description}</Text>
+      <Text style={styles.sectionTitle}>Necesidades publicadas</Text>
+      <Text style={styles.note}>
+        Por ahora se utilizan productos locales. Esta sección quedará preparada para Supabase.
       </Text>
 
-      <Text style={styles.sectionTitle}>Necesidades actuales</Text>
-
-      <FlatList
-        data={products}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderProduct}
-        contentContainerStyle={styles.listContainer}
-      />
-    </View>
+      <View style={styles.grid}>
+        {products.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            onPress={() => navigation.navigate("Product", { productId: product.id })}
+          />
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: COLORS?.background || '#FFF9F3',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS?.text || '#262626',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS?.primary || '#F2A65A',
-    marginBottom: 8,
-  },
-  description: {
-    fontSize: 12,
-    color: COLORS?.textSecondary || '#666666',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS?.text || '#262626',
-    marginBottom: 8,
-  },
-  listContainer: {
-    paddingBottom: 16,
-  },
-  card: {
-    backgroundColor: COLORS?.surface || '#FFFFFF',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  productName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS?.text || '#262626',
-  },
-  productPrice: {
-    fontSize: 14,
-    color: COLORS?.textSecondary || '#666666',
-    marginVertical: 4,
-  },
-  button: {
-    backgroundColor: COLORS?.primary || '#F2A65A',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 4,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
+  screen: { flex: 1, backgroundColor: COLORS.background },
+  content: { padding: SPACING.md, paddingBottom: 40 },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  hero: { backgroundColor: COLORS.surface, padding: 18, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: COLORS.border },
+  logo: { width: 58, height: 58, borderRadius: 29, backgroundColor: COLORS.primarySoft, alignItems: "center", justifyContent: "center", marginBottom: 12 },
+  logoText: { fontSize: 18, fontWeight: "800", color: COLORS.primary },
+  title: { fontSize: 22, fontWeight: "800", color: COLORS.text },
+  home: { fontSize: 14, fontWeight: "700", color: COLORS.secondary, marginTop: 5 },
+  location: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4 },
+  description: { fontSize: 14, lineHeight: 21, color: COLORS.text, marginTop: 18 },
+  sectionTitle: { fontSize: 18, fontWeight: "800", color: COLORS.text, marginTop: 24 },
+  note: { fontSize: 12, color: COLORS.textSecondary, marginTop: 4, marginBottom: 12 },
+  grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
 });

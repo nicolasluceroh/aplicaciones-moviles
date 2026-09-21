@@ -1,21 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  Modal,
   Pressable,
-} from 'react-native';
-import { COLORS } from '../constants/theme';
-import { useCart } from '../context/EstadoCarrito';
-import { foundations } from '../data/foundations'; // [{ id, name }, ...]
+  ScrollView,
+  Modal,
+} from "react-native";
+import { COLORS, RADIUS, SPACING } from "../constants/theme";
+import { foundations } from "../data/foundations";
+import { useCart } from "../context/CartContext";
+import BottomNav from "../components/BottomNav";
 
 export default function CartScreen({ navigation }) {
   const {
     cart,
-    totalItems,
     totalPrice,
     hasMissingFoundation,
     increaseQuantity,
@@ -38,118 +37,120 @@ export default function CartScreen({ navigation }) {
     setActiveProductId(null);
   };
 
-  const handleContinuar = () => {
-    if (hasMissingFoundation) return;
-    navigation.navigate('Checkout');
-  };
-
-  if (!cart || cart.length === 0) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Tu carrito está vacío</Text>
-        <TouchableOpacity
-          style={styles.botonSecundario}
-          onPress={() => navigation.navigate('Home')}
-        >
-          <Text style={styles.textoBotonSecundario}>Ver productos</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  const renderItem = ({ item }) => {
-    const fundacionAsignada = foundations.find(
-      (f) => f.id === item.foundationId
-    );
-
-    return (
-      <View style={styles.card}>
-        <Text style={styles.nombre}>{item.name}</Text>
-
-        <View style={styles.filaCantidad}>
-          <Text style={styles.etiqueta}>Cantidad</Text>
-          <View style={styles.stepper}>
-            <TouchableOpacity
-              style={styles.stepperBtn}
-              onPress={() => decreaseQuantity(item.id)}
-            >
-              <Text style={styles.stepperTexto}>−</Text>
-            </TouchableOpacity>
-            <Text style={styles.stepperValor}>{item.quantity}</Text>
-            <TouchableOpacity
-              style={styles.stepperBtn}
-              onPress={() => increaseQuantity(item.id)}
-            >
-              <Text style={styles.stepperTexto}>+</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.fila}>
-          <Text style={styles.etiqueta}>Subtotal</Text>
-          <Text style={styles.valor}>
-            ${(item.price * item.quantity).toFixed(2)}
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          style={styles.fundacionSelector}
-          onPress={() => abrirSelectorFundacion(item.id)}
-        >
-          <Text style={styles.etiqueta}>Fundación</Text>
-          <Text
-            style={[
-              styles.valor,
-              !fundacionAsignada && styles.valorAdvertencia,
-            ]}
-          >
-            {fundacionAsignada ? fundacionAsignada.name : 'Seleccionar ⚠️'}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.eliminarBtn}
-          onPress={() => removeFromCart(item.id)}
-        >
-          <Text style={styles.eliminarTexto}>Eliminar producto</Text>
-        </TouchableOpacity>
-      </View>
-    );
+  const handleContinue = () => {
+    if (cart.length === 0 || hasMissingFoundation) return;
+    navigation.navigate("Checkout");
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Tu carrito ({totalItems})</Text>
+    <View style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.title}>Tu carrito</Text>
+        <Text style={styles.subtitle}>
+          Acá se define a qué fundación se destina cada producto.
+        </Text>
 
-      <FlatList
-        data={cart}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 16 }}
-      />
+        {cart.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyTitle}>Todavía no agregaste productos</Text>
+            <Text style={styles.emptyText}>
+              Explorá el inicio y sumá productos para donar.
+            </Text>
+            <Pressable
+              style={styles.secondaryButton}
+              onPress={() => navigation.navigate("Home")}
+            >
+              <Text style={styles.secondaryButtonText}>Ver productos</Text>
+            </Pressable>
+          </View>
+        ) : (
+          cart.map((item) => {
+            const foundation = foundations.find(
+              (f) => f.id === item.foundationId
+            );
+            return (
+              <View key={item.product.id} style={styles.card}>
+                <View style={styles.rowBetween}>
+                  <View style={styles.flex}>
+                    <Text style={styles.productName}>{item.product.name}</Text>
+                    <Text style={styles.price}>
+                      ${item.product.price.toLocaleString("es-AR")} c/u
+                    </Text>
+                  </View>
+                  <Pressable onPress={() => removeFromCart(item.product.id)}>
+                    <Text style={styles.remove}>Eliminar</Text>
+                  </Pressable>
+                </View>
 
-      {hasMissingFoundation && (
-        <View style={styles.avisoContainer}>
-          <Text style={styles.avisoTexto}>
-            ⚠️ Asigná una fundación a cada producto para poder continuar.
-          </Text>
-        </View>
-      )}
+                <View style={styles.quantityRow}>
+                  <Text style={styles.label}>Cantidad</Text>
+                  <View style={styles.quantityControls}>
+                    <Pressable
+                      style={styles.quantityButton}
+                      onPress={() => decreaseQuantity(item.product.id)}
+                    >
+                      <Text style={styles.quantityButtonText}>-</Text>
+                    </Pressable>
+                    <Text style={styles.quantity}>{item.quantity}</Text>
+                    <Pressable
+                      style={styles.quantityButton}
+                      onPress={() => increaseQuantity(item.product.id)}
+                    >
+                      <Text style={styles.quantityButtonText}>+</Text>
+                    </Pressable>
+                  </View>
+                </View>
 
-      <View style={styles.filaTotal}>
-        <Text style={styles.tituloTotal}>Total</Text>
-        <Text style={styles.montoTotal}>${totalPrice.toFixed(2)}</Text>
-      </View>
+                <Text style={styles.label}>Fundación destinataria</Text>
+                {foundation ? (
+                  <Text style={styles.foundationSelected}>{foundation.name}</Text>
+                ) : (
+                  <Text style={styles.missing}>Sin seleccionar ⚠️</Text>
+                )}
 
-      <TouchableOpacity
-        style={[styles.boton, hasMissingFoundation && styles.botonDeshabilitado]}
-        onPress={handleContinuar}
-        disabled={hasMissingFoundation}
-      >
-        <Text style={styles.textoBoton}>Continuar al checkout</Text>
-      </TouchableOpacity>
+                <Pressable
+                  style={styles.foundationButton}
+                  onPress={() => abrirSelectorFundacion(item.product.id)}
+                >
+                  <Text style={styles.foundationButtonText}>
+                    {foundation ? "Cambiar fundación" : "Elegir fundación"}
+                  </Text>
+                </Pressable>
+              </View>
+            );
+          })
+        )}
 
-      {/* Selector de fundación */}
+        {cart.length > 0 && (
+          <>
+            {hasMissingFoundation && (
+              <View style={styles.avisoContainer}>
+                <Text style={styles.avisoTexto}>
+                  ⚠️ Asigná una fundación a cada producto para poder continuar.
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.totalBox}>
+              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.total}>
+                ${totalPrice.toLocaleString("es-AR")}
+              </Text>
+            </View>
+            <Pressable
+              style={[
+                styles.primaryButton,
+                hasMissingFoundation && styles.primaryButtonDisabled,
+              ]}
+              onPress={handleContinue}
+              disabled={hasMissingFoundation}
+            >
+              <Text style={styles.primaryButtonText}>Continuar</Text>
+            </Pressable>
+          </>
+        )}
+      </ScrollView>
+
       <Modal
         visible={selectorVisible}
         transparent
@@ -163,204 +164,144 @@ export default function CartScreen({ navigation }) {
           <View style={styles.modalContenido}>
             <Text style={styles.modalTitulo}>Elegí una fundación</Text>
             {foundations.map((f) => (
-              <TouchableOpacity
+              <Pressable
                 key={f.id}
                 style={styles.opcionFundacion}
                 onPress={() => elegirFundacion(f.id)}
               >
                 <Text style={styles.opcionFundacionTexto}>{f.name}</Text>
-              </TouchableOpacity>
+              </Pressable>
             ))}
           </View>
         </Pressable>
       </Modal>
+
+      <BottomNav navigation={navigation} active="Cart" />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: COLORS.background,
+  screen: { flex: 1, backgroundColor: COLORS.background, paddingTop: 46 },
+  content: { padding: SPACING.md, paddingBottom: 24 },
+  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
+  subtitle: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 5,
+    marginBottom: 20,
   },
-  titulo: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: COLORS.text,
+  empty: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.md,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: "center",
+  },
+  emptyTitle: { fontSize: 17, fontWeight: "700", color: COLORS.text },
+  emptyText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    textAlign: "center",
+    marginTop: 6,
   },
   card: {
     backgroundColor: COLORS.surface,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  nombre: {
-    fontSize: 18,
-    fontWeight: '700',
+    borderRadius: RADIUS.md,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     marginBottom: 12,
-    color: COLORS.text,
   },
-  fila: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
   },
-  filaCantidad: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
+  flex: { flex: 1, paddingRight: 10 },
+  productName: { fontSize: 16, fontWeight: "800", color: COLORS.text },
+  price: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4 },
+  remove: { color: COLORS.danger, fontSize: 12, fontWeight: "700" },
+  quantityRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 18,
+    marginBottom: 16,
   },
-  etiqueta: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
+  label: { fontSize: 12, fontWeight: "700", color: COLORS.textSecondary },
+  quantityControls: { flexDirection: "row", alignItems: "center" },
+  quantityButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: COLORS.surfaceAlt,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  valor: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.text,
-    flexShrink: 1,
-    textAlign: 'right',
-  },
-  valorAdvertencia: {
-    color: '#D97706',
-  },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  stepperBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: COLORS.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepperTexto: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  stepperValor: {
-    marginHorizontal: 12,
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  fundacionSelector: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.background,
-    marginTop: 6,
-  },
-  eliminarBtn: {
+  quantityButtonText: { fontSize: 20, color: COLORS.text },
+  quantity: { minWidth: 36, textAlign: "center", fontWeight: "800", color: COLORS.text },
+  foundationSelected: { color: COLORS.text, fontWeight: "700", marginTop: 6 },
+  missing: { color: COLORS.warning, fontWeight: "700", marginTop: 6 },
+  foundationButton: {
+    alignSelf: "flex-start",
     marginTop: 10,
-    alignSelf: 'flex-end',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.primarySoft,
   },
-  eliminarTexto: {
-    fontSize: 12,
-    color: '#DC2626',
-    fontWeight: '600',
-  },
+  foundationButtonText: { color: COLORS.primary, fontWeight: "800", fontSize: 12 },
   avisoContainer: {
-    backgroundColor: '#FEF3C7',
-    borderRadius: 8,
+    backgroundColor: "#FEF3C7",
+    borderRadius: RADIUS.sm,
     padding: 12,
     marginBottom: 12,
   },
-  avisoTexto: {
-    color: '#92400E',
-    fontSize: 13,
-    fontWeight: '600',
+  avisoTexto: { color: "#92400E", fontSize: 13, fontWeight: "600" },
+  totalBox: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 16,
   },
-  filaTotal: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  tituloTotal: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.text,
-  },
-  montoTotal: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  boton: {
+  totalLabel: { fontSize: 17, fontWeight: "700", color: COLORS.text },
+  total: { fontSize: 22, fontWeight: "800", color: COLORS.primary },
+  primaryButton: {
     backgroundColor: COLORS.primary,
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
+    padding: 16,
+    borderRadius: RADIUS.md,
+    alignItems: "center",
   },
-  botonDeshabilitado: {
-    backgroundColor: '#A1A1AA',
-  },
-  textoBoton: {
-    color: COLORS.surface,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.background,
-    padding: 20,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-    marginBottom: 16,
-  },
-  botonSecundario: {
+  primaryButtonDisabled: { backgroundColor: "#A1A1AA" },
+  primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
+  secondaryButton: {
+    marginTop: 16,
     borderWidth: 1,
     borderColor: COLORS.primary,
+    borderRadius: RADIUS.md,
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    paddingHorizontal: 16,
   },
-  textoBotonSecundario: {
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
+  secondaryButtonText: { color: COLORS.primary, fontWeight: "800" },
   modalFondo: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
   },
   modalContenido: {
     backgroundColor: COLORS.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
-    maxHeight: '60%',
+    maxHeight: "60%",
   },
-  modalTitulo: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: COLORS.text,
-  },
+  modalTitulo: { fontSize: 18, fontWeight: "bold", marginBottom: 12, color: COLORS.text },
   opcionFundacion: {
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.background,
   },
-  opcionFundacionTexto: {
-    fontSize: 15,
-    color: COLORS.text,
-  },
+  opcionFundacionTexto: { fontSize: 15, color: COLORS.text },
 });

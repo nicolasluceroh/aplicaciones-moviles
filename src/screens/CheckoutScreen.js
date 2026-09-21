@@ -1,210 +1,176 @@
-import React, { useState } from 'react';
+import { useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
   ActivityIndicator,
-} from 'react-native';
-import { COLORS } from '../constants/theme';
-import { useCart } from '../context/EstadoCarrito';
-import { foundations } from '../data/foundations';
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { COLORS, RADIUS, SPACING } from "../constants/theme";
+import { foundations } from "../data/foundations";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import { supabase } from "../config/supabase";
 
 export default function CheckoutScreen({ navigation }) {
-  const { cart, totalItems, totalPrice, confirmOrder } = useCart();
-  const [procesando, setProcesando] = useState(false);
+  const { cart, totalPrice, hasMissingFoundation, clearCart } = useCart();
+  const { user, loading: authLoading } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
 
-  const nombreFundacion = (foundationId) =>
-    foundations.find((f) => f.id === foundationId)?.name ?? 'Sin asignar';
+  const handleConfirm = async () => {
+    if (authLoading) return;
 
-  const handleConfirmarDonacion = () => {
-    setProcesando(true);
-    // Pago simulado: no hay integración real, solo delay artificial para UX
-    setTimeout(() => {
-      setProcesando(false);
-      confirmOrder();
-      navigation.navigate('Confirmation');
-    }, 1200);
+    if (!user) {
+      Alert.alert(
+        "Necesitás iniciar sesión",
+        "Para confirmar una donación y guardarla en tu historial necesitás una cuenta.",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Crear cuenta",
+            onPress: () => navigation.navigate("Register", { returnTo: "Checkout" }),
+          },
+          {
+            text: "Iniciar sesión",
+            onPress: () =>
+              navigation.navigate("Login", { userType: "donor", returnTo: "Checkout" }),
+          },
+        ]
+      );
+      return;
+    }
+
+    if (cart.length === 0) {
+      Alert.alert("Carrito vacío", "Agregá productos antes de confirmar la donación.");
+      navigation.navigate("Cart");
+      return;
+    }
+
+    if (hasMissingFoundation) {
+      Alert.alert(
+        "Falta elegir una fundación",
+        "Cada producto debe tener una fundación destinataria antes de continuar."
+      );
+      navigation.navigate("Cart");
+      return;
+    }
+
+    const items = cart.map((item) => {
+      const foundation = foundations.find((f) => f.id === item.foundationId);
+
+      return {
+        product_id: String(item.product.id),
+        product_name: item.product.name,
+        foundation_id: String(item.foundationId),
+        foundation_name: foundation?.name || "Fundación",
+        quantity: item.quantity,
+        unit_price: item.product.price,
+      };
+    });
+
+    try {
+      setSubmitting(true);
+
+      const { data: donationId, error } = await supabase.rpc("create_donation", {
+        p_items: items,
+      });
+
+      if (error) throw error;
+
+      clearCart();
+      navigation.replace("Confirmation", {
+        donationId,
+        total: totalPrice,
+      });
+    } catch (error) {
+      Alert.alert(
+        "No se pudo guardar la donación",
+        error?.message || "Intentá nuevamente. Tu carrito se mantuvo sin cambios."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.itemRow}>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.itemNombre}>{item.name}</Text>
-        <Text style={styles.itemFundacion}>
-          Fundación: {nombreFundacion(item.foundationId)}
-        </Text>
-      </View>
-      <View style={styles.itemDerecha}>
-        <Text style={styles.itemCantidad}>x{item.quantity}</Text>
-        <Text style={styles.itemSubtotal}>
-          ${(item.price * item.quantity).toFixed(2)}
-        </Text>
-      </View>
-    </View>
-  );
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Checkout</Text>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+      <Text style={styles.title}>Resumen de la donación</Text>
+      <Text style={styles.subtitle}>Revisá los productos y sus destinos.</Text>
 
-      <Text style={styles.subtitulo}>Resumen de tu donación</Text>
+      {cart.map((item) => {
+        const foundation = foundations.find((f) => f.id === item.foundationId);
+        return (
+          <View key={item.product.id} style={styles.card}>
+            <Text style={styles.productName}>{item.product.name}</Text>
+            <Text style={styles.detail}>Cantidad: {item.quantity}</Text>
+            <Text style={styles.detail}>Destino: {foundation?.name || "Sin seleccionar"}</Text>
+            <Text style={styles.price}>
+              ${(item.product.price * item.quantity).toLocaleString("es-AR")}
+            </Text>
+          </View>
+        );
+      })}
 
-      <FlatList
-        data={cart}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        style={styles.lista}
-        ItemSeparatorComponent={() => <View style={styles.separador} />}
-      />
-
-      <View style={styles.card}>
-        <View style={styles.fila}>
-          <Text style={styles.etiqueta}>Productos</Text>
-          <Text style={styles.valor}>{totalItems}</Text>
-        </View>
-
-        <View style={styles.fila}>
-          <Text style={styles.etiqueta}>Método de pago</Text>
-          <Text style={styles.valor}>Pago simulado</Text>
-        </View>
-
-        <View style={styles.separadorGrueso} />
-
-        <View style={styles.filaTotal}>
-          <Text style={styles.tituloTotal}>Total</Text>
-          <Text style={styles.montoTotal}>${totalPrice.toFixed(2)}</Text>
-        </View>
+      <View style={styles.paymentCard}>
+        <Text style={styles.paymentTitle}>Método de pago</Text>
+        <Text style={styles.detail}>Tarjeta de crédito/débito</Text>
+        <Text style={styles.note}>Pago simulado para esta etapa del proyecto.</Text>
       </View>
 
-      <TouchableOpacity
-        style={[styles.boton, procesando && styles.botonDeshabilitado]}
-        onPress={handleConfirmarDonacion}
-        disabled={procesando}
-      >
-        {procesando ? (
-          <ActivityIndicator color={COLORS.surface} />
+      <View style={styles.accountCard}>
+        <Text style={styles.paymentTitle}>Cuenta</Text>
+        {authLoading ? (
+          <ActivityIndicator color={COLORS.primary} style={styles.accountLoader} />
+        ) : user ? (
+          <Text style={styles.detail}>{user.email}</Text>
         ) : (
-          <Text style={styles.textoBoton}>Confirmar donación</Text>
+          <Text style={styles.note}>
+            Podés revisar el carrito sin cuenta, pero te pediremos iniciar sesión antes de confirmar.
+          </Text>
         )}
-      </TouchableOpacity>
-    </View>
+      </View>
+
+      <View style={styles.totalRow}>
+        <Text style={styles.totalLabel}>Total</Text>
+        <Text style={styles.total}>${totalPrice.toLocaleString("es-AR")}</Text>
+      </View>
+
+      <Pressable
+        style={[styles.button, submitting && styles.disabledButton]}
+        onPress={handleConfirm}
+        disabled={submitting || authLoading}
+      >
+        {submitting ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.buttonText}>Confirmar donación</Text>
+        )}
+      </Pressable>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: COLORS.background,
-  },
-  titulo: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    color: COLORS.text,
-  },
-  subtitulo: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginBottom: 16,
-  },
-  lista: {
-    maxHeight: 240,
-    marginBottom: 16,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 14,
-  },
-  itemNombre: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 4,
-  },
-  itemFundacion: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-  },
-  itemDerecha: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  itemCantidad: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginBottom: 4,
-  },
-  itemSubtotal: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  separador: {
-    height: 8,
-  },
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  fila: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  etiqueta: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-  },
-  valor: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  separadorGrueso: {
-    height: 1,
-    backgroundColor: COLORS.background,
-    marginVertical: 12,
-  },
-  filaTotal: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  tituloTotal: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.text,
-  },
-  montoTotal: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  boton: {
-    backgroundColor: COLORS.primary,
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  botonDeshabilitado: {
-    opacity: 0.7,
-  },
-  textoBoton: {
-    color: COLORS.surface,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  screen: { flex: 1, backgroundColor: COLORS.background },
+  content: { padding: SPACING.md, paddingBottom: 36 },
+  title: { fontSize: 24, fontWeight: "800", color: COLORS.text },
+  subtitle: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4, marginBottom: 20 },
+  card: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 15, marginBottom: 10 },
+  productName: { fontSize: 15, fontWeight: "800", color: COLORS.text },
+  detail: { fontSize: 13, color: COLORS.textSecondary, marginTop: 5 },
+  price: { fontSize: 16, fontWeight: "800", color: COLORS.primary, marginTop: 8 },
+  paymentCard: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 15, marginTop: 8 },
+  accountCard: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 15, marginTop: 10 },
+  accountLoader: { alignSelf: "flex-start", marginTop: 8 },
+  paymentTitle: { fontSize: 15, fontWeight: "800", color: COLORS.text },
+  note: { fontSize: 11, lineHeight: 17, color: COLORS.textSecondary, marginTop: 8 },
+  totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 20 },
+  totalLabel: { fontSize: 17, fontWeight: "700", color: COLORS.text },
+  total: { fontSize: 23, fontWeight: "800", color: COLORS.primary },
+  button: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 16, alignItems: "center" },
+  disabledButton: { opacity: 0.6 },
+  buttonText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16 },
 });
+>>>>>>> origin/main
