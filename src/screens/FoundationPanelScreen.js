@@ -25,6 +25,7 @@ export default function FoundationPanelScreen({ navigation }) {
 
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
   const [photoUri, setPhotoUri] = useState(null);
   const [location, setLocation] = useState(null);
   const [locationError, setLocationError] = useState(null);
@@ -84,40 +85,80 @@ export default function FoundationPanelScreen({ navigation }) {
   );
 
   const handleOpenCamera = async () => {
-    if (!cameraPermission?.granted) {
-      const result = await requestCameraPermission();
-      if (!result.granted) return;
+    try {
+      if (!cameraPermission?.granted) {
+        const result = await requestCameraPermission();
+        if (!result.granted) return;
+      }
+      setCameraReady(false);
+      setCameraOpen(true);
+    } catch (error) {
+      Alert.alert("No se pudo abrir la cámara", "Intentá de nuevo.");
     }
-    setCameraOpen(true);
   };
 
   const handleTakePhoto = async () => {
-    if (!cameraRef.current) return;
-    const photo = await cameraRef.current.takePictureAsync();
-    setPhotoUri(photo.uri);
-    setCameraOpen(false);
+    if (!cameraRef.current || !cameraReady) return;
+    try {
+      const photo = await cameraRef.current.takePictureAsync();
+      setPhotoUri(photo.uri);
+      setCameraOpen(false);
+    } catch (error) {
+      Alert.alert("No se pudo tomar la foto", "Intentá de nuevo.");
+      setCameraOpen(false);
+    }
   };
 
   const handleGetLocation = async () => {
     setLoadingLocation(true);
     setLocationError(null);
 
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      setLocationError("Permiso de ubicación denegado.");
-      setLoadingLocation(false);
-      return;
-    }
-
     try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setLocationError("Permiso de ubicación denegado.");
+        return;
+      }
+
       const position = await Location.getCurrentPositionAsync({});
       setLocation(position.coords);
     } catch (error) {
       setLocationError("No se pudo obtener la ubicación.");
+    } finally {
+      setLoadingLocation(false);
     }
-
-    setLoadingLocation(false);
   };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigation.reset({ index: 0, routes: [{ name: "Account" }] });
+    } catch (error) {
+      Alert.alert("Error", "No se pudo cerrar la sesión.");
+    }
+  };
+
+  if (profileLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator color={COLORS.primary} size="large" />
+      </View>
+    );
+  }
+
+  if (!canAccess) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.accessTitle}>Acceso restringido</Text>
+        <Text style={styles.accessText}>
+          Esta cuenta no está habilitada como fundación o no tiene una fundación asociada.
+        </Text>
+        <Pressable style={styles.secondaryButton} onPress={handleLogout}>
+          <Text style={styles.secondaryButtonText}>Volver a mi cuenta</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   const handleLogout = async () => {
     try {
@@ -153,12 +194,21 @@ export default function FoundationPanelScreen({ navigation }) {
   if (cameraOpen) {
     return (
       <View style={styles.cameraScreen}>
-        <CameraView ref={cameraRef} style={styles.camera} facing="back" />
+        <CameraView
+          ref={cameraRef}
+          style={styles.camera}
+          facing="back"
+          onCameraReady={() => setCameraReady(true)}
+        />
         <View style={styles.cameraControls}>
           <Pressable style={styles.cameraSide} onPress={() => setCameraOpen(false)}>
             <Text style={styles.cameraCancel}>Cancelar</Text>
           </Pressable>
-          <Pressable style={styles.shutter} onPress={handleTakePhoto}>
+          <Pressable
+            style={[styles.shutter, !cameraReady && styles.shutterDisabled]}
+            onPress={handleTakePhoto}
+            disabled={!cameraReady}
+          >
             <View style={styles.shutterInner} />
           </Pressable>
           <View style={styles.cameraSide} />
@@ -327,5 +377,6 @@ const styles = StyleSheet.create({
   cameraSide: { width: 80 },
   cameraCancel: { color: "#FFFFFF", fontSize: 16 },
   shutter: { width: 70, height: 70, borderRadius: 35, borderWidth: 4, borderColor: "#FFFFFF", alignItems: "center", justifyContent: "center" },
+  shutterDisabled: { opacity: 0.4 },
   shutterInner: { width: 54, height: 54, borderRadius: 27, backgroundColor: "#FFFFFF" },
 });

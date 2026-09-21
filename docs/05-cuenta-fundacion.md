@@ -1,5 +1,6 @@
 # Cuenta, autenticación y fundación
 
+**Responsables:** Facundo (UI) + Nicolás (integración Supabase)
 **Responsables:** Facundo (UI) + Nicolás (integración Supabase)  
 **Requisitos relacionados:** RF-007, RF-008, RF-010, RF-011, RF-012, RF-013, RF-014, RF-015, RF-016
 
@@ -100,6 +101,63 @@ Un usuario común no tiene permisos SQL para modificar su propio rol.
 - permite cerrar sesión;
 - abre la gestión de necesidades.
 
+El botón de captura permanece deshabilitado hasta que la cámara avisa que está lista (`onCameraReady`), y la toma de la foto está protegida para no dejar promesas sin manejar.
+
+### FoundationNeedsScreen
+
+Permite a una Fundación:
+
+- agregar necesidades;
+- modificar la cantidad pendiente;
+- eliminar necesidades.
+
+RLS restringe esas operaciones a la Fundación asociada al usuario.
+
+## Capturas
+
+Las imágenes están en `docs/img/`.
+
+### Cuenta de donante
+
+**Cuenta sin sesión** — dos accesos: donante (iniciar sesión / crear cuenta) y organizaciones.
+
+![Cuenta sin sesión](img/cuenta.png)
+
+**Iniciar sesión** — ingreso con email y contraseña, con recuperación de contraseña y acceso de fundación.
+
+![Login](img/login.png)
+
+**Crear cuenta** — registro de donante con validación de campos, contraseñas y términos.
+
+![Registro](img/registro.png)
+
+**Cuenta con sesión** — saludo con el nombre, acceso a Mis datos, Mis donaciones y cerrar sesión.
+
+![Cuenta con sesión](img/cuenta-sesion.png)
+
+**Mis datos** — actualización de nombre, email y contraseña de la cuenta.
+
+![Mis datos](img/mis-datos.png)
+
+### Donaciones
+
+**Mis donaciones** — historial de aportes del usuario autenticado.
+
+![Mis donaciones](img/donaciones.png)
+
+**Detalle de la donación** — fecha, total, productos, cantidades y fundación destinataria.
+
+![Detalle de la donación](img/detalle-donacion.png)
+
+### Cuenta de Fundación
+
+**Panel de fundación** — métricas de donaciones y necesidades, herramientas de cámara y ubicación, y necesidades publicadas.
+
+![Panel de fundación](img/panel-fundacion.png)
+
+**Gestionar necesidades** — alta, edición de pendientes y baja de necesidades de la fundación.
+
+![Gestionar necesidades](img/gestionar-necesidades.png)
 ### FoundationNeedsScreen
 
 Permite a una Fundación:
