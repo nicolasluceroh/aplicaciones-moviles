@@ -9,18 +9,42 @@ import {
   View,
 } from "react-native";
 import { COLORS, RADIUS, SPACING } from "../constants/theme";
-import { login } from "../state/session";
+import { supabase } from "../config/supabase";
 
-export default function RegisterScreen({ navigation }) {
+export default function RegisterScreen({ route, navigation }) {
+  const returnTo = route.params?.returnTo || "Account";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = () => {
-    if (!name.trim() || !email.trim() || !password.trim()) {
+  const resendConfirmation = async (cleanEmail) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: cleanEmail,
+      });
+
+      if (error) throw error;
+      Alert.alert("Email enviado", "Te enviamos un nuevo correo de confirmación.");
+    } catch (error) {
+      Alert.alert("No se pudo reenviar", error?.message || "Intentá nuevamente.");
+    }
+  };
+
+  const handleRegister = async () => {
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanName || !cleanEmail || !password.trim() || !confirmPassword.trim()) {
       Alert.alert("Datos incompletos", "Completá todos los campos.");
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert("Contraseña muy corta", "Usá al menos 6 caracteres.");
       return;
     }
 
@@ -34,15 +58,66 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
 
-    Alert.alert("Registro simulado", "El alta real se conectará con Supabase Auth.", [
-      {
-        text: "Continuar",
-        onPress: () => {
-          login({ name: name.trim(), email: email.trim() });
-          navigation.navigate("Account");
+    try {
+      setLoading(true);
+
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+        options: {
+          data: {
+            full_name: cleanName,
+          },
         },
-      },
-    ]);
+      });
+
+      if (error) {
+        Alert.alert("No se pudo crear la cuenta", error.message);
+        return;
+      }
+
+      // Con confirmación de email activada, Supabase puede devolver un usuario sin
+      // identidades cuando el email ya está registrado. Lo tratamos como cuenta existente.
+      if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+        Alert.alert(
+          "Ese email ya está registrado",
+          "Iniciá sesión con tu contraseña. Si todavía no confirmaste el correo, podés reenviar la confirmación desde el login.",
+          [
+            {
+              text: "Ir al login",
+              onPress: () => navigation.navigate("Login", { userType: "donor", returnTo }),
+            },
+          ]
+        );
+        return;
+      }
+
+      if (data.session) {
+        Alert.alert("Cuenta creada", "Tu cuenta fue creada correctamente.", [
+          {
+            text: "Continuar",
+            onPress: () => navigation.navigate(returnTo),
+          },
+        ]);
+        return;
+      }
+
+      Alert.alert(
+        "Revisá tu email",
+        "La cuenta fue creada, pero todavía no puede iniciar sesión. Confirmá el correo y después volvé a la app.",
+        [
+          { text: "Reenviar email", onPress: () => resendConfirmation(cleanEmail) },
+          {
+            text: "Ir al login",
+            onPress: () => navigation.navigate("Login", { userType: "donor", returnTo }),
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert("Error", error?.message || "Ocurrió un problema al crear la cuenta.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,6 +136,7 @@ export default function RegisterScreen({ navigation }) {
         onChangeText={setName}
         placeholder="Nombre y apellido"
         placeholderTextColor={COLORS.textSecondary}
+        editable={!loading}
       />
 
       <Text style={styles.label}>Email</Text>
@@ -73,6 +149,7 @@ export default function RegisterScreen({ navigation }) {
         autoCorrect={false}
         placeholder="nombre@correo.com"
         placeholderTextColor={COLORS.textSecondary}
+        editable={!loading}
       />
 
       <Text style={styles.label}>Contraseña</Text>
@@ -83,6 +160,7 @@ export default function RegisterScreen({ navigation }) {
         secureTextEntry
         placeholder="Contraseña"
         placeholderTextColor={COLORS.textSecondary}
+        editable={!loading}
       />
 
       <Text style={styles.label}>Repetir contraseña</Text>
@@ -93,11 +171,13 @@ export default function RegisterScreen({ navigation }) {
         secureTextEntry
         placeholder="Repetir contraseña"
         placeholderTextColor={COLORS.textSecondary}
+        editable={!loading}
       />
 
       <Pressable
         style={styles.termsRow}
         onPress={() => setAcceptedTerms(!acceptedTerms)}
+        disabled={loading}
       >
         <View style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}>
           {acceptedTerms && <Text style={styles.checkmark}>✓</Text>}
@@ -107,12 +187,21 @@ export default function RegisterScreen({ navigation }) {
         </Text>
       </Pressable>
 
-      <Pressable style={styles.primaryButton} onPress={handleRegister}>
-        <Text style={styles.primaryButtonText}>Crear cuenta</Text>
+      <Pressable
+        style={[styles.primaryButton, loading && styles.disabledButton]}
+        onPress={handleRegister}
+        disabled={loading}
+      >
+        <Text style={styles.primaryButtonText}>
+          {loading ? "Creando cuenta..." : "Crear cuenta"}
+        </Text>
       </Pressable>
 
       <Text style={styles.helper}>¿Ya tenés cuenta?</Text>
-      <Pressable onPress={() => navigation.navigate("Login", { userType: "donor" })}>
+      <Pressable
+        onPress={() => navigation.navigate("Login", { userType: "donor", returnTo })}
+        disabled={loading}
+      >
         <Text style={styles.link}>Iniciar sesión</Text>
       </Pressable>
     </ScrollView>
@@ -122,10 +211,8 @@ export default function RegisterScreen({ navigation }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLORS.background },
   content: { padding: SPACING.lg, paddingBottom: 40 },
-
   title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
   subtitle: { fontSize: 14, lineHeight: 20, color: COLORS.textSecondary, marginTop: 6, marginBottom: 24 },
-
   label: { fontSize: 13, fontWeight: "700", color: COLORS.text, marginBottom: 6 },
   input: {
     backgroundColor: COLORS.surface,
@@ -137,7 +224,6 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginBottom: 16,
   },
-
   termsRow: { flexDirection: "row", alignItems: "center", marginTop: 4, marginBottom: 20 },
   checkbox: {
     width: 22,
@@ -152,7 +238,6 @@ const styles = StyleSheet.create({
   checkboxChecked: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   checkmark: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" },
   termsText: { flex: 1, fontSize: 13, color: COLORS.textSecondary, marginLeft: 10 },
-
   primaryButton: {
     backgroundColor: COLORS.primary,
     borderRadius: RADIUS.md,
@@ -160,7 +245,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
-
+  disabledButton: { opacity: 0.6 },
   helper: { fontSize: 13, color: COLORS.textSecondary, textAlign: "center", marginTop: 22 },
   link: { fontSize: 15, fontWeight: "800", color: COLORS.primary, textAlign: "center", marginTop: 6 },
 });
