@@ -2,10 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { products } from '../data/products';
 import { COLORS } from '../constants/theme';
+import { useCart } from '../context/EstadoCarrito';
 
 export default function ProductScreen({ route, navigation }) {
   const { productId } = route.params || {};
   const product = products.find((p) => p.id === productId);
+  const { addToCart } = useCart();
 
   if (!product) {
     return (
@@ -15,16 +17,18 @@ export default function ProductScreen({ route, navigation }) {
     );
   }
 
+  const handleDonar = () => {
+    addToCart(product);
+    navigation.navigate('Cart');
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{product.name}</Text>
       <Text style={styles.price}>${product.price}</Text>
       <Text style={styles.description}>{product.description}</Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("Cart", { productId: product.id })}
-      >
+      <TouchableOpacity style={styles.button} onPress={handleDonar}>
         <Text style={styles.buttonText}>Donar este producto</Text>
       </TouchableOpacity>
     </View>
