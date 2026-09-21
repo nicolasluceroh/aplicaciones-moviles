@@ -1,10 +1,98 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { COLORS, RADIUS, SPACING } from "../constants/theme";
 import { foundations } from "../data/foundations";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import { supabase } from "../config/supabase";
 
 export default function CheckoutScreen({ navigation }) {
-  const { cart, totalPrice } = useCart();
+  const { cart, totalPrice, hasMissingFoundation, clearCart } = useCart();
+  const { user, loading: authLoading } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleConfirm = async () => {
+    if (authLoading) return;
+
+    if (!user) {
+      Alert.alert(
+        "Necesitás iniciar sesión",
+        "Para confirmar una donación y guardarla en tu historial necesitás una cuenta.",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Crear cuenta",
+            onPress: () => navigation.navigate("Register", { returnTo: "Checkout" }),
+          },
+          {
+            text: "Iniciar sesión",
+            onPress: () =>
+              navigation.navigate("Login", { userType: "donor", returnTo: "Checkout" }),
+          },
+        ]
+      );
+      return;
+    }
+
+    if (cart.length === 0) {
+      Alert.alert("Carrito vacío", "Agregá productos antes de confirmar la donación.");
+      navigation.navigate("Cart");
+      return;
+    }
+
+    if (hasMissingFoundation) {
+      Alert.alert(
+        "Falta elegir una fundación",
+        "Cada producto debe tener una fundación destinataria antes de continuar."
+      );
+      navigation.navigate("Cart");
+      return;
+    }
+
+    const items = cart.map((item) => {
+      const foundation = foundations.find((f) => f.id === item.foundationId);
+
+      return {
+        product_id: String(item.product.id),
+        product_name: item.product.name,
+        foundation_id: String(item.foundationId),
+        foundation_name: foundation?.name || "Fundación",
+        quantity: item.quantity,
+        unit_price: item.product.price,
+      };
+    });
+
+    try {
+      setSubmitting(true);
+
+      const { data: donationId, error } = await supabase.rpc("create_donation", {
+        p_items: items,
+      });
+
+      if (error) throw error;
+
+      clearCart();
+      navigation.replace("Confirmation", {
+        donationId,
+        total: totalPrice,
+      });
+    } catch (error) {
+      Alert.alert(
+        "No se pudo guardar la donación",
+        error?.message || "Intentá nuevamente. Tu carrito se mantuvo sin cambios."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
@@ -31,13 +119,34 @@ export default function CheckoutScreen({ navigation }) {
         <Text style={styles.note}>Pago simulado para esta etapa del proyecto.</Text>
       </View>
 
+      <View style={styles.accountCard}>
+        <Text style={styles.paymentTitle}>Cuenta</Text>
+        {authLoading ? (
+          <ActivityIndicator color={COLORS.primary} style={styles.accountLoader} />
+        ) : user ? (
+          <Text style={styles.detail}>{user.email}</Text>
+        ) : (
+          <Text style={styles.note}>
+            Podés revisar el carrito sin cuenta, pero te pediremos iniciar sesión antes de confirmar.
+          </Text>
+        )}
+      </View>
+
       <View style={styles.totalRow}>
         <Text style={styles.totalLabel}>Total</Text>
         <Text style={styles.total}>${totalPrice.toLocaleString("es-AR")}</Text>
       </View>
 
-      <Pressable style={styles.button} onPress={() => navigation.replace("Confirmation")}>
-        <Text style={styles.buttonText}>Confirmar donación</Text>
+      <Pressable
+        style={[styles.button, submitting && styles.disabledButton]}
+        onPress={handleConfirm}
+        disabled={submitting || authLoading}
+      >
+        {submitting ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.buttonText}>Confirmar donación</Text>
+        )}
       </Pressable>
     </ScrollView>
   );
@@ -53,11 +162,14 @@ const styles = StyleSheet.create({
   detail: { fontSize: 13, color: COLORS.textSecondary, marginTop: 5 },
   price: { fontSize: 16, fontWeight: "800", color: COLORS.primary, marginTop: 8 },
   paymentCard: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 15, marginTop: 8 },
+  accountCard: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 15, marginTop: 10 },
+  accountLoader: { alignSelf: "flex-start", marginTop: 8 },
   paymentTitle: { fontSize: 15, fontWeight: "800", color: COLORS.text },
-  note: { fontSize: 11, color: COLORS.textSecondary, marginTop: 8 },
+  note: { fontSize: 11, lineHeight: 17, color: COLORS.textSecondary, marginTop: 8 },
   totalRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 20 },
   totalLabel: { fontSize: 17, fontWeight: "700", color: COLORS.text },
   total: { fontSize: 23, fontWeight: "800", color: COLORS.primary },
   button: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 16, alignItems: "center" },
+  disabledButton: { opacity: 0.6 },
   buttonText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16 },
 });

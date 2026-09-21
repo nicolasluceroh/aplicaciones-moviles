@@ -1,13 +1,18 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { COLORS, RADIUS, SPACING } from "../constants/theme";
-import { useCart } from "../context/CartContext";
 
-export default function ConfirmationScreen({ navigation }) {
-  const { clearCart } = useCart();
+const formatPrice = (value) => `$${Number(value || 0).toLocaleString("es-AR")}`;
 
-  const handleFinish = () => {
-    clearCart();
+export default function ConfirmationScreen({ route, navigation }) {
+  const donationId = route.params?.donationId;
+  const total = route.params?.total;
+
+  const handleHome = () => {
     navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+  };
+
+  const handleHistory = () => {
+    navigation.reset({ index: 0, routes: [{ name: "Donations" }] });
   };
 
   return (
@@ -18,11 +23,21 @@ export default function ConfirmationScreen({ navigation }) {
         </View>
         <Text style={styles.title}>¡Gracias por tu donación!</Text>
         <Text style={styles.text}>
-          La donación fue confirmada. En la próxima etapa este movimiento quedará guardado en la base de datos.
+          La donación quedó confirmada y guardada en tu cuenta.
         </Text>
+
+        {!!total && <Text style={styles.total}>{formatPrice(total)}</Text>}
+        {!!donationId && (
+          <Text style={styles.id}>ID {String(donationId).slice(0, 8).toUpperCase()}</Text>
+        )}
       </View>
-      <Pressable style={styles.button} onPress={handleFinish}>
-        <Text style={styles.buttonText}>Volver al inicio</Text>
+
+      <Pressable style={styles.button} onPress={handleHistory}>
+        <Text style={styles.buttonText}>Ver mis donaciones</Text>
+      </Pressable>
+
+      <Pressable style={styles.secondaryButton} onPress={handleHome}>
+        <Text style={styles.secondaryButtonText}>Volver al inicio</Text>
       </Pressable>
     </View>
   );
@@ -35,6 +50,10 @@ const styles = StyleSheet.create({
   icon: { color: "#FFFFFF", fontSize: 34, fontWeight: "800" },
   title: { fontSize: 23, fontWeight: "800", color: COLORS.text, textAlign: "center" },
   text: { fontSize: 14, lineHeight: 21, color: COLORS.textSecondary, textAlign: "center", marginTop: 10 },
+  total: { fontSize: 25, fontWeight: "800", color: COLORS.primary, marginTop: 18 },
+  id: { fontSize: 11, color: COLORS.textSecondary, marginTop: 8 },
   button: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 16, alignItems: "center", marginTop: 18 },
   buttonText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16 },
+  secondaryButton: { borderWidth: 1, borderColor: COLORS.primary, borderRadius: RADIUS.md, padding: 16, alignItems: "center", marginTop: 10 },
+  secondaryButtonText: { color: COLORS.primary, fontWeight: "800", fontSize: 16 },
 });
