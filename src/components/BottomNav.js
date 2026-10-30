@@ -1,13 +1,16 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { COLORS } from "../constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+import { COLORS, TYPE } from "../constants/theme";
 import { useCart } from "../context/CartContext";
 
+// Cada ítem tiene un ícono "outline" (pestaña inactiva) y uno sólido
+// (pestaña activa), para que se note de un vistazo en cuál estás parado.
 const ITEMS = [
-  { key: "Home", label: "Inicio", icon: "⌂" },
-  { key: "Foundations", label: "Fundaciones", icon: "♡" },
-  { key: "Cart", label: "Carrito", icon: "▣" },
-  { key: "Donations", label: "Donaciones", icon: "✓" },
-  { key: "Account", label: "Cuenta", icon: "○" },
+  { key: "Foundations", label: "Fundaciones", iconOutline: "location-outline", iconFilled: "location" },
+  { key: "Cart", label: "Carrito", iconOutline: "bag-outline", iconFilled: "bag" },
+  { key: "Home", label: "Inicio", iconOutline: "home-outline", iconFilled: "home", main: true },
+  { key: "Donations", label: "Donaciones", iconOutline: "gift-outline", iconFilled: "gift" },
+  { key: "Account", label: "Cuenta", iconOutline: "person-outline", iconFilled: "person" },
 ];
 
 export default function BottomNav({ navigation, active }) {
@@ -25,19 +28,44 @@ export default function BottomNav({ navigation, active }) {
             style={styles.item}
             onPress={() => navigation.navigate(item.key)}
           >
-            <View style={styles.iconWrap}>
-              <Text style={[styles.icon, selected && styles.selectedText]}>
-                {item.icon}
-              </Text>
+            <View
+              style={[
+                styles.iconWrap,
+                item.main && styles.iconWrapMain,
+                item.main && selected && styles.iconWrapMainSelected,
+              ]}
+            >
+              <Ionicons
+                name={selected ? item.iconFilled : item.iconOutline}
+                size={item.main ? 21 : 19}
+                color={
+                  item.main
+                    ? selected
+                      ? COLORS.surface
+                      : COLORS.primaryDark
+                    : selected
+                    ? COLORS.primary
+                    : COLORS.textSecondary
+                }
+              />
               {showBadge && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{totalItems}</Text>
                 </View>
               )}
             </View>
-            <Text style={[styles.label, selected && styles.selectedText]}>
+            <Text
+              style={[
+                styles.label,
+                selected && styles.selectedText,
+                item.main && styles.labelMain,
+              ]}
+            >
               {item.label}
             </Text>
+            {!item.main && (
+              <View style={[styles.activeDot, selected && styles.activeDotVisible]} />
+            )}
           </Pressable>
         );
       })}
@@ -62,19 +90,45 @@ const styles = StyleSheet.create({
   },
   iconWrap: {
     position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  icon: {
-    fontSize: 20,
-    color: COLORS.textSecondary,
+  iconWrapMain: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: COLORS.primarySoft,
+    marginTop: -18,
+    borderWidth: 3,
+    borderColor: COLORS.surface,
+  },
+  iconWrapMainSelected: {
+    backgroundColor: COLORS.primary,
   },
   label: {
-    marginTop: 3,
+    ...TYPE.caption,
     fontSize: 10,
+    lineHeight: 13,
+    marginTop: 3,
     color: COLORS.textSecondary,
+  },
+  labelMain: {
+    marginTop: 4,
+    fontWeight: "700",
   },
   selectedText: {
     color: COLORS.primary,
     fontWeight: "700",
+  },
+  activeDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginTop: 3,
+    backgroundColor: "transparent",
+  },
+  activeDotVisible: {
+    backgroundColor: COLORS.primary,
   },
   badge: {
     position: "absolute",
@@ -89,7 +143,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.danger,
   },
   badgeText: {
-    color: "#FFFFFF",
+    color: COLORS.textOnDark,
     fontSize: 10,
     fontWeight: "700",
   },

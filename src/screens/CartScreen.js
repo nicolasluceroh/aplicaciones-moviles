@@ -11,6 +11,7 @@ import { COLORS, RADIUS, SPACING } from "../constants/theme";
 import { foundations } from "../data/foundations";
 import { useCart } from "../context/CartContext";
 import BottomNav from "../components/BottomNav";
+import PressableScale from "../components/PressableScale";
 
 export default function CartScreen({ navigation }) {
   const {
@@ -45,10 +46,30 @@ export default function CartScreen({ navigation }) {
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Tu carrito</Text>
-        <Text style={styles.subtitle}>
-          Acá se define a qué fundación se destina cada producto.
-        </Text>
+        <View style={styles.headerCard}>
+          <Text style={styles.title}>Tu carrito</Text>
+          <Text style={styles.subtitle}>
+            Revisá los productos y asigná a qué fundación va cada donación.
+          </Text>
+        </View>
+
+        {cart.length > 0 && (
+          <View style={styles.statsRow}>
+            <View style={styles.statChip}>
+              <Feather name="shopping-bag" size={13} color={COLORS.primaryDark} />
+              <Text style={styles.statChipText}>
+                {cart.length} {cart.length === 1 ? "producto" : "productos"}
+              </Text>
+            </View>
+            <View style={[styles.statChip, styles.statChipSecondary]}>
+              <Feather name="map-pin" size={13} color={COLORS.secondaryDark} />
+              <Text style={[styles.statChipText, styles.statChipTextSecondary]}>
+                {new Set(cart.filter((i) => i.foundationId).map((i) => i.foundationId)).size} de{" "}
+                {cart.length} con fundación
+              </Text>
+            </View>
+          </View>
+        )}
 
         {cart.length === 0 ? (
           <View style={styles.empty}>
@@ -77,8 +98,11 @@ export default function CartScreen({ navigation }) {
                       ${item.product.price.toLocaleString("es-AR")} c/u
                     </Text>
                   </View>
-                  <Pressable onPress={() => removeFromCart(item.product.id)}>
-                    <Text style={styles.remove}>Eliminar</Text>
+                  <Pressable
+                    style={styles.removeButton}
+                    onPress={() => removeFromCart(item.product.id)}
+                  >
+                    <Feather name="trash-2" size={16} color={COLORS.danger} />
                   </Pressable>
                 </View>
 
@@ -112,9 +136,13 @@ export default function CartScreen({ navigation }) {
                   style={styles.foundationButton}
                   onPress={() => abrirSelectorFundacion(item.product.id)}
                 >
-                  <Text style={styles.foundationButtonText}>
-                    {foundation ? "Cambiar fundación" : "Elegir fundación"}
+                  <Text
+                    style={foundation ? styles.foundationSelected : styles.missing}
+                    numberOfLines={1}
+                  >
+                    {foundation ? foundation.name : "Elegí una fundación"}
                   </Text>
+                  <Feather name="chevron-down" size={16} color={COLORS.textSecondary} />
                 </Pressable>
               </View>
             );

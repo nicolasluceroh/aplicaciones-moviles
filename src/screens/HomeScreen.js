@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { COLORS, SPACING } from "../constants/theme";
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { CARD_RADIUS, COLORS, RADIUS, SHADOW, SPACING, TYPE } from "../constants/theme";
 import { products } from "../data/products";
 import { foundations } from "../data/foundations";
 import BottomNav from "../components/BottomNav";
 import SearchBar from "../components/SearchBar";
 import ProductCard from "../components/ProductCard";
 import FoundationCard from "../components/FoundationCard";
+import logoImage from "../assets/logo.png";
 
 export default function HomeScreen({ navigation }) {
   const [search, setSearch] = useState("");

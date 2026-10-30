@@ -95,26 +95,42 @@ export default function CheckoutScreen({ navigation }) {
   };
 
   return (
+    <View style={styles.root}>
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Resumen de la donación</Text>
-      <Text style={styles.subtitle}>Revisá los productos y sus destinos.</Text>
+      <Text style={styles.title}>Confirmar donación</Text>
+      <Text style={styles.subtitle}>
+        Revisá el detalle antes de confirmar. Esta donación queda registrada en tu cuenta.
+      </Text>
 
-      {cart.map((item) => {
-        const foundation = foundations.find((f) => f.id === item.foundationId);
-        return (
-          <View key={item.product.id} style={styles.card}>
-            <Text style={styles.productName}>{item.product.name}</Text>
-            <Text style={styles.detail}>Cantidad: {item.quantity}</Text>
-            <Text style={styles.detail}>Destino: {foundation?.name || "Sin seleccionar"}</Text>
+      <View style={styles.card}>
+        {cart.map((item, index) => (
+          <View
+            key={item.product.id}
+            style={[styles.row, index === cart.length - 1 && styles.rowLast]}
+          >
+            <View style={styles.flex}>
+              <Text style={styles.productName}>
+                {item.quantity} × {item.product.name}
+              </Text>
+              <Text style={styles.detail}>Para {foundationName(item.foundationId)}</Text>
+            </View>
             <Text style={styles.price}>
               ${(item.product.price * item.quantity).toLocaleString("es-AR")}
             </Text>
           </View>
-        );
-      })}
+        ))}
 
-      <View style={styles.paymentCard}>
-        <Text style={styles.paymentTitle}>Método de pago</Text>
+        <View style={styles.totalRow}>
+          <Text style={styles.totalLabel}>Total</Text>
+          <Text style={styles.total}>${totalPrice.toLocaleString("es-AR")}</Text>
+        </View>
+      </View>
+
+      <View style={styles.infoCard}>
+        <View style={styles.infoHeader}>
+          <Feather name="credit-card" size={14} color={COLORS.textSecondary} />
+          <Text style={styles.infoTitle}>Método de pago</Text>
+        </View>
         <Text style={styles.detail}>Tarjeta de crédito/débito</Text>
         <Text style={styles.note}>Pago simulado para esta etapa del proyecto.</Text>
       </View>
@@ -149,10 +165,13 @@ export default function CheckoutScreen({ navigation }) {
         )}
       </Pressable>
     </ScrollView>
+    <BottomNav navigation={navigation} active="Cart" />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: COLORS.background },
   screen: { flex: 1, backgroundColor: COLORS.background },
   content: { padding: SPACING.md, paddingBottom: 36 },
   title: { fontSize: 24, fontWeight: "800", color: COLORS.text },

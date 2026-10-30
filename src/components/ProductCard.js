@@ -1,5 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { COLORS, RADIUS } from "../constants/theme";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { CARD_RADIUS, COLORS, RADIUS, SHADOW, TYPE } from "../constants/theme";
 
 export default function ProductCard({ product, onPress }) {
   return (
@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
   card: {
     width: "48%",
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.card,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 8,

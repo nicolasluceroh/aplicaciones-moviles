@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  Alert,
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,7 +16,6 @@ export default function RegisterScreen({ route, navigation }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -52,9 +51,23 @@ export default function RegisterScreen({ route, navigation }) {
       Alert.alert("Contraseñas diferentes", "Las contraseñas deben coincidir.");
       return;
     }
+  };
+
+  const handleRegister = async () => {
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+    const errors = {};
+
+    if (!cleanName) errors.name = "Ingresá tu nombre completo.";
+    if (!cleanEmail) errors.email = "Ingresá tu email.";
+    if (!password.trim()) errors.password = "Ingresá una contraseña.";
+    else if (password.length < 6) errors.password = "Usá al menos 6 caracteres.";
+
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     if (!acceptedTerms) {
-      Alert.alert("Términos pendientes", "Aceptá los términos para continuar.");
+      alert("Términos pendientes", "Aceptá los términos para continuar.");
       return;
     }
 
@@ -215,14 +228,15 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14, lineHeight: 20, color: COLORS.textSecondary, marginTop: 6, marginBottom: 24 },
   label: { fontSize: 13, fontWeight: "700", color: COLORS.text, marginBottom: 6 },
   input: {
-    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: RADIUS.md,
-    padding: 14,
-    fontSize: 15,
-    color: COLORS.text,
-    marginBottom: 16,
+    borderColor: WEB.border,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingLeft: 40,
+    paddingRight: 14,
+    fontSize: 14,
+    color: WEB.ink,
+    backgroundColor: WEB.surface,
   },
   termsRow: { flexDirection: "row", alignItems: "center", marginTop: 4, marginBottom: 20 },
   checkbox: {
@@ -230,8 +244,8 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
+    borderColor: WEB.border,
+    backgroundColor: WEB.surface,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -239,10 +253,13 @@ const styles = StyleSheet.create({
   checkmark: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" },
   termsText: { flex: 1, fontSize: 13, color: COLORS.textSecondary, marginLeft: 10 },
   primaryButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.md,
-    padding: 15,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: WEB.sol,
+    borderRadius: 12,
+    paddingVertical: 13,
   },
   primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
   disabledButton: { opacity: 0.6 },
