@@ -1,17 +1,34 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { COLORS, RADIUS } from "../constants/theme";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { CARD_RADIUS, COLORS, RADIUS, SHADOW, TYPE } from "../constants/theme";
 
 export default function FoundationCard({ foundation, onPress }) {
   return (
     <Pressable style={styles.card} onPress={onPress}>
       <View style={styles.logo}>
-        <Text style={styles.logoText}>{foundation.shortName || "FS"}</Text>
+        {foundation.logo ? (
+          <Image source={foundation.logo} style={styles.logoImage} resizeMode="cover" />
+        ) : (
+          <Text style={styles.logoText}>
+            {foundation.shortName || "FS"}
+          </Text>
+        )}
       </View>
+
       <View style={styles.info}>
-        <Text style={styles.name}>{foundation.name}</Text>
-        <Text style={styles.location}>{foundation.location}</Text>
-        <Text style={styles.action}>Ver fundación →</Text>
+        <Text style={styles.name} numberOfLines={2}>
+          {foundation.name}
+        </Text>
+
+        <View style={styles.locationRow}>
+          <Feather name="map-pin" size={12} color={COLORS.textSecondary} />
+          <Text style={styles.location}>
+            {foundation.location}
+          </Text>
+        </View>
       </View>
+
+      <Feather name="chevron-right" size={20} color={COLORS.textSecondary} />
     </Pressable>
   );
 }
@@ -19,25 +36,59 @@ export default function FoundationCard({ foundation, onPress }) {
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.card,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: COLORS.borderStrong,
     padding: 14,
     marginBottom: 12,
+    ...SHADOW.card,
   },
+
   logo: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: COLORS.primarySoft,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: COLORS.secondarySoft,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
+    overflow: "hidden",
   },
-  logoText: { fontWeight: "800", color: COLORS.primary },
-  info: { flex: 1 },
-  name: { fontSize: 15, fontWeight: "700", color: COLORS.text },
-  location: { fontSize: 12, color: COLORS.textSecondary, marginTop: 3 },
-  action: { fontSize: 12, fontWeight: "700", color: COLORS.primary, marginTop: 7 },
+
+  logoImage: {
+    width: "100%",
+    height: "100%",
+  },
+
+  logoText: {
+    ...TYPE.caption,
+    fontWeight: "700",
+    color: COLORS.secondaryDark,
+  },
+
+  info: {
+    flex: 1,
+  },
+
+  name: {
+    ...TYPE.bodyStrong,
+    fontSize: 14,
+    color: COLORS.text,
+  },
+
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
+
+  location: {
+    ...TYPE.caption,
+    fontSize: 11,
+    lineHeight: 14,
+    color: COLORS.textSecondary,
+  },
 });

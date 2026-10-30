@@ -4,6 +4,7 @@ import {
   Alert,
   Image,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,12 +13,14 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
-import { COLORS, RADIUS, SPACING } from "../constants/theme";
+import { Feather } from "@expo/vector-icons";
+import { COLORS, RADIUS, SHADOW, SPACING, TYPE } from "../constants/theme";
 import { foundations } from "../data/foundations";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../config/supabase";
+import SkeletonBlock from "../components/SkeletonBlock";
 
-const SOFT_BLUE = "#E8F0F7";
+const formatPrice = (value) => `$${Number(value || 0).toLocaleString("es-AR")}`;
 
 export default function FoundationPanelScreen({ navigation }) {
   const { profile, profileLoading, signOut } = useAuth();
@@ -30,27 +33,33 @@ export default function FoundationPanelScreen({ navigation }) {
   const [location, setLocation] = useState(null);
   const [locationError, setLocationError] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
-  const [summary, setSummary] = useState({ donations: 0, needs: 0 });
+  const [summary, setSummary] = useState({ donations: 0, totalDonated: 0, needs: 0 });
   const [publishedNeeds, setPublishedNeeds] = useState([]);
+  const [receivedItems, setReceivedItems] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [panelError, setPanelError] = useState(null);
   const cameraRef = useRef(null);
 
   const foundationId = profile?.foundation_id;
   const canAccess = ["foundation", "admin"].includes(profile?.role) && !!foundationId;
 
-  const loadPanelData = useCallback(async () => {
+  const loadPanelData = useCallback(async ({ isRefresh = false } = {}) => {
     if (!foundationId || !canAccess) {
-      setSummary({ donations: 0, needs: 0 });
+      setSummary({ donations: 0, totalDonated: 0, needs: 0 });
       setPublishedNeeds([]);
+      setReceivedItems([]);
       return;
     }
 
-    setLoadingData(true);
+    if (isRefresh) setRefreshing(true);
+    else setLoadingData(true);
+    setPanelError(null);
 
     const [itemsResult, needsResult] = await Promise.all([
       supabase
         .from("donation_items")
-        .select("donation_id, quantity")
+        .select("donation_id, product_name, quantity, unit_price")
         .eq("foundation_id", foundationId),
       supabase
         .from("foundation_needs")
@@ -59,23 +68,35 @@ export default function FoundationPanelScreen({ navigation }) {
         .order("created_at", { ascending: true }),
     ]);
 
-    if (itemsResult.error) {
-      Alert.alert("No se pudieron cargar las donaciones", itemsResult.error.message);
+    if (itemsResult.error || needsResult.error) {
+      setPanelError(
+        itemsResult.error?.message ||
+          needsResult.error?.message ||
+          "No se pudieron cargar los datos del panel."
+      );
+      if (isRefresh) setRefreshing(false);
+      else setLoadingData(false);
+      return;
     }
 
-    if (needsResult.error) {
-      Alert.alert("No se pudieron cargar las necesidades", needsResult.error.message);
-    }
-
-    const donationIds = new Set((itemsResult.data || []).map((item) => item.donation_id));
+    const items = itemsResult.data || [];
+    const donationIds = new Set(items.map((item) => item.donation_id));
+    const totalDonated = items.reduce(
+      (sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price || 0),
+      0
+    );
     const needs = needsResult.data || [];
+    const activeNeeds = needs.filter((need) => need.pending > 0).length;
 
     setSummary({
       donations: donationIds.size,
-      needs: needs.length,
+      totalDonated,
+      needs: activeNeeds,
     });
     setPublishedNeeds(needs);
-    setLoadingData(false);
+    setReceivedItems(items);
+    if (isRefresh) setRefreshing(false);
+    else setLoadingData(false);
   }, [foundationId, canAccess]);
 
   useFocusEffect(
@@ -141,7 +162,7 @@ export default function FoundationPanelScreen({ navigation }) {
   if (profileLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={COLORS.primary} size="large" />
+        <ActivityIndicator color={COLORS.secondary} size="large" />
       </View>
     );
   }
@@ -187,38 +208,99 @@ export default function FoundationPanelScreen({ navigation }) {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => loadPanelData({ isRefresh: true })}
+          tintColor={COLORS.secondary}
+        />
+      }
+    >
       <View style={styles.topRow}>
         <View style={styles.topRowText}>
           <Text style={styles.title}>Panel de fundación</Text>
           <Text style={styles.subtitle}>{foundation?.name || "Fundación"}</Text>
         </View>
-        <Pressable onPress={handleLogout}>
+        <Pressable style={styles.logoutButton} onPress={handleLogout}>
+          <Feather name="log-out" size={14} color={COLORS.danger} />
           <Text style={styles.logout}>Cerrar sesión</Text>
         </Pressable>
       </View>
 
-      {loadingData ? (
-        <ActivityIndicator color={COLORS.primary} style={styles.panelLoader} />
+      {panelError ? (
+        <View style={styles.errorBox}>
+          <Feather name="alert-triangle" size={18} color={COLORS.danger} />
+          <Text style={styles.errorBoxText}>{panelError}</Text>
+          <Pressable style={styles.secondaryButton} onPress={() => loadPanelData()}>
+            <Text style={styles.secondaryButtonText}>Reintentar</Text>
+          </Pressable>
+        </View>
+      ) : loadingData ? (
+        <View style={styles.metrics}>
+          <SkeletonBlock height={78} radius={RADIUS.card} style={{ flex: 1 }} />
+          <SkeletonBlock height={78} radius={RADIUS.card} style={{ flex: 1 }} />
+          <SkeletonBlock height={78} radius={RADIUS.card} style={{ flex: 1 }} />
+        </View>
       ) : (
         <View style={styles.metrics}>
           <View style={[styles.metric, { backgroundColor: COLORS.primarySoft }]}>
-            <Text style={[styles.metricLabel, { color: COLORS.primary }]}>Donaciones</Text>
+            <View style={styles.metricHeader}>
+              <Feather name="heart" size={14} color={COLORS.primaryDark} />
+              <Text style={[styles.metricLabel, { color: COLORS.primaryDark }]}>Donaciones</Text>
+            </View>
             <Text style={styles.metricValue}>{summary.donations}</Text>
           </View>
-          <View style={[styles.metric, { backgroundColor: SOFT_BLUE }]}>
-            <Text style={[styles.metricLabel, { color: COLORS.secondary }]}>Necesidades</Text>
+          <View style={[styles.metric, { backgroundColor: COLORS.accentSoft }]}>
+            <View style={styles.metricHeader}>
+              <Feather name="trending-up" size={14} color={COLORS.warning} />
+              <Text style={[styles.metricLabel, { color: COLORS.warning }]}>Total donado</Text>
+            </View>
+            <Text style={styles.metricValueSmall}>{formatPrice(summary.totalDonated)}</Text>
+          </View>
+          <View style={[styles.metric, { backgroundColor: COLORS.secondarySoft }]}>
+            <View style={styles.metricHeader}>
+              <Feather name="package" size={14} color={COLORS.secondaryDark} />
+              <Text style={[styles.metricLabel, { color: COLORS.secondaryDark }]}>Necesidades</Text>
+            </View>
             <Text style={styles.metricValue}>{summary.needs}</Text>
           </View>
         </View>
       )}
 
+      <Text style={styles.sectionTitle}>Donaciones recibidas</Text>
+
+      <View style={styles.card}>
+        {receivedItems.length === 0 ? (
+          <Text style={styles.cardText}>Todavía no recibiste donaciones.</Text>
+        ) : (
+          receivedItems.map((item, index) => (
+            <View
+              key={`${item.donation_id}-${item.product_name}-${index}`}
+              style={[styles.itemRow, index > 0 && styles.itemRowSpacing]}
+            >
+              <View style={styles.flex}>
+                <Text style={styles.itemName} numberOfLines={1}>
+                  {item.product_name}
+                </Text>
+                <Text style={styles.itemQty}>x{item.quantity}</Text>
+              </View>
+              <Text style={styles.itemSubtotal}>
+                {formatPrice(Number(item.quantity || 0) * Number(item.unit_price || 0))}
+              </Text>
+            </View>
+          ))
+        )}
+      </View>
+
       <Text style={styles.sectionTitle}>Herramientas</Text>
 
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <View style={[styles.iconCircle, { backgroundColor: COLORS.primarySoft }]}>
-            <Text style={styles.icon}>📷</Text>
+          <View style={[styles.iconCircle, { backgroundColor: COLORS.secondarySoft }]}>
+            <Feather name="camera" size={19} color={COLORS.secondaryDark} />
           </View>
           <View style={styles.cardHeaderText}>
             <Text style={styles.cardTitle}>Cámara</Text>
@@ -228,8 +310,9 @@ export default function FoundationPanelScreen({ navigation }) {
 
         {photoUri && <Image source={{ uri: photoUri }} style={styles.photo} />}
 
-        <Pressable style={styles.primaryButton} onPress={handleOpenCamera}>
-          <Text style={styles.primaryButtonText}>
+        <Pressable style={styles.secondaryFilledButton} onPress={handleOpenCamera}>
+          <Feather name="camera" size={15} color={COLORS.surface} />
+          <Text style={styles.secondaryFilledButtonText}>
             {photoUri ? "Sacar otra foto" : "Abrir cámara"}
           </Text>
         </Pressable>
@@ -243,8 +326,8 @@ export default function FoundationPanelScreen({ navigation }) {
 
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <View style={[styles.iconCircle, { backgroundColor: SOFT_BLUE }]}>
-            <Text style={styles.icon}>📍</Text>
+          <View style={[styles.iconCircle, { backgroundColor: COLORS.accentSoft }]}>
+            <Feather name="map-pin" size={19} color={COLORS.warning} />
           </View>
           <View style={styles.cardHeaderText}>
             <Text style={styles.cardTitle}>Ubicación</Text>
@@ -267,11 +350,14 @@ export default function FoundationPanelScreen({ navigation }) {
           disabled={loadingLocation}
         >
           {loadingLocation ? (
-            <ActivityIndicator color={COLORS.primary} />
+            <ActivityIndicator color={COLORS.secondary} />
           ) : (
-            <Text style={styles.secondaryButtonText}>
-              {location ? "Actualizar ubicación" : "Obtener ubicación"}
-            </Text>
+            <>
+              <Feather name="crosshair" size={15} color={COLORS.secondary} />
+              <Text style={styles.secondaryButtonText}>
+                {location ? "Actualizar ubicación" : "Obtener ubicación"}
+              </Text>
+            </>
           )}
         </Pressable>
       </View>
@@ -288,17 +374,22 @@ export default function FoundationPanelScreen({ navigation }) {
               style={[styles.needRow, index > 0 && styles.needRowSpacing]}
             >
               <Text style={styles.needName}>{need.name}</Text>
-              <Text style={styles.needPending}>{need.pending} pendientes</Text>
+              <View style={[styles.needBadge, need.pending <= 0 && styles.needBadgeDone]}>
+                <Text style={[styles.needPending, need.pending <= 0 && styles.needPendingDone]}>
+                  {need.pending > 0 ? `${need.pending} pendientes` : "Sin pendientes"}
+                </Text>
+              </View>
             </View>
           ))
         )}
       </View>
 
       <Pressable
-        style={styles.primaryButton}
+        style={styles.secondaryFilledButton}
         onPress={() => navigation.navigate("FoundationNeeds")}
       >
-        <Text style={styles.primaryButtonText}>Gestionar necesidades</Text>
+        <Feather name="edit-3" size={15} color={COLORS.surface} />
+        <Text style={styles.secondaryFilledButtonText}>Gestionar necesidades</Text>
       </Pressable>
     </ScrollView>
   );
@@ -308,38 +399,89 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLORS.background },
   content: { padding: SPACING.md, paddingBottom: 40 },
   centered: { flex: 1, backgroundColor: COLORS.background, alignItems: "center", justifyContent: "center", padding: SPACING.lg },
-  accessTitle: { fontSize: 20, fontWeight: "800", color: COLORS.text },
-  accessText: { fontSize: 13, color: COLORS.textSecondary, textAlign: "center", lineHeight: 19, marginTop: 8 },
+  accessTitle: { ...TYPE.h1, color: COLORS.text },
+  accessText: { ...TYPE.caption, color: COLORS.textSecondary, textAlign: "center", marginTop: 8 },
   topRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
   topRowText: { flex: 1, paddingRight: 12 },
-  logout: { fontSize: 12, fontWeight: "800", color: COLORS.danger, marginTop: 6 },
-  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
-  subtitle: { fontSize: 14, color: COLORS.textSecondary, marginTop: 4, marginBottom: 20 },
+  logoutButton: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 6 },
+  logout: { ...TYPE.caption, fontSize: 12, color: COLORS.danger },
+  title: { ...TYPE.display, fontSize: 24, color: COLORS.text },
+  subtitle: { ...TYPE.body, fontSize: 13, color: COLORS.secondary, marginTop: 4, marginBottom: 20 },
   panelLoader: { marginVertical: 20 },
+  errorBox: {
+    backgroundColor: COLORS.dangerSoft,
+    borderRadius: RADIUS.card,
+    padding: 18,
+    alignItems: "center",
+    gap: 8,
+  },
+  errorBoxText: { ...TYPE.body, fontSize: 13, color: COLORS.danger, textAlign: "center" },
   metrics: { flexDirection: "row", gap: SPACING.sm },
-  metric: { flex: 1, borderRadius: RADIUS.md, padding: 16 },
-  metricLabel: { fontSize: 13, fontWeight: "700" },
-  metricValue: { fontSize: 30, fontWeight: "800", color: COLORS.text, marginTop: 4 },
-  sectionTitle: { fontSize: 19, fontWeight: "800", color: COLORS.text, marginTop: 24, marginBottom: 12 },
-  card: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 16, marginBottom: 14 },
+  metric: { flex: 1, borderRadius: RADIUS.card, padding: 14, ...SHADOW.card },
+  metricHeader: { flexDirection: "row", alignItems: "center", gap: 5 },
+  metricLabel: { ...TYPE.caption, fontSize: 11, fontWeight: "700" },
+  metricValue: { ...TYPE.display, fontSize: 26, color: COLORS.text, marginTop: 6 },
+  metricValueSmall: { ...TYPE.display, fontSize: 16, color: COLORS.text, marginTop: 10 },
+  sectionTitle: { ...TYPE.h1, fontSize: 17, color: COLORS.text, marginTop: 24, marginBottom: 12 },
+  card: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.card,
+    borderWidth: 1,
+    borderColor: COLORS.borderStrong,
+    padding: 16,
+    marginBottom: 14,
+    ...SHADOW.card,
+  },
   cardHeader: { flexDirection: "row", alignItems: "center" },
   cardHeaderText: { flex: 1, marginLeft: 12 },
   iconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
-  icon: { fontSize: 20 },
-  cardTitle: { fontSize: 16, fontWeight: "800", color: COLORS.text },
-  cardText: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
-  photo: { width: "100%", height: 200, borderRadius: RADIUS.sm, marginTop: 14 },
-  coords: { backgroundColor: COLORS.surfaceAlt, borderRadius: RADIUS.sm, padding: 12, marginTop: 14 },
-  coordsText: { fontSize: 13, color: COLORS.text },
-  primaryButton: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 15, alignItems: "center", marginTop: 14 },
-  primaryButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "800" },
-  secondaryButton: { borderWidth: 1, borderColor: COLORS.primary, borderRadius: RADIUS.md, padding: 15, alignItems: "center", marginTop: 14 },
-  secondaryButtonText: { color: COLORS.primary, fontSize: 15, fontWeight: "800" },
-  errorText: { color: COLORS.danger, fontSize: 13, marginTop: 10 },
+  cardTitle: { ...TYPE.h2, fontSize: 15, color: COLORS.text },
+  cardText: { ...TYPE.caption, fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
+  photo: { width: "100%", height: 200, borderRadius: RADIUS.lg, marginTop: 14 },
+  coords: { backgroundColor: COLORS.surfaceAlt, borderRadius: RADIUS.lg, padding: 12, marginTop: 14 },
+  coordsText: { ...TYPE.caption, fontSize: 12, color: COLORS.text },
+  secondaryFilledButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: COLORS.secondary,
+    borderRadius: RADIUS.lg,
+    paddingVertical: 14,
+    marginTop: 14,
+  },
+  secondaryFilledButtonText: { ...TYPE.button, fontSize: 13, color: COLORS.surface },
+  secondaryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: COLORS.secondary,
+    borderRadius: RADIUS.lg,
+    paddingVertical: 14,
+    marginTop: 14,
+  },
+  secondaryButtonText: { ...TYPE.button, fontSize: 13, color: COLORS.secondary },
+  errorText: { color: COLORS.danger, ...TYPE.caption, fontSize: 11, marginTop: 10 },
   needRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   needRowSpacing: { marginTop: 12 },
-  needName: { fontSize: 15, fontWeight: "700", color: COLORS.text },
-  needPending: { fontSize: 14, fontWeight: "700", color: COLORS.primary },
+  needName: { flex: 1, ...TYPE.bodyStrong, fontSize: 13, color: COLORS.text, paddingRight: 10 },
+  needBadge: {
+    backgroundColor: COLORS.secondarySoft,
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  needPending: { ...TYPE.bodyStrong, fontSize: 12, color: COLORS.secondaryDark },
+  needBadgeDone: { backgroundColor: COLORS.surfaceAlt },
+  needPendingDone: { color: COLORS.textSecondary },
+  flex: { flex: 1, paddingRight: 10 },
+  itemRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  itemRowSpacing: { marginTop: 12 },
+  itemName: { ...TYPE.bodyStrong, fontSize: 13, color: COLORS.text },
+  itemQty: { ...TYPE.caption, fontSize: 11, color: COLORS.textSecondary, marginTop: 2 },
+  itemSubtotal: { ...TYPE.bodyStrong, fontSize: 13, color: COLORS.text },
   cameraScreen: { flex: 1, backgroundColor: "#000000" },
   camera: { flex: 1 },
   cameraControls: { position: "absolute", bottom: 40, left: 0, right: 0, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 30 },

@@ -7,5 +7,7 @@ export const foundations = [
     location: "Pilar, Buenos Aires",
     description:
       "Fundación dedicada al acompañamiento de niños y adolescentes de la comunidad.",
+    logo: require("../assets/fundacion-juguemos.png"),
+    instagram: "https://www.instagram.com/fjuguemosycaminemosjuntos/",
   },
 ];

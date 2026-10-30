@@ -1,10 +1,16 @@
-import { StyleSheet, TextInput, View, Text } from "react-native";
-import { COLORS, RADIUS } from "../constants/theme";
+import { StyleSheet, TextInput, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { COLORS, RADIUS, TYPE } from "../constants/theme";
 
-export default function SearchBar({ value, onChangeText, placeholder = "Buscar productos..." }) {
+export default function SearchBar({
+  value,
+  onChangeText,
+  placeholder = "Buscar producto...",
+}) {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>⌕</Text>
+      <Feather name="search" size={16} color={COLORS.textSecondary} style={styles.icon} />
+
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -20,21 +26,23 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    minHeight: 48,
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
+    height: 42,
+    backgroundColor: COLORS.surfaceAlt,
+    borderRadius: RADIUS.pill,
     borderWidth: 1,
     borderColor: COLORS.border,
     paddingHorizontal: 14,
   },
+
   icon: {
-    fontSize: 22,
-    color: COLORS.textSecondary,
     marginRight: 8,
   },
+
   input: {
+    ...TYPE.body,
     flex: 1,
-    fontSize: 15,
+    fontSize: 13,
     color: COLORS.text,
+    paddingVertical: 0,
   },
 });

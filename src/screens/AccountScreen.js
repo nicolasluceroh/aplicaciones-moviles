@@ -1,68 +1,112 @@
-import { useEffect, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { COLORS, RADIUS, SPACING } from "../constants/theme";
+import { useState } from "react";
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { COLORS, RADIUS, SHADOW, SPACING, TYPE } from "../constants/theme";
 import BottomNav from "../components/BottomNav";
-import { getUser, logout, subscribe } from "../state/session";
+import { useAuth } from "../context/AuthContext";
 
-// Azul suave para la caja de organizaciones.
-// Se define acá para no modificar theme.js, que es un archivo compartido.
-const SOFT_BLUE = "#E8F0F7";
+const INFO_CONTENT = {
+  "Cómo funciona": "Elegís productos, los agregás al carrito, asignás una fundación a cada uno y confirmás la donación. Si iniciás sesión, la donación queda guardada en tu historial.",
+  "Privacidad y contacto": "Tu cuenta se usa para autenticarte y asociar tus donaciones. La información de sesión se administra con Supabase Auth.",
+};
 
 export default function AccountScreen({ navigation }) {
-  // La sesión vive en src/state/session.js para que no se pierda al navegar.
-  const [user, setUser] = useState(getUser);
+  const { user, profile, loading, signOut } = useAuth();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [infoModal, setInfoModal] = useState(null);
 
-  useEffect(() => subscribe(setUser), []);
+  const name =
+    profile?.full_name ||
+    user?.user_metadata?.full_name ||
+    user?.email?.split("@")[0] ||
+    "Usuario";
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      setLoggingOut(true);
+      await signOut();
+    } catch (error) {
+      Alert.alert("Error", "No se pudo cerrar la sesión.");
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   const handleMyData = () => {
-    Alert.alert("Mis datos", "La edición de datos se habilitará junto con Supabase.");
+    navigation.navigate("Profile");
   };
 
   const handleInfo = (title) => {
-    Alert.alert(title, "Esta sección se completará en una etapa posterior.");
+    setInfoModal({ title, message: INFO_CONTENT[title] });
   };
 
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Mi cuenta</Text>
-        <Text style={styles.subtitle}>Guardá y consultá tus donaciones.</Text>
+        <View style={styles.headerCard}>
+          <Text style={styles.eyebrow}>Tu espacio</Text>
+          <Text style={styles.title}>Mi cuenta</Text>
+          <Text style={styles.subtitle}>Guardá y consultá tus donaciones.</Text>
+        </View>
 
-        {user ? (
-          // ---------- Con sesión ----------
+        {loading ? (
+          <View style={styles.loadingCard}>
+            <ActivityIndicator color={COLORS.primary} />
+            <Text style={styles.loadingText}>Cargando sesión...</Text>
+          </View>
+        ) : user ? (
+          // ---------- Con sesión real de Supabase ----------
           <View style={styles.card}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {user.name.trim().charAt(0).toUpperCase()}
-              </Text>
+            <View style={styles.profileRow}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {name.trim().charAt(0).toUpperCase()}
+                </Text>
+              </View>
+              <View style={styles.profileInfo}>
+                <Text style={styles.greeting}>Hola, {name}</Text>
+                {!!user.email && (
+                  <View style={styles.emailRow}>
+                    <Feather name="mail" size={12} color={COLORS.textSecondary} />
+                    <Text style={styles.email}>{user.email}</Text>
+                  </View>
+                )}
+              </View>
             </View>
-            <Text style={styles.greeting}>Hola, {user.name}</Text>
-            {!!user.email && <Text style={styles.email}>{user.email}</Text>}
 
             <Pressable style={[styles.row, styles.firstRowSession]} onPress={handleMyData}>
-              <Text style={styles.rowText}>Mis datos</Text>
-              <Text style={styles.rowArrow}>›</Text>
+              <View style={styles.rowLeft}>
+                <Feather name="user" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.rowText}>Mis datos</Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={COLORS.textSecondary} />
             </Pressable>
 
             <Pressable style={styles.row} onPress={() => navigation.navigate("Donations")}>
-              <Text style={styles.rowText}>Mis donaciones</Text>
-              <Text style={styles.rowArrow}>›</Text>
+              <View style={styles.rowLeft}>
+                <Feather name="package" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.rowText}>Mis donaciones</Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={COLORS.textSecondary} />
             </Pressable>
 
-            <Pressable style={styles.secondaryButton} onPress={handleLogout}>
-              <Text style={styles.secondaryButtonText}>Cerrar sesión</Text>
+            <Pressable
+              style={[styles.logoutButton, loggingOut && styles.disabledButton]}
+              onPress={handleLogout}
+              disabled={loggingOut}
+            >
+              <Feather name="log-out" size={15} color={COLORS.danger} />
+              <Text style={styles.logoutButtonText}>
+                {loggingOut ? "Cerrando sesión..." : "Cerrar sesión"}
+              </Text>
             </Pressable>
           </View>
         ) : (
           // ---------- Sin sesión ----------
           <>
             <View style={styles.card}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>○</Text>
+              <View style={[styles.avatar, styles.avatarEmpty]}>
+                <Feather name="user" size={26} color={COLORS.primaryDark} />
               </View>
               <Text style={styles.cardTitle}>Todavía no iniciaste sesión</Text>
               <Text style={styles.cardText}>
@@ -74,6 +118,7 @@ export default function AccountScreen({ navigation }) {
                 style={styles.primaryButton}
                 onPress={() => navigation.navigate("Login", { userType: "donor" })}
               >
+                <Feather name="log-in" size={15} color={COLORS.surface} />
                 <Text style={styles.primaryButtonText}>Iniciar sesión</Text>
               </Pressable>
             </View>
@@ -82,23 +127,46 @@ export default function AccountScreen({ navigation }) {
               style={styles.secondaryButton}
               onPress={() => navigation.navigate("Register")}
             >
+              <Feather name="user-plus" size={15} color={COLORS.primaryDark} />
               <Text style={styles.secondaryButtonText}>Crear cuenta</Text>
             </Pressable>
+
+            <View style={styles.stepsCard}>
+              <Text style={styles.stepsTitle}>¿Cómo funciona?</Text>
+              {[
+                { icon: "shopping-bag", text: "Elegís productos del catálogo." },
+                { icon: "heart", text: "Asignás cada uno a una fundación." },
+                { icon: "check-circle", text: "Confirmás y queda en tu historial." },
+              ].map((step, index) => (
+                <View key={step.icon} style={styles.stepRow}>
+                  <View style={styles.stepNumber}>
+                    <Text style={styles.stepNumberText}>{index + 1}</Text>
+                  </View>
+                  <Feather name={step.icon} size={14} color={COLORS.primaryDark} />
+                  <Text style={styles.stepText}>{step.text}</Text>
+                </View>
+              ))}
+            </View>
           </>
         )}
 
         <Text style={styles.sectionTitle}>Organizaciones</Text>
 
         <View style={styles.foundationBox}>
-          <Text style={styles.foundationTitle}>¿Representás a una fundación?</Text>
+          <View style={styles.foundationHeader}>
+            <Feather name="map-pin" size={16} color={COLORS.secondaryDark} />
+            <Text style={styles.foundationTitle}>¿Representás a una fundación?</Text>
+          </View>
           <Text style={styles.foundationText}>
             Ingresá al panel de organización para gestionar necesidades, cámara y
             ubicación.
           </Text>
           <Pressable
+            style={styles.foundationLinkRow}
             onPress={() => navigation.navigate("Login", { userType: "foundation" })}
           >
-            <Text style={styles.foundationLink}>Acceso para fundaciones →</Text>
+            <Text style={styles.foundationLink}>Acceso para fundaciones</Text>
+            <Feather name="arrow-right" size={16} color={COLORS.secondaryDark} />
           </Pressable>
         </View>
 
@@ -109,18 +177,41 @@ export default function AccountScreen({ navigation }) {
             style={[styles.row, styles.firstRow]}
             onPress={() => handleInfo("Cómo funciona")}
           >
-            <Text style={styles.rowText}>Cómo funciona</Text>
-            <Text style={styles.rowArrow}>›</Text>
+            <View style={styles.rowLeft}>
+              <Feather name="help-circle" size={16} color={COLORS.textSecondary} />
+              <Text style={styles.rowText}>Cómo funciona</Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={COLORS.textSecondary} />
           </Pressable>
           <Pressable
             style={styles.row}
             onPress={() => handleInfo("Privacidad y contacto")}
           >
-            <Text style={styles.rowText}>Privacidad y contacto</Text>
-            <Text style={styles.rowArrow}>›</Text>
+            <View style={styles.rowLeft}>
+              <Feather name="shield" size={16} color={COLORS.textSecondary} />
+              <Text style={styles.rowText}>Privacidad y contacto</Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={COLORS.textSecondary} />
           </Pressable>
         </View>
       </ScrollView>
+
+      <Modal
+        visible={!!infoModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setInfoModal(null)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setInfoModal(null)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>{infoModal?.title}</Text>
+            <Text style={styles.modalMessage}>{infoModal?.message}</Text>
+            <Pressable style={styles.modalCloseButton} onPress={() => setInfoModal(null)}>
+              <Text style={styles.modalCloseText}>Entendido</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <BottomNav navigation={navigation} active="Account" />
     </View>
@@ -131,40 +222,63 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLORS.background, paddingTop: 46 },
   content: { padding: SPACING.md, paddingBottom: 24 },
 
-  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
-  subtitle: { fontSize: 13, color: COLORS.textSecondary, marginTop: 5, marginBottom: 20 },
+  headerCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.card,
+    borderWidth: 1,
+    borderColor: COLORS.borderStrong,
+    padding: SPACING.md,
+    marginBottom: 20,
+    ...SHADOW.card,
+  },
+  eyebrow: { ...TYPE.caption, fontSize: 11, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase", color: COLORS.primary },
+  title: { ...TYPE.display, fontSize: 24, color: COLORS.text, marginTop: 4 },
+  subtitle: { ...TYPE.caption, fontSize: 13, color: COLORS.textSecondary, marginTop: 5 },
 
   card: {
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: COLORS.borderStrong,
+    borderRadius: RADIUS.card,
     padding: 20,
-    alignItems: "center",
+    ...SHADOW.card,
   },
+  loadingCard: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.borderStrong,
+    borderRadius: RADIUS.card,
+    padding: 28,
+    alignItems: "center",
+    ...SHADOW.card,
+  },
+  loadingText: { ...TYPE.caption, color: COLORS.textSecondary, marginTop: 10 },
 
+  profileRow: { flexDirection: "row", alignItems: "center", gap: 14 },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: COLORS.primarySoft,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 14,
   },
-  avatarText: { fontSize: 24, fontWeight: "800", color: COLORS.primary },
+  avatarEmpty: { backgroundColor: COLORS.primarySoft, alignSelf: "center", marginBottom: 4 },
+  avatarText: { fontSize: 22, fontWeight: "800", color: COLORS.surface },
 
-  cardTitle: { fontSize: 18, fontWeight: "800", color: COLORS.text, textAlign: "center" },
+  profileInfo: { flex: 1 },
+  cardTitle: { ...TYPE.h1, fontSize: 16, color: COLORS.text, textAlign: "center" },
   cardText: {
+    ...TYPE.body,
     fontSize: 13,
     color: COLORS.textSecondary,
-    lineHeight: 19,
     textAlign: "center",
     marginTop: 8,
   },
 
-  greeting: { fontSize: 20, fontWeight: "800", color: COLORS.text },
-  email: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4 },
+  greeting: { ...TYPE.h1, fontSize: 16, color: COLORS.text },
+  emailRow: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4 },
+  email: { ...TYPE.caption, fontSize: 12, color: COLORS.textSecondary },
 
   row: {
     width: "100%",
@@ -176,42 +290,120 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     marginTop: 4,
   },
+  rowLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
   firstRow: { borderTopWidth: 0, marginTop: 0 },
-  firstRowSession: { marginTop: 14 },
-  rowText: { fontSize: 15, fontWeight: "700", color: COLORS.text },
-  rowArrow: { fontSize: 20, color: COLORS.textSecondary },
+  firstRowSession: { marginTop: 18 },
+  rowText: { ...TYPE.bodyStrong, fontSize: 14, color: COLORS.text },
 
   primaryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
     width: "100%",
     backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.md,
-    padding: 15,
-    alignItems: "center",
+    borderRadius: RADIUS.lg,
+    paddingVertical: 14,
     marginTop: 18,
   },
-  primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
+  primaryButtonText: { ...TYPE.button, fontSize: 14, color: COLORS.surface },
 
   secondaryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
     width: "100%",
     borderWidth: 1,
     borderColor: COLORS.primary,
-    borderRadius: RADIUS.md,
-    padding: 15,
-    alignItems: "center",
+    borderRadius: RADIUS.lg,
+    paddingVertical: 14,
     marginTop: 12,
   },
-  secondaryButtonText: { color: COLORS.primary, fontSize: 16, fontWeight: "800" },
+  secondaryButtonText: { ...TYPE.button, fontSize: 14, color: COLORS.primaryDark },
+
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    width: "100%",
+    borderRadius: RADIUS.lg,
+    paddingVertical: 13,
+    marginTop: 14,
+  },
+  logoutButtonText: { ...TYPE.button, fontSize: 13, color: COLORS.danger },
+  disabledButton: { opacity: 0.6 },
 
   sectionTitle: {
-    fontSize: 19,
-    fontWeight: "800",
+    ...TYPE.h1,
+    fontSize: 16,
     color: COLORS.text,
     marginTop: 26,
     marginBottom: 12,
   },
 
-  foundationBox: { backgroundColor: SOFT_BLUE, borderRadius: RADIUS.md, padding: 18 },
-  foundationTitle: { fontSize: 15, fontWeight: "800", color: COLORS.secondary },
-  foundationText: { fontSize: 13, color: COLORS.text, lineHeight: 19, marginTop: 8 },
-  foundationLink: { fontSize: 14, fontWeight: "800", color: COLORS.secondary, marginTop: 14 },
+  foundationBox: {
+    backgroundColor: COLORS.secondarySoft,
+    borderRadius: RADIUS.card,
+    padding: 18,
+    ...SHADOW.card,
+  },
+  foundationHeader: { flexDirection: "row", alignItems: "center", gap: 7 },
+  foundationTitle: { ...TYPE.h2, fontSize: 15, color: COLORS.secondaryDark },
+  foundationText: { ...TYPE.body, fontSize: 13, color: COLORS.text, marginTop: 8, lineHeight: 18 },
+  foundationLinkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 14,
+  },
+  foundationLink: { ...TYPE.bodyStrong, fontSize: 13, color: COLORS.secondaryDark },
+
+  stepsCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.card,
+    borderWidth: 1,
+    borderColor: COLORS.borderStrong,
+    padding: 18,
+    marginTop: 16,
+    ...SHADOW.card,
+  },
+  stepsTitle: { ...TYPE.h2, fontSize: 15, color: COLORS.text },
+  stepRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 14 },
+  stepNumber: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: COLORS.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stepNumberText: { ...TYPE.caption, fontSize: 11, fontWeight: "800", color: COLORS.primaryDark },
+  stepText: { ...TYPE.body, fontSize: 13, color: COLORS.textSecondary, flex: 1 },
+
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(28,25,23,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: SPACING.lg,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 360,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.card,
+    padding: 22,
+  },
+  modalTitle: { ...TYPE.h1, fontSize: 17, color: COLORS.text },
+  modalMessage: { ...TYPE.body, fontSize: 14, color: COLORS.textSecondary, marginTop: 10, lineHeight: 20 },
+  modalCloseButton: {
+    marginTop: 18,
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.lg,
+    paddingVertical: 13,
+    alignItems: "center",
+  },
+  modalCloseText: { ...TYPE.button, fontSize: 14, color: COLORS.surface },
 });

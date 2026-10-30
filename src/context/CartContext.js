@@ -1,9 +1,35 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 const CartContext = createContext(null);
+const STORAGE_KEY = "@pilar_de_sonrisas_cart";
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
+  // Evita pisar el storage con el carrito vacío inicial antes de terminar de
+  // leer lo que había guardado.
+  const hydrated = useRef(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const saved = await AsyncStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) setCart(parsed);
+        }
+      } catch {
+        // Si el storage está corrupto o no disponible, seguimos con carrito vacío.
+      } finally {
+        hydrated.current = true;
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated.current) return;
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(cart)).catch(() => {});
+  }, [cart]);
 
   const addToCart = (product) => {
     setCart((current) => {

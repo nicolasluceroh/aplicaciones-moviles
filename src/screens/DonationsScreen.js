@@ -1,61 +1,173 @@
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { COLORS, RADIUS, SPACING } from "../constants/theme";
+import { useCallback, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import { Feather } from "@expo/vector-icons";
+import { COLORS, RADIUS, SHADOW, SPACING, TYPE } from "../constants/theme";
 import BottomNav from "../components/BottomNav";
+import SkeletonBlock from "../components/SkeletonBlock";
+import { useAuth } from "../context/AuthContext";
+import { supabase } from "../config/supabase";
 
-// Azul suave para el aviso del pie.
-// Se define acá para no modificar theme.js, que es un archivo compartido.
-const SOFT_BLUE = "#E8F0F7";
-const SOFT_GREEN = "#E3F2E8";
+const formatPrice = (value) => `$${Number(value || 0).toLocaleString("es-AR")}`;
+const formatDate = (value) =>
+  new Date(value).toLocaleDateString("es-AR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 
-// Historial simulado. Nicolás lo reemplazará con datos de Supabase.
-const DONATIONS = [
-  {
-    id: "1",
-    foundation: "Juguemos y Caminemos Juntos",
-    date: "18 Sep 2026",
-    products: 2,
-    total: 27000,
-    status: "Confirmada",
-  },
-  {
-    id: "2",
-    foundation: "Juguemos y Caminemos Juntos",
-    date: "12 Sep 2026",
-    products: 2,
-    total: 27000,
-    status: "Confirmada",
-  },
-];
+const STATUS_LABEL = { confirmed: "Confirmada", cancelled: "Cancelada" };
 
-const formatPrice = (value) => `$${value.toLocaleString("es-AR")}`;
+function DonationSkeleton() {
+  return (
+    <>
+      <SkeletonBlock height={86} radius={RADIUS.card} style={{ marginBottom: 18 }} />
+      {[0, 1, 2].map((i) => (
+        <View key={i} style={styles.card}>
+          <SkeletonBlock width={46} height={46} radius={RADIUS.lg} />
+          <View style={[styles.cardBody, { gap: 6 }]}>
+            <SkeletonBlock width="50%" height={14} />
+            <SkeletonBlock width="35%" height={11} />
+            <SkeletonBlock width="70%" height={11} />
+          </View>
+        </View>
+      ))}
+    </>
+  );
+}
 
 export default function DonationsScreen({ navigation }) {
-  const totalDonated = DONATIONS.reduce((sum, item) => sum + item.total, 0);
+  const { user, loading: authLoading } = useAuth();
+  const [donations, setDonations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(null);
 
-  const handleDetail = () => {
-    Alert.alert(
-      "Detalle de la donación",
-      "El detalle completo se mostrará cuando el historial venga de Supabase."
-    );
+  const loadDonations = useCallback(async ({ isRefresh = false } = {}) => {
+    if (!user?.id) {
+      setDonations([]);
+      return;
+    }
+
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+    setLoadError(null);
+
+    const { data, error } = await supabase
+      .from("donations")
+      .select(
+        "id, total, status, created_at, donation_items(id, product_name, foundation_name, quantity, unit_price)"
+      )
+      .eq("donor_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      setLoadError(error.message || "No se pudo cargar el historial.");
+    } else {
+      setDonations(data || []);
+    }
+
+    if (isRefresh) setRefreshing(false);
+    else setLoading(false);
+  }, [user?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadDonations();
+    }, [loadDonations])
+  );
+
+  const totalDonated = useMemo(
+    () => donations.reduce((sum, item) => sum + Number(item.total || 0), 0),
+    [donations]
+  );
+
+  const describeFoundations = (items = []) => {
+    const names = [...new Set(items.map((item) => item.foundation_name).filter(Boolean))];
+
+    if (names.length === 0) return "Fundación no disponible";
+    if (names.length === 1) return names[0];
+    return `${names.length} fundaciones`;
   };
+
+  const countProducts = (items = []) =>
+    items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Mis donaciones</Text>
-        <Text style={styles.subtitle}>Historial de tus aportes realizados.</Text>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => loadDonations({ isRefresh: true })}
+            tintColor={COLORS.primary}
+          />
+        }
+      >
+        <View style={styles.headerCard}>
+          <Text style={styles.eyebrow}>Tu historial</Text>
+          <Text style={styles.title}>Mis donaciones</Text>
+          <Text style={styles.subtitle}>
+            Historial de todo lo que donaste a través de Pilar de Sonrisas.
+          </Text>
+        </View>
 
-        {DONATIONS.length === 0 ? (
+        {authLoading ? (
+          <View style={styles.loadingBox}>
+            <ActivityIndicator color={COLORS.primary} />
+            <Text style={styles.loadingText}>Cargando sesión...</Text>
+          </View>
+        ) : !user ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyTitle}>Todavía no hay historial</Text>
+            <View style={styles.emptyIcon}>
+              <Feather name="log-in" size={22} color={COLORS.primary} />
+            </View>
+            <Text style={styles.emptyTitle}>Iniciá sesión para ver tu historial</Text>
             <Text style={styles.emptyText}>
-              Cuando confirmes una donación vas a poder consultarla desde acá.
+              Las donaciones se guardan en la cuenta con la que confirmás el checkout.
             </Text>
             <Pressable
-              style={styles.emptyButton}
-              onPress={() => navigation.navigate("Home")}
+              style={styles.primaryButton}
+              onPress={() =>
+                navigation.navigate("Login", { userType: "donor", returnTo: "Donations" })
+              }
             >
-              <Text style={styles.emptyButtonText}>Explorar productos</Text>
+              <Text style={styles.primaryButtonText}>Iniciar sesión</Text>
+            </Pressable>
+          </View>
+        ) : loading ? (
+          <DonationSkeleton />
+        ) : loadError ? (
+          <View style={styles.empty}>
+            <View style={styles.emptyIcon}>
+              <Feather name="alert-triangle" size={22} color={COLORS.danger} />
+            </View>
+            <Text style={styles.emptyTitle}>No se pudo cargar tu historial</Text>
+            <Text style={styles.emptyText}>{loadError}</Text>
+            <Pressable style={styles.primaryButton} onPress={() => loadDonations()}>
+              <Text style={styles.primaryButtonText}>Reintentar</Text>
+            </Pressable>
+          </View>
+        ) : donations.length === 0 ? (
+          <View style={styles.empty}>
+            <View style={styles.emptyIcon}>
+              <Feather name="package" size={22} color={COLORS.primary} />
+            </View>
+            <Text style={styles.emptyTitle}>Todavía no hiciste ninguna donación</Text>
+            <Text style={styles.emptyText}>
+              Cuando dones algo del catálogo, vas a ver el seguimiento acá.
+            </Text>
+            <Pressable style={styles.emptyButton} onPress={() => navigation.navigate("Home")}>
+              <Text style={styles.emptyButtonText}>Ir al catálogo</Text>
             </Pressable>
           </View>
         ) : (
@@ -66,42 +178,53 @@ export default function DonationsScreen({ navigation }) {
                 <Text style={styles.summaryValue}>{formatPrice(totalDonated)}</Text>
               </View>
               <Text style={styles.summaryCount}>
-                {DONATIONS.length} {DONATIONS.length === 1 ? "donación" : "donaciones"}
+                {donations.length} {donations.length === 1 ? "donación" : "donaciones"}
               </Text>
             </View>
 
-            {DONATIONS.map((donation) => (
-              <View key={donation.id} style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle} numberOfLines={2}>
-                    Donación a {donation.foundation}
-                  </Text>
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{donation.status}</Text>
+            {donations.map((donation) => {
+              const items = donation.donation_items || [];
+              const productsCount = countProducts(items);
+              const statusKey = donation.status || "confirmed";
+              const isCancelled = statusKey === "cancelled";
+
+              return (
+                <Pressable
+                  key={donation.id}
+                  style={styles.card}
+                  onPress={() =>
+                    navigation.navigate("DonationDetail", { donationId: donation.id })
+                  }
+                >
+                  <View style={styles.cardIcon}>
+                    <Feather name="package" size={20} color={COLORS.primary} />
                   </View>
-                </View>
 
-                <Text style={styles.cardDate}>{donation.date}</Text>
+                  <View style={styles.cardBody}>
+                    <Text style={styles.cardTotal}>{formatPrice(donation.total)}</Text>
+                    <Text style={styles.cardDate}>{formatDate(donation.created_at)}</Text>
+                    <Text style={styles.cardMeta} numberOfLines={1}>
+                      {describeFoundations(items)} · {productsCount}{" "}
+                      {productsCount === 1 ? "producto" : "productos"}
+                    </Text>
+                  </View>
 
-                <View style={styles.divider} />
-
-                <View style={styles.cardFooter}>
-                  <Text style={styles.cardProducts}>
-                    {donation.products} productos
-                  </Text>
-                  <Text style={styles.cardTotal}>{formatPrice(donation.total)}</Text>
-                </View>
-
-                <Pressable onPress={handleDetail}>
-                  <Text style={styles.detailLink}>Ver detalle →</Text>
+                  <View style={styles.cardRight}>
+                    <View style={[styles.badge, isCancelled && styles.badgeDanger]}>
+                      <Text style={[styles.badgeText, isCancelled && styles.badgeTextDanger]}>
+                        {STATUS_LABEL[statusKey] || "Confirmada"}
+                      </Text>
+                    </View>
+                    <Feather name="chevron-right" size={18} color={COLORS.textSecondary} />
+                  </View>
                 </Pressable>
-              </View>
-            ))}
+              );
+            })}
 
             <View style={styles.notice}>
               <Text style={styles.noticeTitle}>Tu ayuda queda registrada</Text>
               <Text style={styles.noticeText}>
-                Cuando conectemos Supabase, este historial se cargará con datos reales.
+                Este historial se carga desde Supabase y solo muestra las donaciones de tu cuenta.
               </Text>
             </View>
           </>
@@ -116,78 +239,117 @@ export default function DonationsScreen({ navigation }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLORS.background, paddingTop: 46 },
   content: { padding: SPACING.md, paddingBottom: 24 },
-
-  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
-  subtitle: { fontSize: 13, color: COLORS.textSecondary, marginTop: 5, marginBottom: 20 },
-
+  headerCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.card,
+    borderWidth: 1,
+    borderColor: COLORS.borderStrong,
+    padding: SPACING.md,
+    marginBottom: 20,
+    ...SHADOW.card,
+  },
+  eyebrow: { ...TYPE.caption, fontSize: 11, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase", color: COLORS.primary },
+  title: { ...TYPE.display, fontSize: 24, color: COLORS.text, marginTop: 4 },
+  subtitle: { ...TYPE.body, fontSize: 13, color: COLORS.textSecondary, marginTop: 5 },
   summary: {
     backgroundColor: COLORS.primarySoft,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.card,
     padding: 18,
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "space-between",
     marginBottom: 18,
+    ...SHADOW.card,
   },
-  summaryLabel: { fontSize: 13, fontWeight: "800", color: COLORS.primary },
-  summaryValue: { fontSize: 30, fontWeight: "800", color: COLORS.text, marginTop: 2 },
-  summaryCount: { fontSize: 13, fontWeight: "700", color: COLORS.textSecondary },
-
+  summaryLabel: { ...TYPE.caption, color: COLORS.primaryDark },
+  summaryValue: { ...TYPE.display, fontSize: 28, color: COLORS.text, marginTop: 2 },
+  summaryCount: { ...TYPE.bodyStrong, fontSize: 13, color: COLORS.textSecondary },
   card: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.card,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 16,
-    marginBottom: 14,
+    borderColor: COLORS.borderStrong,
+    padding: 14,
+    marginBottom: 12,
+    ...SHADOW.card,
   },
-  cardHeader: { flexDirection: "row", alignItems: "flex-start" },
-  cardTitle: { flex: 1, fontSize: 15, fontWeight: "800", color: COLORS.text, paddingRight: 10 },
+  cardIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardBody: { flex: 1 },
+  cardTotal: { ...TYPE.bodyStrong, fontSize: 15, color: COLORS.text },
+  cardDate: { ...TYPE.caption, fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
+  cardMeta: { ...TYPE.caption, fontSize: 11, color: COLORS.textSecondary, marginTop: 4 },
+  cardRight: { alignItems: "flex-end", gap: 6 },
   badge: {
-    backgroundColor: SOFT_GREEN,
-    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.successSoft,
+    borderRadius: RADIUS.pill,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 4,
   },
-  badgeText: { fontSize: 12, fontWeight: "800", color: COLORS.success },
-
-  cardDate: { fontSize: 13, color: COLORS.textSecondary, marginTop: 6 },
-
-  divider: { height: 1, backgroundColor: COLORS.border, marginVertical: 14 },
-
-  cardFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  cardProducts: { fontSize: 14, color: COLORS.textSecondary },
-  cardTotal: { fontSize: 18, fontWeight: "800", color: COLORS.primary },
-
-  detailLink: { fontSize: 14, fontWeight: "800", color: COLORS.secondary, marginTop: 12 },
-
-  notice: { backgroundColor: SOFT_BLUE, borderRadius: RADIUS.md, padding: 18, marginTop: 8 },
-  noticeTitle: { fontSize: 15, fontWeight: "800", color: COLORS.secondary },
-  noticeText: { fontSize: 13, color: COLORS.text, lineHeight: 19, marginTop: 8 },
-
-  empty: {
+  badgeDanger: { backgroundColor: COLORS.dangerSoft },
+  badgeText: { ...TYPE.caption, fontSize: 11, color: COLORS.success, fontWeight: "600" },
+  badgeTextDanger: { color: COLORS.danger },
+  notice: { backgroundColor: COLORS.accentSoft, borderRadius: RADIUS.card, padding: 18, marginTop: 8, ...SHADOW.card },
+  noticeTitle: { ...TYPE.h2, fontSize: 15, color: COLORS.secondaryDark },
+  noticeText: { ...TYPE.body, fontSize: 13, color: COLORS.text, marginTop: 8, lineHeight: 18 },
+  loadingBox: {
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.card,
     borderWidth: 1,
     borderColor: COLORS.border,
-    padding: 22,
+    padding: 24,
     alignItems: "center",
   },
-  emptyTitle: { fontSize: 17, fontWeight: "800", color: COLORS.text },
+  loadingText: { marginTop: 10, color: COLORS.textSecondary },
+  empty: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.card,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: COLORS.border,
+    padding: 28,
+    alignItems: "center",
+  },
+  emptyIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: COLORS.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  emptyTitle: { ...TYPE.h2, fontSize: 16, color: COLORS.text, textAlign: "center" },
   emptyText: {
-    fontSize: 13,
+    ...TYPE.caption,
+    fontSize: 12,
     color: COLORS.textSecondary,
-    lineHeight: 19,
     textAlign: "center",
     marginTop: 7,
   },
   emptyButton: {
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    borderRadius: RADIUS.md,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.lg,
+    paddingVertical: 11,
+    paddingHorizontal: 18,
     marginTop: 16,
   },
-  emptyButtonText: { color: COLORS.primary, fontWeight: "800" },
+  emptyButtonText: { ...TYPE.button, fontSize: 13, color: COLORS.surface },
+  primaryButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.lg,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    marginTop: 16,
+  },
+  primaryButtonText: { ...TYPE.button, fontSize: 13, color: COLORS.textOnDark },
 });
