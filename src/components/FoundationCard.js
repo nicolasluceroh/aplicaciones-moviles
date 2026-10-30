@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { COLORS, RADIUS } from "../constants/theme";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { CARD_RADIUS, COLORS, RADIUS, SHADOW, TYPE } from "../constants/theme";
 
 export default function FoundationCard({ foundation, onPress }) {
   return (
@@ -30,7 +31,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.card,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 12,

@@ -63,15 +63,18 @@ export default function ProductScreen({ route, navigation }) {
       <Text style={styles.note}>
         La fundación destinataria se selecciona después, desde el carrito.
       </Text>
-    </ScrollView>
+      </ScrollView>
+      <BottomNav navigation={navigation} active="Home" />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLORS.background },
-  content: { padding: SPACING.md },
+  content: { padding: SPACING.md, paddingBottom: 40 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  imagePlaceholder: { height: 230, borderRadius: RADIUS.lg, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, alignItems: "center", justifyContent: "center", marginBottom: 18 },
+  image: { width: "100%", height: 230, borderRadius: RADIUS.card, backgroundColor: COLORS.surfaceAlt, marginBottom: 20 },
+  imagePlaceholder: { height: 230, borderRadius: RADIUS.card, backgroundColor: COLORS.surfaceAlt, alignItems: "center", justifyContent: "center", marginBottom: 20 },
   emoji: { fontSize: 78 },
   category: { fontSize: 12, color: COLORS.secondary, fontWeight: "700" },
   title: { fontSize: 26, fontWeight: "800", color: COLORS.text, marginTop: 4 },

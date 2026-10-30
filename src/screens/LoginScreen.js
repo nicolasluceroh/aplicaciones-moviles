@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  Alert,
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,6 +14,7 @@ import { supabase } from "../config/supabase";
 const SOFT_BLUE = "#E8F0F7";
 
 export default function LoginScreen({ route, navigation }) {
+  const alert = useAppAlert();
   const userType = route.params?.userType || "donor";
   const returnTo = route.params?.returnTo || "Account";
   const isFoundation = userType === "foundation";
@@ -198,11 +199,27 @@ export default function LoginScreen({ route, navigation }) {
             <Text style={styles.secondaryButtonText}>Crear cuenta</Text>
           </Pressable>
 
-          <View style={styles.separator}>
-            <View style={styles.separatorLine} />
-            <Text style={styles.separatorText}>o</Text>
-            <View style={styles.separatorLine} />
+        <View style={styles.field}>
+          <Text style={styles.label}>Email</Text>
+          <View style={styles.inputWrap}>
+            <Feather name="mail" size={16} color={WEB.inkSoft} style={styles.fieldIcon} />
+            <TextInput
+              style={[styles.input, fieldErrors.email && styles.inputError]}
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (fieldErrors.email) setFieldErrors((e) => ({ ...e, email: null }));
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholder="vos@email.com"
+              placeholderTextColor={WEB.inkSoft}
+              editable={!loading && !resending}
+            />
           </View>
+          {!!fieldErrors.email && <Text style={styles.fieldError}>{fieldErrors.email}</Text>}
+        </View>
 
           <Pressable
             style={styles.foundationBox}
@@ -215,8 +232,49 @@ export default function LoginScreen({ route, navigation }) {
               <Text style={styles.foundationArrow}>›</Text>
             </View>
           </Pressable>
-        </>
-      )}
+        )}
+
+        <PressableScale
+          style={[styles.primaryButton, (loading || resending) && styles.disabledButton]}
+          onPress={handleLogin}
+          disabled={loading || resending}
+        >
+          {loading && <ActivityIndicator size="small" color={WEB.surface} style={styles.spinner} />}
+          <Text style={styles.primaryButtonText}>
+            {loading ? "Ingresando..." : "Iniciar sesión"}
+          </Text>
+        </PressableScale>
+
+        {!isFoundation && (
+          <>
+            <Text style={styles.helper}>¿Todavía no tenés cuenta?</Text>
+
+            <Pressable
+              style={styles.secondaryButton}
+              onPress={() => navigation.navigate("Register", { returnTo })}
+              disabled={loading || resending}
+            >
+              <Feather name="user-plus" size={16} color={WEB.sol} />
+              <Text style={styles.secondaryButtonText}>Crear cuenta</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.foundationCard}
+              onPress={() => navigation.push("Login", { userType: "foundation" })}
+              disabled={loading || resending}
+            >
+              <View style={styles.foundationHeader}>
+                <Feather name="map" size={18} color={WEB.monteDark} />
+                <Text style={styles.foundationTitle}>¿Representás una fundación?</Text>
+              </View>
+              <View style={styles.foundationRow}>
+                <Text style={styles.foundationText}>Ingresá con la cuenta de la organización.</Text>
+                <Feather name="arrow-right" size={16} color={WEB.monteDark} />
+              </View>
+            </Pressable>
+          </>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -230,12 +288,13 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: RADIUS.md,
-    padding: 14,
-    fontSize: 15,
-    color: COLORS.text,
-    marginBottom: 16,
+    borderColor: WEB.border,
+    padding: 24,
+    shadowColor: "#1C1917",
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
   forgot: {
     fontSize: 13,
@@ -245,20 +304,26 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   primaryButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.md,
-    padding: 15,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: WEB.sol,
+    borderRadius: 12,
+    paddingVertical: 13,
   },
   primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
   disabledButton: { opacity: 0.6 },
   helper: { fontSize: 13, color: COLORS.textSecondary, textAlign: "center", marginTop: 22 },
   secondaryButton: {
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    borderRadius: RADIUS.md,
-    padding: 15,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: WEB.sol,
+    borderRadius: 12,
+    paddingVertical: 13,
     marginTop: 10,
   },
   secondaryButtonText: { color: COLORS.primary, fontSize: 16, fontWeight: "800" },

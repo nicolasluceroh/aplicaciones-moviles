@@ -80,9 +80,23 @@ export default function DonationsScreen({ navigation }) {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Mis donaciones</Text>
-        <Text style={styles.subtitle}>Historial de tus aportes realizados.</Text>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => loadDonations({ isRefresh: true })}
+            tintColor={COLORS.primary}
+          />
+        }
+      >
+        <View style={styles.headerCard}>
+          <Text style={styles.eyebrow}>Tu historial</Text>
+          <Text style={styles.title}>Mis donaciones</Text>
+          <Text style={styles.subtitle}>
+            Historial de todo lo que donaste a través de Pilar de Sonrisas.
+          </Text>
+        </View>
 
         {authLoading ? (
           <View style={styles.loadingBox}>
@@ -190,31 +204,47 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 13, color: COLORS.textSecondary, marginTop: 5, marginBottom: 20 },
   summary: {
     backgroundColor: COLORS.primarySoft,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.card,
     padding: 18,
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "space-between",
     marginBottom: 18,
+    ...SHADOW.card,
   },
   summaryLabel: { fontSize: 13, fontWeight: "800", color: COLORS.primary },
   summaryValue: { fontSize: 30, fontWeight: "800", color: COLORS.text, marginTop: 2 },
   summaryCount: { fontSize: 13, fontWeight: "700", color: COLORS.textSecondary },
   card: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.card,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 16,
-    marginBottom: 14,
+    borderColor: COLORS.borderStrong,
+    padding: 14,
+    marginBottom: 12,
+    ...SHADOW.card,
   },
-  cardHeader: { flexDirection: "row", alignItems: "flex-start" },
-  cardTitle: { flex: 1, fontSize: 15, fontWeight: "800", color: COLORS.text, paddingRight: 10 },
+  cardIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardBody: { flex: 1 },
+  cardTotal: { ...TYPE.bodyStrong, fontSize: 15, color: COLORS.text },
+  cardDate: { ...TYPE.caption, fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
+  cardMeta: { ...TYPE.caption, fontSize: 11, color: COLORS.textSecondary, marginTop: 4 },
+  cardRight: { alignItems: "flex-end", gap: 6 },
   badge: {
-    backgroundColor: SOFT_GREEN,
-    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.successSoft,
+    borderRadius: RADIUS.pill,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 4,
   },
   badgeText: { fontSize: 12, fontWeight: "800", color: COLORS.success },
   cardDate: { fontSize: 13, color: COLORS.textSecondary, marginTop: 6 },
@@ -237,26 +267,43 @@ const styles = StyleSheet.create({
   loadingText: { marginTop: 10, color: COLORS.textSecondary },
   empty: {
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.card,
     borderWidth: 1,
+    borderStyle: "dashed",
     borderColor: COLORS.border,
-    padding: 22,
+    padding: 28,
     alignItems: "center",
+  },
+  emptyIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: COLORS.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
   },
   emptyTitle: { fontSize: 17, fontWeight: "800", color: COLORS.text, textAlign: "center" },
   emptyText: {
-    fontSize: 13,
+    ...TYPE.caption,
+    fontSize: 12,
     color: COLORS.textSecondary,
-    lineHeight: 19,
     textAlign: "center",
     marginTop: 7,
   },
   emptyButton: {
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    borderRadius: RADIUS.md,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.lg,
+    paddingVertical: 11,
+    paddingHorizontal: 18,
+    marginTop: 16,
+  },
+  emptyButtonText: { ...TYPE.button, fontSize: 13, color: COLORS.surface },
+  primaryButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.lg,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
     marginTop: 16,
   },
   emptyButtonText: { color: COLORS.primary, fontWeight: "800" },

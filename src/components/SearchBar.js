@@ -1,5 +1,6 @@
-import { StyleSheet, TextInput, View, Text } from "react-native";
-import { COLORS, RADIUS } from "../constants/theme";
+import { StyleSheet, TextInput, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { COLORS, RADIUS, TYPE } from "../constants/theme";
 
 export default function SearchBar({
   value,
@@ -34,12 +35,11 @@ const styles = StyleSheet.create({
   },
 
   icon: {
-    fontSize: 22,
-    color: COLORS.textSecondary,
     marginRight: 8,
   },
 
   input: {
+    ...TYPE.body,
     flex: 1,
     fontSize: 13,
     color: COLORS.text,
