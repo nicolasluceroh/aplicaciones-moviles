@@ -8,32 +8,16 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { COLORS, RADIUS, SPACING } from "../constants/theme";
 import { supabase } from "../config/supabase";
-import PressableScale from "../components/PressableScale";
-import { useAppAlert } from "../components/AppAlert";
-
-// Misma paleta que LoginScreen.js, calcada de pilar-sonrisas-web (src/index.css).
-const WEB = {
-  paper: "#fafaf9",
-  surface: "#ffffff",
-  ink: "#1c1917",
-  inkSoft: "#78716c",
-  border: "#e7e5e4",
-  sol: "#f46a4e",
-  solDark: "#e0583b",
-  danger: "#a33c32",
-};
 
 export default function RegisterScreen({ route, navigation }) {
-  const alert = useAppAlert();
   const returnTo = route.params?.returnTo || "Account";
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState({});
 
   const resendConfirmation = async (cleanEmail) => {
     try {
@@ -43,9 +27,29 @@ export default function RegisterScreen({ route, navigation }) {
       });
 
       if (error) throw error;
-      alert("Email enviado", "Te enviamos un nuevo correo de confirmación.");
+      Alert.alert("Email enviado", "Te enviamos un nuevo correo de confirmación.");
     } catch (error) {
-      alert("No se pudo reenviar", error?.message || "Intentá nuevamente.");
+      Alert.alert("No se pudo reenviar", error?.message || "Intentá nuevamente.");
+    }
+  };
+
+  const handleRegister = async () => {
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanName || !cleanEmail || !password.trim() || !confirmPassword.trim()) {
+      Alert.alert("Datos incompletos", "Completá todos los campos.");
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert("Contraseña muy corta", "Usá al menos 6 caracteres.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Contraseñas diferentes", "Las contraseñas deben coincidir.");
+      return;
     }
   };
 
@@ -81,14 +85,14 @@ export default function RegisterScreen({ route, navigation }) {
       });
 
       if (error) {
-        alert("No se pudo crear la cuenta", error.message);
+        Alert.alert("No se pudo crear la cuenta", error.message);
         return;
       }
 
       // Con confirmación de email activada, Supabase puede devolver un usuario sin
       // identidades cuando el email ya está registrado. Lo tratamos como cuenta existente.
       if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-        alert(
+        Alert.alert(
           "Ese email ya está registrado",
           "Iniciá sesión con tu contraseña. Si todavía no confirmaste el correo, podés reenviar la confirmación desde el login.",
           [
@@ -102,7 +106,7 @@ export default function RegisterScreen({ route, navigation }) {
       }
 
       if (data.session) {
-        alert("Cuenta creada", "Tu cuenta fue creada correctamente.", [
+        Alert.alert("Cuenta creada", "Tu cuenta fue creada correctamente.", [
           {
             text: "Continuar",
             onPress: () => navigation.navigate(returnTo),
@@ -111,7 +115,7 @@ export default function RegisterScreen({ route, navigation }) {
         return;
       }
 
-      alert(
+      Alert.alert(
         "Revisá tu email",
         "La cuenta fue creada, pero todavía no puede iniciar sesión. Confirmá el correo y después volvé a la app.",
         [
@@ -123,7 +127,7 @@ export default function RegisterScreen({ route, navigation }) {
         ]
       );
     } catch (error) {
-      alert("Error", error?.message || "Ocurrió un problema al crear la cuenta.");
+      Alert.alert("Error", error?.message || "Ocurrió un problema al crear la cuenta.");
     } finally {
       setLoading(false);
     }
@@ -135,132 +139,94 @@ export default function RegisterScreen({ route, navigation }) {
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.card}>
-        <Text style={styles.title}>Crear cuenta</Text>
-        <Text style={styles.subtitle}>Tu cuenta te permite guardar el historial.</Text>
+      <Text style={styles.title}>Sumate a Pilar de Sonrisas</Text>
+      <Text style={styles.subtitle}>Tu cuenta te permite guardar el historial.</Text>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Nombre completo</Text>
-          <View style={styles.inputWrap}>
-            <Feather name="user" size={16} color={WEB.inkSoft} style={styles.fieldIcon} />
-            <TextInput
-              style={[styles.input, fieldErrors.name && styles.inputError]}
-              value={name}
-              onChangeText={(text) => {
-                setName(text);
-                if (fieldErrors.name) setFieldErrors((e) => ({ ...e, name: null }));
-              }}
-              placeholder="Nombre y apellido"
-              placeholderTextColor={WEB.inkSoft}
-              editable={!loading}
-            />
-          </View>
-          {!!fieldErrors.name && <Text style={styles.fieldError}>{fieldErrors.name}</Text>}
+      <Text style={styles.label}>Nombre y apellido</Text>
+      <TextInput
+        style={styles.input}
+        value={name}
+        onChangeText={setName}
+        placeholder="Nombre y apellido"
+        placeholderTextColor={COLORS.textSecondary}
+        editable={!loading}
+      />
+
+      <Text style={styles.label}>Email</Text>
+      <TextInput
+        style={styles.input}
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        placeholder="nombre@correo.com"
+        placeholderTextColor={COLORS.textSecondary}
+        editable={!loading}
+      />
+
+      <Text style={styles.label}>Contraseña</Text>
+      <TextInput
+        style={styles.input}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        placeholder="Contraseña"
+        placeholderTextColor={COLORS.textSecondary}
+        editable={!loading}
+      />
+
+      <Text style={styles.label}>Repetir contraseña</Text>
+      <TextInput
+        style={styles.input}
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        secureTextEntry
+        placeholder="Repetir contraseña"
+        placeholderTextColor={COLORS.textSecondary}
+        editable={!loading}
+      />
+
+      <Pressable
+        style={styles.termsRow}
+        onPress={() => setAcceptedTerms(!acceptedTerms)}
+        disabled={loading}
+      >
+        <View style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}>
+          {acceptedTerms && <Text style={styles.checkmark}>✓</Text>}
         </View>
+        <Text style={styles.termsText}>
+          Acepto los términos y la política de privacidad.
+        </Text>
+      </Pressable>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Email</Text>
-          <View style={styles.inputWrap}>
-            <Feather name="mail" size={16} color={WEB.inkSoft} style={styles.fieldIcon} />
-            <TextInput
-              style={[styles.input, fieldErrors.email && styles.inputError]}
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (fieldErrors.email) setFieldErrors((e) => ({ ...e, email: null }));
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              placeholder="nombre@correo.com"
-              placeholderTextColor={WEB.inkSoft}
-              editable={!loading}
-            />
-          </View>
-          {!!fieldErrors.email && <Text style={styles.fieldError}>{fieldErrors.email}</Text>}
-        </View>
+      <Pressable
+        style={[styles.primaryButton, loading && styles.disabledButton]}
+        onPress={handleRegister}
+        disabled={loading}
+      >
+        <Text style={styles.primaryButtonText}>
+          {loading ? "Creando cuenta..." : "Crear cuenta"}
+        </Text>
+      </Pressable>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Contraseña</Text>
-          <View style={styles.inputWrap}>
-            <Feather name="lock" size={16} color={WEB.inkSoft} style={styles.fieldIcon} />
-            <TextInput
-              style={[styles.input, fieldErrors.password && styles.inputError]}
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (fieldErrors.password) setFieldErrors((e) => ({ ...e, password: null }));
-              }}
-              secureTextEntry
-              placeholder="Mínimo 6 caracteres"
-              placeholderTextColor={WEB.inkSoft}
-              editable={!loading}
-            />
-          </View>
-          {!!fieldErrors.password && <Text style={styles.fieldError}>{fieldErrors.password}</Text>}
-        </View>
-
-        <Pressable
-          style={styles.termsRow}
-          onPress={() => setAcceptedTerms(!acceptedTerms)}
-          disabled={loading}
-        >
-          <View style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}>
-            {acceptedTerms && <Feather name="check" size={14} color={WEB.surface} />}
-          </View>
-          <Text style={styles.termsText}>
-            Acepto los términos y la política de privacidad.
-          </Text>
-        </Pressable>
-
-        <PressableScale
-          style={[styles.primaryButton, loading && styles.disabledButton]}
-          onPress={handleRegister}
-          disabled={loading}
-        >
-          {loading && <ActivityIndicator size="small" color={WEB.surface} style={styles.spinner} />}
-          <Text style={styles.primaryButtonText}>
-            {loading ? "Creando cuenta..." : "Crear cuenta"}
-          </Text>
-        </PressableScale>
-
-        <Text style={styles.helper}>¿Ya tenés cuenta?</Text>
-        <Pressable
-          style={styles.secondaryButton}
-          onPress={() => navigation.navigate("Login", { userType: "donor", returnTo })}
-          disabled={loading}
-        >
-          <Feather name="log-in" size={16} color={WEB.sol} />
-          <Text style={styles.secondaryButtonText}>Iniciar sesión</Text>
-        </Pressable>
-      </View>
+      <Text style={styles.helper}>¿Ya tenés cuenta?</Text>
+      <Pressable
+        onPress={() => navigation.navigate("Login", { userType: "donor", returnTo })}
+        disabled={loading}
+      >
+        <Text style={styles.link}>Iniciar sesión</Text>
+      </Pressable>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: WEB.paper },
-  content: { padding: 24, paddingBottom: 48 },
-  card: {
-    backgroundColor: WEB.surface,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: WEB.border,
-    padding: 24,
-    shadowColor: "#1C1917",
-    shadowOpacity: 0.1,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 3,
-  },
-  title: { fontSize: 22, fontWeight: "600", color: WEB.ink },
-  subtitle: { fontSize: 14, color: WEB.inkSoft, marginTop: 4, marginBottom: 20 },
-  field: { gap: 6, marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: "500", color: WEB.ink },
-  inputWrap: { position: "relative", justifyContent: "center" },
-  inputError: { borderColor: WEB.danger },
-  fieldError: { fontSize: 12, color: WEB.danger, marginTop: 5 },
-  fieldIcon: { position: "absolute", left: 14, zIndex: 1 },
+  screen: { flex: 1, backgroundColor: COLORS.background },
+  content: { padding: SPACING.lg, paddingBottom: 40 },
+  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
+  subtitle: { fontSize: 14, lineHeight: 20, color: COLORS.textSecondary, marginTop: 6, marginBottom: 24 },
+  label: { fontSize: 13, fontWeight: "700", color: COLORS.text, marginBottom: 6 },
   input: {
     borderWidth: 1,
     borderColor: WEB.border,
@@ -272,7 +238,7 @@ const styles = StyleSheet.create({
     color: WEB.ink,
     backgroundColor: WEB.surface,
   },
-  termsRow: { flexDirection: "row", alignItems: "center", marginTop: 4, marginBottom: 20, gap: 10 },
+  termsRow: { flexDirection: "row", alignItems: "center", marginTop: 4, marginBottom: 20 },
   checkbox: {
     width: 22,
     height: 22,
@@ -283,8 +249,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  checkboxChecked: { backgroundColor: WEB.sol, borderColor: WEB.sol },
-  termsText: { flex: 1, fontSize: 13, color: WEB.inkSoft },
+  checkboxChecked: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  checkmark: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" },
+  termsText: { flex: 1, fontSize: 13, color: COLORS.textSecondary, marginLeft: 10 },
   primaryButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -294,20 +261,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 13,
   },
-  spinner: { marginRight: 2 },
-  primaryButtonText: { fontSize: 14, fontWeight: "500", color: WEB.surface },
+  primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
   disabledButton: { opacity: 0.6 },
-  helper: { fontSize: 13, color: WEB.inkSoft, textAlign: "center", marginTop: 22 },
-  secondaryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    borderWidth: 1,
-    borderColor: WEB.sol,
-    borderRadius: 12,
-    paddingVertical: 13,
-    marginTop: 10,
-  },
-  secondaryButtonText: { fontSize: 14, fontWeight: "500", color: WEB.solDark },
+  helper: { fontSize: 13, color: COLORS.textSecondary, textAlign: "center", marginTop: 22 },
+  link: { fontSize: 15, fontWeight: "800", color: COLORS.primary, textAlign: "center", marginTop: 6 },
 });

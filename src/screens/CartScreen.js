@@ -6,10 +6,8 @@ import {
   Pressable,
   ScrollView,
   Modal,
-  Image,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
-import { COLORS, RADIUS, SPACING, TYPE, SHADOW } from "../constants/theme";
+import { COLORS, RADIUS, SPACING } from "../constants/theme";
 import { foundations } from "../data/foundations";
 import { useCart } from "../context/CartContext";
 import BottomNav from "../components/BottomNav";
@@ -75,20 +73,16 @@ export default function CartScreen({ navigation }) {
 
         {cart.length === 0 ? (
           <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <Feather name="shopping-bag" size={24} color={COLORS.textSecondary} />
-            </View>
-            <Text style={styles.emptyTitle}>Tu carrito está vacío</Text>
+            <Text style={styles.emptyTitle}>Todavía no agregaste productos</Text>
             <Text style={styles.emptyText}>
-              Elegí productos del catálogo para armar una donación.
+              Explorá el inicio y sumá productos para donar.
             </Text>
-            <PressableScale
+            <Pressable
               style={styles.secondaryButton}
               onPress={() => navigation.navigate("Home")}
             >
-              <Text style={styles.secondaryButtonText}>Ir al catálogo</Text>
-              <Feather name="arrow-right" size={14} color={COLORS.surface} />
-            </PressableScale>
+              <Text style={styles.secondaryButtonText}>Ver productos</Text>
+            </Pressable>
           </View>
         ) : (
           cart.map((item) => {
@@ -98,20 +92,11 @@ export default function CartScreen({ navigation }) {
             return (
               <View key={item.product.id} style={styles.card}>
                 <View style={styles.rowBetween}>
-                  <View style={styles.thumbRow}>
-                    {item.product.image ? (
-                      <Image source={{ uri: item.product.image }} style={styles.thumb} />
-                    ) : (
-                      <View style={styles.thumbPlaceholder}>
-                        <Text style={styles.thumbEmoji}>{item.product.emoji || "🎁"}</Text>
-                      </View>
-                    )}
-                    <View style={styles.flex}>
-                      <Text style={styles.productName}>{item.product.name}</Text>
-                      <Text style={styles.price}>
-                        ${item.product.price.toLocaleString("es-AR")} c/u
-                      </Text>
-                    </View>
+                  <View style={styles.flex}>
+                    <Text style={styles.productName}>{item.product.name}</Text>
+                    <Text style={styles.price}>
+                      ${item.product.price.toLocaleString("es-AR")} c/u
+                    </Text>
                   </View>
                   <Pressable
                     style={styles.removeButton}
@@ -128,21 +113,27 @@ export default function CartScreen({ navigation }) {
                       style={styles.quantityButton}
                       onPress={() => decreaseQuantity(item.product.id)}
                     >
-                      <Feather name="minus" size={14} color={COLORS.text} />
+                      <Text style={styles.quantityButtonText}>-</Text>
                     </Pressable>
                     <Text style={styles.quantity}>{item.quantity}</Text>
                     <Pressable
                       style={styles.quantityButton}
                       onPress={() => increaseQuantity(item.product.id)}
                     >
-                      <Feather name="plus" size={14} color={COLORS.text} />
+                      <Text style={styles.quantityButtonText}>+</Text>
                     </Pressable>
                   </View>
                 </View>
 
                 <Text style={styles.label}>Fundación destinataria</Text>
+                {foundation ? (
+                  <Text style={styles.foundationSelected}>{foundation.name}</Text>
+                ) : (
+                  <Text style={styles.missing}>Sin seleccionar ⚠️</Text>
+                )}
+
                 <Pressable
-                  style={[styles.foundationSelect, !foundation && styles.foundationSelectInvalid]}
+                  style={styles.foundationButton}
                   onPress={() => abrirSelectorFundacion(item.product.id)}
                 >
                   <Text
@@ -162,20 +153,19 @@ export default function CartScreen({ navigation }) {
           <>
             {hasMissingFoundation && (
               <View style={styles.avisoContainer}>
-                <Feather name="alert-circle" size={15} color={COLORS.warning} />
                 <Text style={styles.avisoTexto}>
-                  Asigná una fundación a cada producto para continuar.
+                  ⚠️ Asigná una fundación a cada producto para poder continuar.
                 </Text>
               </View>
             )}
 
             <View style={styles.totalBox}>
-              <Text style={styles.totalLabel}>Subtotal</Text>
+              <Text style={styles.totalLabel}>Total</Text>
               <Text style={styles.total}>
                 ${totalPrice.toLocaleString("es-AR")}
               </Text>
             </View>
-            <PressableScale
+            <Pressable
               style={[
                 styles.primaryButton,
                 hasMissingFoundation && styles.primaryButtonDisabled,
@@ -183,20 +173,8 @@ export default function CartScreen({ navigation }) {
               onPress={handleContinue}
               disabled={hasMissingFoundation}
             >
-              <Text
-                style={[
-                  styles.primaryButtonText,
-                  hasMissingFoundation && styles.primaryButtonTextDisabled,
-                ]}
-              >
-                Continuar
-              </Text>
-              <Feather
-                name="arrow-right"
-                size={16}
-                color={hasMissingFoundation ? COLORS.textSecondary : COLORS.surface}
-              />
-            </PressableScale>
+              <Text style={styles.primaryButtonText}>Continuar</Text>
+            </Pressable>
           </>
         )}
       </ScrollView>
@@ -234,204 +212,124 @@ export default function CartScreen({ navigation }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLORS.background, paddingTop: 46 },
   content: { padding: SPACING.md, paddingBottom: 24 },
-  headerCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.card,
-    borderWidth: 1,
-    borderColor: COLORS.borderStrong,
-    padding: SPACING.md,
-    marginBottom: 20,
-    ...SHADOW.card,
-  },
-  title: { ...TYPE.display, fontSize: 24, color: COLORS.text },
+  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
   subtitle: {
-    ...TYPE.body,
     fontSize: 13,
     color: COLORS.textSecondary,
     marginTop: 5,
+    marginBottom: 20,
   },
-  statsRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
-  statChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: COLORS.primarySoft,
-    borderRadius: RADIUS.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
-  statChipSecondary: { backgroundColor: COLORS.secondarySoft },
-  statChipText: { ...TYPE.caption, fontSize: 11, fontWeight: "700", color: COLORS.primaryDark },
-  statChipTextSecondary: { color: COLORS.secondaryDark },
   empty: {
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.card,
-    padding: 28,
+    borderRadius: RADIUS.md,
+    padding: 22,
     borderWidth: 1,
-    borderColor: COLORS.borderStrong,
+    borderColor: COLORS.border,
     alignItems: "center",
-    ...SHADOW.card,
   },
-  emptyIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: COLORS.surfaceAlt,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  emptyTitle: { ...TYPE.h2, color: COLORS.text },
+  emptyTitle: { fontSize: 17, fontWeight: "700", color: COLORS.text },
   emptyText: {
-    ...TYPE.caption,
+    fontSize: 13,
     color: COLORS.textSecondary,
     textAlign: "center",
     marginTop: 6,
   },
   card: {
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.card,
-    borderWidth: 1,
-    borderColor: COLORS.borderStrong,
+    borderRadius: RADIUS.md,
     padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
     marginBottom: 12,
-    ...SHADOW.card,
   },
   rowBetween: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
-  thumbRow: { flexDirection: "row", alignItems: "center", flex: 1, gap: 12 },
-  thumb: {
-    width: 52,
-    height: 52,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.surfaceAlt,
-  },
-  thumbPlaceholder: {
-    width: 52,
-    height: 52,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.surfaceAlt,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  thumbEmoji: { fontSize: 22 },
   flex: { flex: 1, paddingRight: 10 },
-  productName: { ...TYPE.bodyStrong, fontSize: 15, color: COLORS.text },
-  price: { ...TYPE.caption, color: COLORS.textSecondary, marginTop: 4 },
-  removeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  productName: { fontSize: 16, fontWeight: "800", color: COLORS.text },
+  price: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4 },
+  remove: { color: COLORS.danger, fontSize: 12, fontWeight: "700" },
   quantityRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 16,
-    marginBottom: 14,
+    marginTop: 18,
+    marginBottom: 16,
   },
-  label: { ...TYPE.caption, fontSize: 11, color: COLORS.textSecondary },
-  quantityControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: RADIUS.pill,
-    padding: 2,
-  },
+  label: { fontSize: 12, fontWeight: "700", color: COLORS.textSecondary },
+  quantityControls: { flexDirection: "row", alignItems: "center" },
   quantityButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: COLORS.surfaceAlt,
     alignItems: "center",
     justifyContent: "center",
   },
-  quantity: { minWidth: 26, textAlign: "center", fontSize: 13, fontWeight: "600", color: COLORS.text },
-  foundationSelect: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 6,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: RADIUS.lg,
+  quantityButtonText: { fontSize: 20, color: COLORS.text },
+  quantity: { minWidth: 36, textAlign: "center", fontWeight: "800", color: COLORS.text },
+  foundationSelected: { color: COLORS.text, fontWeight: "700", marginTop: 6 },
+  missing: { color: COLORS.warning, fontWeight: "700", marginTop: 6 },
+  foundationButton: {
+    alignSelf: "flex-start",
+    marginTop: 10,
+    paddingVertical: 8,
     paddingHorizontal: 12,
-    paddingVertical: 11,
-    backgroundColor: COLORS.background,
+    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.primarySoft,
   },
-  foundationSelectInvalid: {
-    borderColor: COLORS.warning,
-    backgroundColor: COLORS.warningSoft,
-  },
-  foundationSelected: { color: COLORS.text, ...TYPE.body, fontSize: 13, flex: 1 },
-  missing: { color: COLORS.textSecondary, ...TYPE.body, fontSize: 13, flex: 1 },
+  foundationButtonText: { color: COLORS.primary, fontWeight: "800", fontSize: 12 },
   avisoContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    backgroundColor: COLORS.warningSoft,
-    borderRadius: RADIUS.lg,
+    backgroundColor: "#FEF3C7",
+    borderRadius: RADIUS.sm,
     padding: 12,
     marginBottom: 12,
   },
-  avisoTexto: { flex: 1, color: COLORS.warning, ...TYPE.caption, fontSize: 12 },
+  avisoTexto: { color: "#92400E", fontSize: 13, fontWeight: "600" },
   totalBox: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    paddingTop: 16,
-    paddingBottom: 6,
+    paddingVertical: 16,
   },
-  totalLabel: { ...TYPE.body, fontSize: 13, color: COLORS.textSecondary },
-  total: { ...TYPE.h1, fontSize: 20, color: COLORS.text },
+  totalLabel: { fontSize: 17, fontWeight: "700", color: COLORS.text },
+  total: { fontSize: 22, fontWeight: "800", color: COLORS.primary },
   primaryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
     backgroundColor: COLORS.primary,
-    paddingVertical: 15,
-    borderRadius: RADIUS.lg,
-    marginTop: 10,
+    padding: 16,
+    borderRadius: RADIUS.md,
+    alignItems: "center",
   },
-  primaryButtonDisabled: { backgroundColor: COLORS.border },
-  primaryButtonText: { color: COLORS.surface, ...TYPE.button, fontSize: 14 },
-  primaryButtonTextDisabled: { color: COLORS.textSecondary },
+  primaryButtonDisabled: { backgroundColor: "#A1A1AA" },
+  primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
   secondaryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
     marginTop: 16,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.lg,
-    paddingVertical: 11,
-    paddingHorizontal: 18,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: RADIUS.md,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
   },
-  secondaryButtonText: { color: COLORS.surface, ...TYPE.button, fontSize: 13 },
+  secondaryButtonText: { color: COLORS.primary, fontWeight: "800" },
   modalFondo: {
     flex: 1,
-    backgroundColor: "rgba(28,25,23,0.45)",
+    backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "flex-end",
   },
   modalContenido: {
     backgroundColor: COLORS.surface,
-    borderTopLeftRadius: RADIUS.card,
-    borderTopRightRadius: RADIUS.card,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     padding: 20,
     maxHeight: "60%",
   },
-  modalTitulo: { ...TYPE.h2, marginBottom: 12, color: COLORS.text },
+  modalTitulo: { fontSize: 18, fontWeight: "bold", marginBottom: 12, color: COLORS.text },
   opcionFundacion: {
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: COLORS.background,
   },
-  opcionFundacionTexto: { ...TYPE.body, color: COLORS.text },
+  opcionFundacionTexto: { fontSize: 15, color: COLORS.text },
 });

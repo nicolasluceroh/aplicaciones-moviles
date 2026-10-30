@@ -1,36 +1,11 @@
-import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
-import { Feather } from "@expo/vector-icons";
-import { COLORS, RADIUS, SPACING, TYPE } from "../constants/theme";
-import PressableScale from "../components/PressableScale";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { COLORS, RADIUS, SPACING } from "../constants/theme";
 
 const formatPrice = (value) => `$${Number(value || 0).toLocaleString("es-AR")}`;
 
 export default function ConfirmationScreen({ route, navigation }) {
   const donationId = route.params?.donationId;
   const total = route.params?.total;
-  const shortId = donationId ? String(donationId).slice(0, 8).toUpperCase() : "";
-
-  // Calca el efecto de la web (motion/react: scale 0.6 → 1 con spring) al
-  // confirmar una donación.
-  const scale = useRef(new Animated.Value(0.6)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scale, {
-        toValue: 1,
-        useNativeDriver: true,
-        speed: 9,
-        bounciness: 14,
-      }),
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [scale, opacity]);
 
   const handleHome = () => {
     navigation.reset({ index: 0, routes: [{ name: "Home" }] });
@@ -42,99 +17,43 @@ export default function ConfirmationScreen({ route, navigation }) {
 
   return (
     <View style={styles.screen}>
-      <Animated.View
-        style={[styles.iconCircle, { opacity, transform: [{ scale }] }]}
-      >
-        <Feather name="check" size={36} color={COLORS.surface} />
-      </Animated.View>
+      <View style={styles.card}>
+        <View style={styles.iconCircle}>
+          <Text style={styles.icon}>✓</Text>
+        </View>
+        <Text style={styles.title}>¡Gracias por tu donación!</Text>
+        <Text style={styles.text}>
+          La donación quedó confirmada y guardada en tu cuenta.
+        </Text>
 
-      <Text style={styles.title}>¡Gracias por tu donación!</Text>
-      <Text style={styles.text}>
-        Tu ayuda ya quedó registrada y en camino a la fundación que elegiste. Vas a poder ver
-        el detalle completo cuando quieras.
-      </Text>
-
-      {!!total && <Text style={styles.total}>{formatPrice(total)}</Text>}
-      {!!shortId && <Text style={styles.id}>Referencia #{shortId}</Text>}
-
-      <View style={styles.actions}>
-        <PressableScale style={styles.secondaryButton} onPress={handleHistory}>
-          <Feather name="list" size={16} color={COLORS.text} />
-          <Text style={styles.secondaryButtonText}>Ver mis donaciones</Text>
-        </PressableScale>
-
-        <PressableScale style={styles.primaryButton} onPress={handleHome}>
-          <Feather name="gift" size={16} color={COLORS.surface} />
-          <Text style={styles.primaryButtonText}>Seguir donando</Text>
-        </PressableScale>
+        {!!total && <Text style={styles.total}>{formatPrice(total)}</Text>}
+        {!!donationId && (
+          <Text style={styles.id}>ID {String(donationId).slice(0, 8).toUpperCase()}</Text>
+        )}
       </View>
+
+      <Pressable style={styles.button} onPress={handleHistory}>
+        <Text style={styles.buttonText}>Ver mis donaciones</Text>
+      </Pressable>
+
+      <Pressable style={styles.secondaryButton} onPress={handleHome}>
+        <Text style={styles.secondaryButtonText}>Volver al inicio</Text>
+      </Pressable>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    padding: SPACING.lg,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: RADIUS.pill,
-    backgroundColor: COLORS.secondary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
-  },
-  title: { ...TYPE.display, fontSize: 26, color: COLORS.text, textAlign: "center" },
-  text: {
-    ...TYPE.body,
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    textAlign: "center",
-    marginTop: 12,
-    lineHeight: 20,
-    maxWidth: 320,
-  },
-  total: { ...TYPE.display, fontSize: 26, color: COLORS.text, marginTop: 20 },
-  id: {
-    ...TYPE.caption,
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 14,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.pill,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  actions: { flexDirection: "row", gap: 12, marginTop: 28, width: "100%" },
-  secondaryButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.lg,
-    paddingVertical: 14,
-  },
-  secondaryButtonText: { ...TYPE.button, fontSize: 13, color: COLORS.text },
-  primaryButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.lg,
-    paddingVertical: 14,
-  },
-  primaryButtonText: { ...TYPE.button, fontSize: 13, color: COLORS.surface },
+  screen: { flex: 1, backgroundColor: COLORS.background, padding: SPACING.lg, justifyContent: "center" },
+  card: { backgroundColor: COLORS.surface, borderRadius: RADIUS.lg, padding: 28, alignItems: "center", borderWidth: 1, borderColor: COLORS.border },
+  iconCircle: { width: 64, height: 64, borderRadius: 32, backgroundColor: COLORS.success, alignItems: "center", justifyContent: "center", marginBottom: 16 },
+  icon: { color: "#FFFFFF", fontSize: 34, fontWeight: "800" },
+  title: { fontSize: 23, fontWeight: "800", color: COLORS.text, textAlign: "center" },
+  text: { fontSize: 14, lineHeight: 21, color: COLORS.textSecondary, textAlign: "center", marginTop: 10 },
+  total: { fontSize: 25, fontWeight: "800", color: COLORS.primary, marginTop: 18 },
+  id: { fontSize: 11, color: COLORS.textSecondary, marginTop: 8 },
+  button: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 16, alignItems: "center", marginTop: 18 },
+  buttonText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16 },
+  secondaryButton: { borderWidth: 1, borderColor: COLORS.primary, borderRadius: RADIUS.md, padding: 16, alignItems: "center", marginTop: 10 },
+  secondaryButtonText: { color: COLORS.primary, fontWeight: "800", fontSize: 16 },
 });

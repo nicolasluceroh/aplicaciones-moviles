@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Feather } from "@expo/vector-icons";
-import { COLORS, RADIUS, SHADOW, SPACING, TYPE } from "../constants/theme";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { COLORS, RADIUS, SPACING } from "../constants/theme";
 import BottomNav from "../components/BottomNav";
 import { useAuth } from "../context/AuthContext";
 
@@ -13,7 +12,6 @@ const INFO_CONTENT = {
 export default function AccountScreen({ navigation }) {
   const { user, profile, loading, signOut } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
-  const [infoModal, setInfoModal] = useState(null);
 
   const name =
     profile?.full_name ||
@@ -37,7 +35,18 @@ export default function AccountScreen({ navigation }) {
   };
 
   const handleInfo = (title) => {
-    setInfoModal({ title, message: INFO_CONTENT[title] });
+    if (title === "Cómo funciona") {
+      Alert.alert(
+        "Cómo funciona",
+        "Elegís productos, los agregás al carrito, asignás una fundación a cada uno y confirmás la donación. Si iniciás sesión, la donación queda guardada en tu historial."
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Privacidad y contacto",
+      "Tu cuenta se usa para autenticarte y asociar tus donaciones. La información de sesión se administra con Supabase Auth."
+    );
   };
 
   return (
@@ -57,22 +66,13 @@ export default function AccountScreen({ navigation }) {
         ) : user ? (
           // ---------- Con sesión real de Supabase ----------
           <View style={styles.card}>
-            <View style={styles.profileRow}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {name.trim().charAt(0).toUpperCase()}
-                </Text>
-              </View>
-              <View style={styles.profileInfo}>
-                <Text style={styles.greeting}>Hola, {name}</Text>
-                {!!user.email && (
-                  <View style={styles.emailRow}>
-                    <Feather name="mail" size={12} color={COLORS.textSecondary} />
-                    <Text style={styles.email}>{user.email}</Text>
-                  </View>
-                )}
-              </View>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {name.trim().charAt(0).toUpperCase()}
+              </Text>
             </View>
+            <Text style={styles.greeting}>Hola, {name}</Text>
+            {!!user.email && <Text style={styles.email}>{user.email}</Text>}
 
             <Pressable style={[styles.row, styles.firstRowSession]} onPress={handleMyData}>
               <View style={styles.rowLeft}>
@@ -91,12 +91,11 @@ export default function AccountScreen({ navigation }) {
             </Pressable>
 
             <Pressable
-              style={[styles.logoutButton, loggingOut && styles.disabledButton]}
+              style={[styles.secondaryButton, loggingOut && styles.disabledButton]}
               onPress={handleLogout}
               disabled={loggingOut}
             >
-              <Feather name="log-out" size={15} color={COLORS.danger} />
-              <Text style={styles.logoutButtonText}>
+              <Text style={styles.secondaryButtonText}>
                 {loggingOut ? "Cerrando sesión..." : "Cerrar sesión"}
               </Text>
             </Pressable>
@@ -252,7 +251,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     ...SHADOW.card,
   },
-  loadingText: { ...TYPE.caption, color: COLORS.textSecondary, marginTop: 10 },
+  loadingCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 28,
+    alignItems: "center",
+  },
+  loadingText: { fontSize: 13, color: COLORS.textSecondary, marginTop: 10 },
 
   profileRow: { flexDirection: "row", alignItems: "center", gap: 14 },
   avatar: {
@@ -320,19 +327,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     marginTop: 12,
   },
-  secondaryButtonText: { ...TYPE.button, fontSize: 14, color: COLORS.primaryDark },
-
-  logoutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 7,
-    width: "100%",
-    borderRadius: RADIUS.lg,
-    paddingVertical: 13,
-    marginTop: 14,
-  },
-  logoutButtonText: { ...TYPE.button, fontSize: 13, color: COLORS.danger },
+  secondaryButtonText: { color: COLORS.primary, fontSize: 16, fontWeight: "800" },
   disabledButton: { opacity: 0.6 },
 
   sectionTitle: {

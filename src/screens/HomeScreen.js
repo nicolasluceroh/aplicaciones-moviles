@@ -37,40 +37,21 @@ export default function HomeScreen({ navigation }) {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero */}
-        <View style={styles.heroCard}>
-          <View style={styles.header}>
-            <View style={styles.headerText}>
-              <View style={styles.brandRow}>
-                <Image source={logoImage} style={styles.brandLogo} resizeMode="contain" />
-                <Text style={styles.brand}>Pilar de Sonrisas</Text>
-              </View>
-              <Text style={styles.subtitle}>
-                Una compra que llega como ayuda a Pilar.
-              </Text>
-            </View>
-
-            <Pressable
-              style={styles.profileButton}
-              onPress={() => navigation.navigate("Profile")}
-            >
-              <Feather name="user" size={17} color={COLORS.text} />
-            </Pressable>
+        {/* Encabezado */}
+        <View style={styles.header}>
+          <View style={styles.headerText}>
+            <Text style={styles.brand}>Pilar de Sonrisas</Text>
+            <Text style={styles.subtitle}>
+              Transformá una compra en una ayuda concreta.
+            </Text>
           </View>
 
-          {/* Mini resumen del catálogo: le da presencia al hero y es siempre real. */}
-          <View style={styles.statsRow}>
-            <View style={styles.statChip}>
-              <Feather name="gift" size={13} color={COLORS.primaryDark} />
-              <Text style={styles.statChipText}>{products.length} productos</Text>
-            </View>
-            <View style={[styles.statChip, styles.statChipSecondary]}>
-              <Feather name="map-pin" size={13} color={COLORS.secondaryDark} />
-              <Text style={[styles.statChipText, styles.statChipTextSecondary]}>
-                {foundations.length} {foundations.length === 1 ? "fundación" : "fundaciones"}
-              </Text>
-            </View>
-          </View>
+          <Pressable
+            style={styles.profileButton}
+            onPress={() => navigation.navigate("Profile")}
+          >
+            <Text style={styles.profileIcon}>👤</Text>
+          </Pressable>
         </View>
 
         {/* Buscador */}
@@ -109,16 +90,10 @@ export default function HomeScreen({ navigation }) {
 
         {/* Productos */}
         <View style={styles.sectionHeader}>
-          <View>
-            <Text style={styles.sectionTitle}>Productos para donar</Text>
-            <Text style={styles.sectionSubtitle}>
-              Cada uno va directo a una fundación que lo necesita.
-            </Text>
-          </View>
+          <Text style={styles.sectionTitle}>Productos para donar</Text>
 
-          <Pressable style={styles.seeAllRow} onPress={() => navigation.navigate("Catalog")}>
-            <Text style={styles.seeAll}>Ver todo</Text>
-            <Feather name="arrow-right" size={13} color={COLORS.primaryDark} />
+          <Pressable onPress={() => navigation.navigate("Catalog")}>
+            <Text style={styles.seeAll}>Ver todos</Text>
           </Pressable>
         </View>
 
@@ -138,7 +113,6 @@ export default function HomeScreen({ navigation }) {
           </View>
         ) : (
           <View style={styles.emptyState}>
-            <Feather name="search" size={22} color={COLORS.primary} />
             <Text style={styles.emptyTitle}>No encontramos productos</Text>
             <Text style={styles.emptyText}>
               Probá con otra búsqueda o categoría.
@@ -148,16 +122,10 @@ export default function HomeScreen({ navigation }) {
 
         {/* Fundaciones */}
         <View style={styles.sectionHeader}>
-          <View>
-            <Text style={[styles.sectionTitle, styles.foundationsTitle]}>Fundaciones de Pilar</Text>
-            <Text style={styles.sectionSubtitle}>
-              Organizaciones locales que reciben lo que donás.
-            </Text>
-          </View>
+          <Text style={styles.sectionTitle}>Fundaciones</Text>
 
-          <Pressable style={styles.seeAllRow} onPress={() => navigation.navigate("Foundations")}>
-            <Text style={styles.seeAll}>Ver todo</Text>
-            <Feather name="arrow-right" size={13} color={COLORS.primaryDark} />
+          <Pressable onPress={() => navigation.navigate("Foundations")}>
+            <Text style={styles.seeAll}>Ver todos</Text>
           </Pressable>
         </View>
 
@@ -177,26 +145,14 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.howItWorks}>
           <Text style={styles.sectionTitle}>¿Cómo funciona?</Text>
 
-          {[
-            { icon: "shopping-bag", text: "Elegís uno o más productos del catálogo." },
-            { icon: "heart", text: "Asignás cada uno a la fundación que quieras ayudar." },
-            { icon: "check-circle", text: "Confirmás y queda registrado en tu historial." },
-          ].map((step, index) => (
-            <View key={step.icon} style={styles.stepRow}>
-              <View style={styles.stepNumber}>
-                <Text style={styles.stepNumberText}>{index + 1}</Text>
-              </View>
-              <Feather name={step.icon} size={15} color={COLORS.primaryDark} style={styles.stepIcon} />
-              <Text style={styles.stepText}>{step.text}</Text>
-            </View>
-          ))}
+          <Text style={styles.howItWorksText}>
+            Elegís un producto, realizás la compra y tu aporte se transforma
+            en una ayuda concreta para una fundación.
+          </Text>
 
-          <View style={styles.highlightRow}>
-            <Feather name="check-circle" size={14} color={COLORS.primaryDark} />
-            <Text style={styles.highlight}>
-              La fundación recibe la ayuda, no vos.
-            </Text>
-          </View>
+          <Text style={styles.highlight}>
+            La fundación recibe la ayuda, no vos.
+          </Text>
         </View>
       </ScrollView>
 
@@ -217,16 +173,6 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
   },
 
-  heroCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.card,
-    borderWidth: 1,
-    borderColor: COLORS.borderStrong,
-    padding: SPACING.md,
-    marginBottom: 20,
-    ...SHADOW.card,
-  },
-
   header: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -239,25 +185,13 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
 
-  brandRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  brandLogo: {
-    width: 28,
-    height: 28,
-  },
-
   brand: {
-    ...TYPE.display,
-    fontSize: 22,
+    fontSize: 25,
+    fontWeight: "800",
     color: COLORS.text,
   },
 
   subtitle: {
-    ...TYPE.body,
     fontSize: 13,
     color: COLORS.textSecondary,
     marginTop: 4,
@@ -275,35 +209,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  statsRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 4,
-  },
-
-  statChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: COLORS.primarySoft,
-    borderRadius: RADIUS.pill,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-  },
-
-  statChipSecondary: {
-    backgroundColor: COLORS.secondarySoft,
-  },
-
-  statChipText: {
-    ...TYPE.caption,
-    fontSize: 11,
-    fontWeight: "700",
-    color: COLORS.primaryDark,
-  },
-
-  statChipTextSecondary: {
-    color: COLORS.secondaryDark,
+  profileIcon: {
+    fontSize: 18,
   },
 
   categories: {
@@ -313,8 +220,8 @@ const styles = StyleSheet.create({
 
   categoryButton: {
     paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: RADIUS.pill,
+    paddingVertical: 8,
+    borderRadius: 20,
     backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -326,9 +233,8 @@ const styles = StyleSheet.create({
   },
 
   categoryText: {
-    ...TYPE.caption,
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "700",
     color: COLORS.textSecondary,
   },
 
@@ -337,40 +243,23 @@ const styles = StyleSheet.create({
   },
 
   sectionHeader: {
-    marginTop: 14,
-    marginBottom: 14,
+    marginTop: 12,
+    marginBottom: 12,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-end",
+    alignItems: "center",
   },
 
   sectionTitle: {
-    ...TYPE.h1,
+    fontSize: 18,
+    fontWeight: "800",
     color: COLORS.text,
   },
 
-  foundationsTitle: {
-    color: COLORS.secondaryDark,
-  },
-
-  sectionSubtitle: {
-    ...TYPE.caption,
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 3,
-  },
-
-  seeAllRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-
   seeAll: {
-    ...TYPE.caption,
     fontSize: 12,
-    color: COLORS.primaryDark,
-    fontWeight: "700",
+    color: COLORS.primary,
+    fontWeight: "800",
   },
 
   grid: {
@@ -381,93 +270,45 @@ const styles = StyleSheet.create({
 
   emptyState: {
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.card,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    borderRadius: 12,
     padding: 20,
     alignItems: "center",
     marginBottom: 8,
-    gap: 6,
   },
 
   emptyTitle: {
-    ...TYPE.bodyStrong,
     fontSize: 14,
+    fontWeight: "700",
     color: COLORS.text,
   },
 
   emptyText: {
-    ...TYPE.caption,
     fontSize: 12,
     color: COLORS.textSecondary,
+    marginTop: 4,
   },
 
   howItWorks: {
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.card,
-    padding: 18,
-    marginTop: 14,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 12,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: COLORS.borderStrong,
-    ...SHADOW.card,
+    borderColor: COLORS.border,
   },
 
   howItWorksText: {
-    ...TYPE.body,
     fontSize: 13,
     lineHeight: 19,
     color: COLORS.textSecondary,
-    marginTop: 6,
-  },
-
-  stepRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginTop: 14,
-  },
-
-  stepNumber: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: COLORS.primarySoft,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  stepNumberText: {
-    ...TYPE.caption,
-    fontSize: 11,
-    fontWeight: "800",
-    color: COLORS.primaryDark,
-  },
-
-  stepIcon: {
-    marginLeft: -2,
-  },
-
-  stepText: {
-    ...TYPE.body,
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    flex: 1,
-  },
-
-  highlightRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 16,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+    marginTop: 4,
   },
 
   highlight: {
-    ...TYPE.bodyStrong,
     fontSize: 13,
-    color: COLORS.primaryDark,
+    fontWeight: "700",
+    color: COLORS.primary,
+    marginTop: 12,
   },
 });

@@ -31,14 +31,16 @@ export function CartProvider({ children }) {
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(cart)).catch(() => {});
   }, [cart]);
 
-  const addToCart = (product) => {
+  const addToCart = (product, quantity = 1) => {
+    const safeQuantity = Math.max(1, Number(quantity) || 1);
+
     setCart((current) => {
       const existing = current.find((item) => item.product.id === product.id);
 
       if (existing) {
         return current.map((item) =>
           item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + safeQuantity }
             : item
         );
       }
@@ -47,7 +49,7 @@ export function CartProvider({ children }) {
         ...current,
         {
           product,
-          quantity: 1,
+          quantity: safeQuantity,
           foundationId: null,
         },
       ];

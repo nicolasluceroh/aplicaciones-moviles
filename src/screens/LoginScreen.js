@@ -8,27 +8,10 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { COLORS, RADIUS, SPACING } from "../constants/theme";
 import { supabase } from "../config/supabase";
-import PressableScale from "../components/PressableScale";
-import { useAppAlert } from "../components/AppAlert";
 
-// Paleta y tipografía de pilar-sonrisas-web (src/index.css), usada SOLO en
-// esta pantalla y en RegisterScreen.js para que login/registro queden
-// calcados a la web — el resto de la app sigue con constants/theme.js.
-const WEB = {
-  paper: "#fafaf9",
-  surface: "#ffffff",
-  ink: "#1c1917",
-  inkSoft: "#78716c",
-  border: "#e7e5e4",
-  sol: "#f46a4e",
-  solDark: "#e0583b",
-  monteSoft: "#f0fdfa",
-  monteDark: "#0b7b70",
-  danger: "#a33c32",
-  dangerSoft: "#f0dcd9",
-};
+const SOFT_BLUE = "#E8F0F7";
 
 export default function LoginScreen({ route, navigation }) {
   const alert = useAppAlert();
@@ -40,11 +23,10 @@ export default function LoginScreen({ route, navigation }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState({});
 
   const resendConfirmation = async (cleanEmail = email.trim().toLowerCase()) => {
     if (!cleanEmail) {
-      alert("Ingresá tu email", "Escribí el correo de tu cuenta para reenviar la confirmación.");
+      Alert.alert("Ingresá tu email", "Escribí el correo de tu cuenta para reenviar la confirmación.");
       return;
     }
 
@@ -57,12 +39,12 @@ export default function LoginScreen({ route, navigation }) {
 
       if (error) throw error;
 
-      alert(
+      Alert.alert(
         "Email enviado",
         "Te enviamos un nuevo correo de confirmación. Abrilo y después volvé a iniciar sesión."
       );
     } catch (error) {
-      alert(
+      Alert.alert(
         "No se pudo reenviar",
         error?.message || "Intentá nuevamente en unos minutos."
       );
@@ -73,13 +55,11 @@ export default function LoginScreen({ route, navigation }) {
 
   const handleLogin = async () => {
     const cleanEmail = email.trim().toLowerCase();
-    const errors = {};
 
-    if (!cleanEmail) errors.email = "Ingresá tu email.";
-    if (!password.trim()) errors.password = "Ingresá tu contraseña.";
-
-    setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
+    if (!cleanEmail || !password.trim()) {
+      Alert.alert("Datos incompletos", "Ingresá email y contraseña.");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -94,7 +74,7 @@ export default function LoginScreen({ route, navigation }) {
         const message = (error.message || "").toLowerCase();
 
         if (code === "email_not_confirmed" || message.includes("email not confirmed")) {
-          alert(
+          Alert.alert(
             "Falta confirmar el email",
             "Tu cuenta existe, pero todavía tenés que confirmar el correo antes de ingresar.",
             [
@@ -106,14 +86,14 @@ export default function LoginScreen({ route, navigation }) {
         }
 
         if (code === "invalid_credentials" || message.includes("invalid login credentials")) {
-          alert(
+          Alert.alert(
             "No se pudo iniciar sesión",
             "El email o la contraseña no coinciden. Si recreaste la cuenta, asegurate también de haber confirmado el nuevo email."
           );
           return;
         }
 
-        alert("No se pudo iniciar sesión", error.message || "Intentá nuevamente.");
+        Alert.alert("No se pudo iniciar sesión", error.message || "Intentá nuevamente.");
         return;
       }
 
@@ -131,23 +111,20 @@ export default function LoginScreen({ route, navigation }) {
           (profile.role === "foundation" && !profile.foundation_id)
         ) {
           await supabase.auth.signOut();
-          alert(
+          Alert.alert(
             "Acceso restringido",
             "Esta cuenta no está habilitada como fundación."
           );
           return;
         }
 
-        // reset (no replace): limpia toda la pila, incluido el login de
-        // donante que haya quedado atrás, para que "volver" no tenga a
-        // dónde ir y no muestre un back button que no tiene sentido acá.
-        navigation.reset({ index: 0, routes: [{ name: "FoundationPanel" }] });
+        navigation.replace("FoundationPanel");
         return;
       }
 
       navigation.navigate(returnTo);
     } catch (error) {
-      alert("Error", error?.message || "Ocurrió un problema al iniciar sesión.");
+      Alert.alert("Error", error?.message || "Ocurrió un problema al iniciar sesión.");
     } finally {
       setLoading(false);
     }
@@ -159,15 +136,68 @@ export default function LoginScreen({ route, navigation }) {
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.card}>
-        <Text style={styles.title}>
-          {isFoundation ? "Acceso para fundaciones" : "Tu cuenta"}
+      <Text style={styles.title}>
+        {isFoundation ? "Acceso para fundaciones" : "Bienvenido de nuevo"}
+      </Text>
+      <Text style={styles.subtitle}>
+        {isFoundation
+          ? "Ingresá con la cuenta de la organización."
+          : "Ingresá para consultar tus donaciones."}
+      </Text>
+
+      <Text style={styles.label}>Email</Text>
+      <TextInput
+        style={styles.input}
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        placeholder="nombre@correo.com"
+        placeholderTextColor={COLORS.textSecondary}
+        editable={!loading && !resending}
+      />
+
+      <Text style={styles.label}>Contraseña</Text>
+      <TextInput
+        style={styles.input}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        placeholder="Contraseña"
+        placeholderTextColor={COLORS.textSecondary}
+        editable={!loading && !resending}
+      />
+
+      {!isFoundation && (
+        <Pressable onPress={() => resendConfirmation()} disabled={loading || resending}>
+          <Text style={styles.forgot}>
+            {resending ? "Reenviando..." : "¿No confirmaste tu cuenta? Reenviar email"}
+          </Text>
+        </Pressable>
+      )}
+
+      <Pressable
+        style={[styles.primaryButton, (loading || resending) && styles.disabledButton]}
+        onPress={handleLogin}
+        disabled={loading || resending}
+      >
+        <Text style={styles.primaryButtonText}>
+          {loading ? "Ingresando..." : "Ingresar"}
         </Text>
-        <Text style={styles.subtitle}>
-          {isFoundation
-            ? "Ingresá con la cuenta de la organización."
-            : "Iniciá sesión o creá una cuenta para donar y seguir tu historial."}
-        </Text>
+      </Pressable>
+
+      {!isFoundation && (
+        <>
+          <Text style={styles.helper}>¿Todavía no tenés cuenta?</Text>
+
+          <Pressable
+            style={styles.secondaryButton}
+            onPress={() => navigation.navigate("Register", { returnTo })}
+            disabled={loading || resending}
+          >
+            <Text style={styles.secondaryButtonText}>Crear cuenta</Text>
+          </Pressable>
 
         <View style={styles.field}>
           <Text style={styles.label}>Email</Text>
@@ -191,31 +221,16 @@ export default function LoginScreen({ route, navigation }) {
           {!!fieldErrors.email && <Text style={styles.fieldError}>{fieldErrors.email}</Text>}
         </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Contraseña</Text>
-          <View style={styles.inputWrap}>
-            <Feather name="lock" size={16} color={WEB.inkSoft} style={styles.fieldIcon} />
-            <TextInput
-              style={[styles.input, fieldErrors.password && styles.inputError]}
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (fieldErrors.password) setFieldErrors((e) => ({ ...e, password: null }));
-              }}
-              secureTextEntry
-              placeholder="••••••••"
-              placeholderTextColor={WEB.inkSoft}
-              editable={!loading && !resending}
-            />
-          </View>
-          {!!fieldErrors.password && <Text style={styles.fieldError}>{fieldErrors.password}</Text>}
-        </View>
-
-        {!isFoundation && (
-          <Pressable onPress={() => resendConfirmation()} disabled={loading || resending}>
-            <Text style={styles.forgot}>
-              {resending ? "Reenviando..." : "¿No confirmaste tu cuenta? Reenviar email"}
-            </Text>
+          <Pressable
+            style={styles.foundationBox}
+            onPress={() => navigation.push("Login", { userType: "foundation" })}
+            disabled={loading || resending}
+          >
+            <Text style={styles.foundationTitle}>Acceso para fundaciones</Text>
+            <View style={styles.foundationRow}>
+              <Text style={styles.foundationText}>Ingresar como organización</Text>
+              <Text style={styles.foundationArrow}>›</Text>
+            </View>
           </Pressable>
         )}
 
@@ -265,11 +280,13 @@ export default function LoginScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: WEB.paper },
-  content: { padding: 24, paddingBottom: 48 },
-  card: {
-    backgroundColor: WEB.surface,
-    borderRadius: 20,
+  screen: { flex: 1, backgroundColor: COLORS.background },
+  content: { padding: SPACING.lg, paddingBottom: 40 },
+  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
+  subtitle: { fontSize: 14, lineHeight: 20, color: COLORS.textSecondary, marginTop: 6, marginBottom: 24 },
+  label: { fontSize: 13, fontWeight: "700", color: COLORS.text, marginBottom: 6 },
+  input: {
+    backgroundColor: COLORS.surface,
     borderWidth: 1,
     borderColor: WEB.border,
     padding: 24,
@@ -279,26 +296,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: 3,
   },
-  title: { fontSize: 22, fontWeight: "600", color: WEB.ink },
-  subtitle: { fontSize: 14, color: WEB.inkSoft, marginTop: 4, marginBottom: 20 },
-  field: { gap: 6, marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: "500", color: WEB.ink },
-  inputWrap: { position: "relative", justifyContent: "center" },
-  inputError: { borderColor: WEB.danger },
-  fieldError: { fontSize: 12, color: WEB.danger, marginTop: 5 },
-  fieldIcon: { position: "absolute", left: 14, zIndex: 1 },
-  input: {
-    borderWidth: 1,
-    borderColor: WEB.border,
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingLeft: 40,
-    paddingRight: 14,
-    fontSize: 14,
-    color: WEB.ink,
-    backgroundColor: WEB.surface,
+  forgot: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: COLORS.primary,
+    textAlign: "right",
+    marginBottom: 20,
   },
-  forgot: { fontSize: 13, fontWeight: "500", color: WEB.sol, textAlign: "right", marginBottom: 20 },
   primaryButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -308,10 +312,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 13,
   },
-  spinner: { marginRight: 2 },
-  primaryButtonText: { fontSize: 14, fontWeight: "500", color: WEB.surface },
+  primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
   disabledButton: { opacity: 0.6 },
-  helper: { fontSize: 13, color: WEB.inkSoft, textAlign: "center", marginTop: 22 },
+  helper: { fontSize: 13, color: COLORS.textSecondary, textAlign: "center", marginTop: 22 },
   secondaryButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -323,21 +326,13 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     marginTop: 10,
   },
-  secondaryButtonText: { fontSize: 14, fontWeight: "500", color: WEB.solDark },
-  foundationCard: {
-    marginTop: 24,
-    backgroundColor: WEB.monteSoft,
-    borderRadius: 20,
-    padding: 20,
-  },
-  foundationHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
-  foundationTitle: { fontSize: 14, fontWeight: "600", color: WEB.monteDark },
-  foundationRow: {
-    marginTop: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-  },
-  foundationText: { flex: 1, fontSize: 14, color: WEB.inkSoft },
+  secondaryButtonText: { color: COLORS.primary, fontSize: 16, fontWeight: "800" },
+  separator: { flexDirection: "row", alignItems: "center", marginVertical: 24 },
+  separatorLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
+  separatorText: { fontSize: 12, color: COLORS.textSecondary, marginHorizontal: 12 },
+  foundationBox: { backgroundColor: SOFT_BLUE, borderRadius: RADIUS.md, padding: 18 },
+  foundationTitle: { fontSize: 15, fontWeight: "800", color: COLORS.secondary },
+  foundationRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 10 },
+  foundationText: { fontSize: 14, fontWeight: "700", color: COLORS.text },
+  foundationArrow: { fontSize: 24, color: COLORS.secondary },
 });

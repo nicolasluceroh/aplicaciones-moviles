@@ -10,8 +10,7 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { Feather } from "@expo/vector-icons";
-import { COLORS, RADIUS, SPACING, TYPE } from "../constants/theme";
+import { COLORS, RADIUS, SPACING } from "../constants/theme";
 import { supabase } from "../config/supabase";
 import { useAuth } from "../context/AuthContext";
 
@@ -137,7 +136,7 @@ export default function FoundationNeedsScreen() {
   if (profileLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={COLORS.secondary} size="large" />
+        <ActivityIndicator color={COLORS.primary} size="large" />
       </View>
     );
   }
@@ -191,7 +190,6 @@ export default function FoundationNeedsScreen() {
           onPress={addNeed}
           disabled={saving}
         >
-          <Feather name="plus-circle" size={15} color={COLORS.surface} />
           <Text style={styles.primaryButtonText}>
             {saving ? "Guardando..." : "Agregar necesidad"}
           </Text>
@@ -201,7 +199,7 @@ export default function FoundationNeedsScreen() {
       <Text style={styles.sectionTitle}>Publicadas</Text>
 
       {loading ? (
-        <ActivityIndicator color={COLORS.secondary} />
+        <ActivityIndicator color={COLORS.primary} />
       ) : needs.length === 0 ? (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyText}>Todavía no hay necesidades publicadas.</Text>
@@ -211,8 +209,7 @@ export default function FoundationNeedsScreen() {
           <View key={need.id} style={styles.needCard}>
             <View style={styles.needHeader}>
               <Text style={styles.needName}>{need.name}</Text>
-              <Pressable style={styles.removeButton} onPress={() => removeNeed(need)}>
-                <Feather name="trash-2" size={14} color={COLORS.danger} />
+              <Pressable onPress={() => removeNeed(need)}>
                 <Text style={styles.remove}>Eliminar</Text>
               </Pressable>
             </View>
@@ -223,14 +220,14 @@ export default function FoundationNeedsScreen() {
                 style={styles.quantityButton}
                 onPress={() => updatePending(need, need.pending - 1)}
               >
-                <Feather name="minus" size={15} color={COLORS.secondaryDark} />
+                <Text style={styles.quantityButtonText}>−</Text>
               </Pressable>
               <Text style={styles.quantity}>{need.pending}</Text>
               <Pressable
                 style={styles.quantityButton}
                 onPress={() => updatePending(need, need.pending + 1)}
               >
-                <Feather name="plus" size={15} color={COLORS.secondaryDark} />
+                <Text style={styles.quantityButtonText}>+</Text>
               </Pressable>
             </View>
           </View>
@@ -250,66 +247,47 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: SPACING.lg,
   },
-  title: { ...TYPE.display, fontSize: 24, color: COLORS.text },
-  subtitle: { ...TYPE.body, fontSize: 13, color: COLORS.textSecondary, marginTop: 5, marginBottom: 18 },
+  title: { fontSize: 25, fontWeight: "800", color: COLORS.text },
+  subtitle: { fontSize: 13, lineHeight: 19, color: COLORS.textSecondary, marginTop: 5, marginBottom: 18 },
   formCard: {
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.card,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 16,
   },
-  label: { ...TYPE.caption, fontSize: 12, color: COLORS.text, marginBottom: 6 },
+  label: { fontSize: 13, fontWeight: "700", color: COLORS.text, marginBottom: 6 },
   input: {
     backgroundColor: COLORS.background,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: RADIUS.lg,
+    borderRadius: RADIUS.md,
     padding: 13,
-    ...TYPE.body,
     fontSize: 14,
     color: COLORS.text,
     marginBottom: 14,
   },
-  primaryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: COLORS.secondary,
-    borderRadius: RADIUS.lg,
-    paddingVertical: 14,
-  },
-  primaryButtonText: { ...TYPE.button, fontSize: 13, color: COLORS.surface },
+  primaryButton: { backgroundColor: COLORS.primary, borderRadius: RADIUS.md, padding: 14, alignItems: "center" },
+  primaryButtonText: { color: "#FFFFFF", fontWeight: "800" },
   disabledButton: { opacity: 0.6 },
-  sectionTitle: { ...TYPE.h1, fontSize: 17, color: COLORS.text, marginTop: 24, marginBottom: 12 },
+  sectionTitle: { fontSize: 19, fontWeight: "800", color: COLORS.text, marginTop: 24, marginBottom: 12 },
   needCard: {
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.card,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 16,
     marginBottom: 12,
   },
   needHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  needName: { flex: 1, ...TYPE.bodyStrong, fontSize: 14, color: COLORS.text, paddingRight: 10 },
-  removeButton: { flexDirection: "row", alignItems: "center", gap: 5 },
-  remove: { color: COLORS.danger, ...TYPE.caption, fontSize: 12 },
-  pendingLabel: { ...TYPE.caption, fontSize: 11, color: COLORS.textSecondary, marginTop: 14 },
-  quantityRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: RADIUS.pill,
-    alignSelf: "flex-start",
-    padding: 3,
-  },
-  quantityButton: { width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.secondarySoft, alignItems: "center", justifyContent: "center" },
-  quantity: { minWidth: 36, textAlign: "center", ...TYPE.h2, fontSize: 16, color: COLORS.text },
-  emptyCard: { backgroundColor: COLORS.surface, borderRadius: RADIUS.card, borderWidth: 1, borderColor: COLORS.border, padding: 18 },
-  emptyTitle: { ...TYPE.h2, color: COLORS.text },
-  emptyText: { ...TYPE.caption, color: COLORS.textSecondary, textAlign: "center" },
+  needName: { flex: 1, fontSize: 15, fontWeight: "800", color: COLORS.text, paddingRight: 10 },
+  remove: { color: COLORS.danger, fontSize: 12, fontWeight: "700" },
+  pendingLabel: { fontSize: 12, fontWeight: "700", color: COLORS.textSecondary, marginTop: 14 },
+  quantityRow: { flexDirection: "row", alignItems: "center", marginTop: 8 },
+  quantityButton: { width: 34, height: 34, borderRadius: 17, backgroundColor: COLORS.surfaceAlt, alignItems: "center", justifyContent: "center" },
+  quantityButtonText: { fontSize: 20, color: COLORS.text },
+  quantity: { minWidth: 44, textAlign: "center", fontSize: 16, fontWeight: "800", color: COLORS.text },
+  emptyCard: { backgroundColor: COLORS.surface, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border, padding: 18 },
+  emptyTitle: { fontSize: 18, fontWeight: "800", color: COLORS.text },
+  emptyText: { fontSize: 13, lineHeight: 19, color: COLORS.textSecondary, textAlign: "center" },
 });

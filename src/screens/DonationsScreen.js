@@ -1,20 +1,21 @@
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
-  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { Feather } from "@expo/vector-icons";
-import { COLORS, RADIUS, SHADOW, SPACING, TYPE } from "../constants/theme";
+import { COLORS, RADIUS, SPACING } from "../constants/theme";
 import BottomNav from "../components/BottomNav";
-import SkeletonBlock from "../components/SkeletonBlock";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../config/supabase";
+
+const SOFT_BLUE = "#E8F0F7";
+const SOFT_GREEN = "#E3F2E8";
 
 const formatPrice = (value) => `$${Number(value || 0).toLocaleString("es-AR")}`;
 const formatDate = (value) =>
@@ -24,42 +25,18 @@ const formatDate = (value) =>
     year: "numeric",
   });
 
-const STATUS_LABEL = { confirmed: "Confirmada", cancelled: "Cancelada" };
-
-function DonationSkeleton() {
-  return (
-    <>
-      <SkeletonBlock height={86} radius={RADIUS.card} style={{ marginBottom: 18 }} />
-      {[0, 1, 2].map((i) => (
-        <View key={i} style={styles.card}>
-          <SkeletonBlock width={46} height={46} radius={RADIUS.lg} />
-          <View style={[styles.cardBody, { gap: 6 }]}>
-            <SkeletonBlock width="50%" height={14} />
-            <SkeletonBlock width="35%" height={11} />
-            <SkeletonBlock width="70%" height={11} />
-          </View>
-        </View>
-      ))}
-    </>
-  );
-}
-
 export default function DonationsScreen({ navigation }) {
   const { user, loading: authLoading } = useAuth();
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadError, setLoadError] = useState(null);
 
-  const loadDonations = useCallback(async ({ isRefresh = false } = {}) => {
+  const loadDonations = useCallback(async () => {
     if (!user?.id) {
       setDonations([]);
       return;
     }
 
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-    setLoadError(null);
+    setLoading(true);
 
     const { data, error } = await supabase
       .from("donations")
@@ -70,13 +47,13 @@ export default function DonationsScreen({ navigation }) {
       .order("created_at", { ascending: false });
 
     if (error) {
-      setLoadError(error.message || "No se pudo cargar el historial.");
+      Alert.alert("No se pudo cargar el historial", error.message);
+      setDonations([]);
     } else {
       setDonations(data || []);
     }
 
-    if (isRefresh) setRefreshing(false);
-    else setLoading(false);
+    setLoading(false);
   }, [user?.id]);
 
   useFocusEffect(
@@ -128,9 +105,6 @@ export default function DonationsScreen({ navigation }) {
           </View>
         ) : !user ? (
           <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <Feather name="log-in" size={22} color={COLORS.primary} />
-            </View>
             <Text style={styles.emptyTitle}>Iniciá sesión para ver tu historial</Text>
             <Text style={styles.emptyText}>
               Las donaciones se guardan en la cuenta con la que confirmás el checkout.
@@ -145,29 +119,18 @@ export default function DonationsScreen({ navigation }) {
             </Pressable>
           </View>
         ) : loading ? (
-          <DonationSkeleton />
-        ) : loadError ? (
-          <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <Feather name="alert-triangle" size={22} color={COLORS.danger} />
-            </View>
-            <Text style={styles.emptyTitle}>No se pudo cargar tu historial</Text>
-            <Text style={styles.emptyText}>{loadError}</Text>
-            <Pressable style={styles.primaryButton} onPress={() => loadDonations()}>
-              <Text style={styles.primaryButtonText}>Reintentar</Text>
-            </Pressable>
+          <View style={styles.loadingBox}>
+            <ActivityIndicator color={COLORS.primary} />
+            <Text style={styles.loadingText}>Cargando donaciones...</Text>
           </View>
         ) : donations.length === 0 ? (
           <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <Feather name="package" size={22} color={COLORS.primary} />
-            </View>
-            <Text style={styles.emptyTitle}>Todavía no hiciste ninguna donación</Text>
+            <Text style={styles.emptyTitle}>Todavía no hiciste donaciones</Text>
             <Text style={styles.emptyText}>
-              Cuando dones algo del catálogo, vas a ver el seguimiento acá.
+              Cuando confirmes una donación, va a aparecer automáticamente en este historial.
             </Text>
             <Pressable style={styles.emptyButton} onPress={() => navigation.navigate("Home")}>
-              <Text style={styles.emptyButtonText}>Ir al catálogo</Text>
+              <Text style={styles.emptyButtonText}>Explorar productos</Text>
             </Pressable>
           </View>
         ) : (
@@ -185,39 +148,37 @@ export default function DonationsScreen({ navigation }) {
             {donations.map((donation) => {
               const items = donation.donation_items || [];
               const productsCount = countProducts(items);
-              const statusKey = donation.status || "confirmed";
-              const isCancelled = statusKey === "cancelled";
 
               return (
-                <Pressable
-                  key={donation.id}
-                  style={styles.card}
-                  onPress={() =>
-                    navigation.navigate("DonationDetail", { donationId: donation.id })
-                  }
-                >
-                  <View style={styles.cardIcon}>
-                    <Feather name="package" size={20} color={COLORS.primary} />
-                  </View>
-
-                  <View style={styles.cardBody}>
-                    <Text style={styles.cardTotal}>{formatPrice(donation.total)}</Text>
-                    <Text style={styles.cardDate}>{formatDate(donation.created_at)}</Text>
-                    <Text style={styles.cardMeta} numberOfLines={1}>
-                      {describeFoundations(items)} · {productsCount}{" "}
-                      {productsCount === 1 ? "producto" : "productos"}
+                <View key={donation.id} style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle} numberOfLines={2}>
+                      Donación a {describeFoundations(items)}
                     </Text>
+                    <View style={styles.badge}>
+                      <Text style={styles.badgeText}>Confirmada</Text>
+                    </View>
                   </View>
 
-                  <View style={styles.cardRight}>
-                    <View style={[styles.badge, isCancelled && styles.badgeDanger]}>
-                      <Text style={[styles.badgeText, isCancelled && styles.badgeTextDanger]}>
-                        {STATUS_LABEL[statusKey] || "Confirmada"}
-                      </Text>
-                    </View>
-                    <Feather name="chevron-right" size={18} color={COLORS.textSecondary} />
+                  <Text style={styles.cardDate}>{formatDate(donation.created_at)}</Text>
+
+                  <View style={styles.divider} />
+
+                  <View style={styles.cardFooter}>
+                    <Text style={styles.cardProducts}>
+                      {productsCount} {productsCount === 1 ? "producto" : "productos"}
+                    </Text>
+                    <Text style={styles.cardTotal}>{formatPrice(donation.total)}</Text>
                   </View>
-                </Pressable>
+
+                  <Pressable
+                    onPress={() =>
+                      navigation.navigate("DonationDetail", { donationId: donation.id })
+                    }
+                  >
+                    <Text style={styles.detailLink}>Ver detalle →</Text>
+                  </Pressable>
+                </View>
               );
             })}
 
@@ -239,18 +200,8 @@ export default function DonationsScreen({ navigation }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLORS.background, paddingTop: 46 },
   content: { padding: SPACING.md, paddingBottom: 24 },
-  headerCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.card,
-    borderWidth: 1,
-    borderColor: COLORS.borderStrong,
-    padding: SPACING.md,
-    marginBottom: 20,
-    ...SHADOW.card,
-  },
-  eyebrow: { ...TYPE.caption, fontSize: 11, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase", color: COLORS.primary },
-  title: { ...TYPE.display, fontSize: 24, color: COLORS.text, marginTop: 4 },
-  subtitle: { ...TYPE.body, fontSize: 13, color: COLORS.textSecondary, marginTop: 5 },
+  title: { fontSize: 26, fontWeight: "800", color: COLORS.text },
+  subtitle: { fontSize: 13, color: COLORS.textSecondary, marginTop: 5, marginBottom: 20 },
   summary: {
     backgroundColor: COLORS.primarySoft,
     borderRadius: RADIUS.card,
@@ -261,9 +212,9 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     ...SHADOW.card,
   },
-  summaryLabel: { ...TYPE.caption, color: COLORS.primaryDark },
-  summaryValue: { ...TYPE.display, fontSize: 28, color: COLORS.text, marginTop: 2 },
-  summaryCount: { ...TYPE.bodyStrong, fontSize: 13, color: COLORS.textSecondary },
+  summaryLabel: { fontSize: 13, fontWeight: "800", color: COLORS.primary },
+  summaryValue: { fontSize: 30, fontWeight: "800", color: COLORS.text, marginTop: 2 },
+  summaryCount: { fontSize: 13, fontWeight: "700", color: COLORS.textSecondary },
   card: {
     flexDirection: "row",
     alignItems: "center",
@@ -295,15 +246,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  badgeDanger: { backgroundColor: COLORS.dangerSoft },
-  badgeText: { ...TYPE.caption, fontSize: 11, color: COLORS.success, fontWeight: "600" },
-  badgeTextDanger: { color: COLORS.danger },
-  notice: { backgroundColor: COLORS.accentSoft, borderRadius: RADIUS.card, padding: 18, marginTop: 8, ...SHADOW.card },
-  noticeTitle: { ...TYPE.h2, fontSize: 15, color: COLORS.secondaryDark },
-  noticeText: { ...TYPE.body, fontSize: 13, color: COLORS.text, marginTop: 8, lineHeight: 18 },
+  badgeText: { fontSize: 12, fontWeight: "800", color: COLORS.success },
+  cardDate: { fontSize: 13, color: COLORS.textSecondary, marginTop: 6 },
+  divider: { height: 1, backgroundColor: COLORS.border, marginVertical: 14 },
+  cardFooter: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  cardProducts: { fontSize: 14, color: COLORS.textSecondary },
+  cardTotal: { fontSize: 18, fontWeight: "800", color: COLORS.primary },
+  detailLink: { fontSize: 14, fontWeight: "800", color: COLORS.secondary, marginTop: 12 },
+  notice: { backgroundColor: SOFT_BLUE, borderRadius: RADIUS.md, padding: 18, marginTop: 8 },
+  noticeTitle: { fontSize: 15, fontWeight: "800", color: COLORS.secondary },
+  noticeText: { fontSize: 13, color: COLORS.text, lineHeight: 19, marginTop: 8 },
   loadingBox: {
     backgroundColor: COLORS.surface,
-    borderRadius: RADIUS.card,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: COLORS.border,
     padding: 24,
@@ -328,7 +283,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 10,
   },
-  emptyTitle: { ...TYPE.h2, fontSize: 16, color: COLORS.text, textAlign: "center" },
+  emptyTitle: { fontSize: 17, fontWeight: "800", color: COLORS.text, textAlign: "center" },
   emptyText: {
     ...TYPE.caption,
     fontSize: 12,
@@ -351,5 +306,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     marginTop: 16,
   },
-  primaryButtonText: { ...TYPE.button, fontSize: 13, color: COLORS.textOnDark },
+  emptyButtonText: { color: COLORS.primary, fontWeight: "800" },
+  primaryButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.md,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    marginTop: 16,
+  },
+  primaryButtonText: { color: "#FFFFFF", fontWeight: "800" },
 });

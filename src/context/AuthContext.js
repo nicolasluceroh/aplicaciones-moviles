@@ -1,14 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { supabase } from "../config/supabase";
 
-// Contexto de sesión real con Supabase Auth. Reemplaza a src/state/session.js
-// (que dejó la nota: "Nicolás reemplazará este módulo al conectar Supabase Auth").
-//
-// Expone: user, profile, loading, profileLoading, signOut(), refreshProfile()
-// — exactamente lo que ya esperan AccountScreen, ProfileScreen,
-// FoundationPanelScreen, FoundationNeedsScreen, CheckoutScreen y DonationsScreen.
-
-const AuthContext = createContext(undefined);
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -16,84 +9,156 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  const user = session?.user ?? null;
-
-  const fetchProfile = useCallback(async (userId) => {
+  const loadProfileByUserId = async (userId) => {
     if (!userId) {
       setProfile(null);
-      return;
+      return null;
     }
 
     setProfileLoading(true);
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("role, foundation_id, full_name")
+      .select("id, full_name, role, foundation_id, created_at, updated_at")
       .eq("id", userId)
       .single();
 
-    setProfile(error ? null : data);
     setProfileLoading(false);
-  }, []);
+
+    if (error) {
+      console.warn("No se pudo cargar el perfil:", error.message);
+      setProfile(null);
+      return null;
+    }
+
+    setProfile(data);
+    return data;
+  };
 
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!isMounted) return;
-      setSession(data.session);
-      setLoading(false);
-      if (data.session?.user?.id) {
-        fetchProfile(data.session.user.id);
+    async function bootstrapAuth() {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+      if (!mounted) return;
+
+      if (sessionError) {
+        console.warn("No se pudo recuperar la sesión:", sessionError.message);
       }
-    });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      const currentSession = sessionData?.session ?? null;
+
+      if (!currentSession) {
+        setSession(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      // getSession() puede devolver una sesión local vieja si el usuario fue borrado
+      // desde Supabase. getUser() valida que el usuario siga existiendo en el servidor.
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+
+      if (!mounted) return;
+
+      if (userError || !userData?.user) {
+        await supabase.auth.signOut({ scope: "local" });
+        if (!mounted) return;
+        setSession(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      setSession(currentSession);
+      setLoading(false);
+    }
+
+    bootstrapAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!mounted) return;
       setSession(nextSession);
       setLoading(false);
-
-      if (nextSession?.user?.id) {
-        fetchProfile(nextSession.user.id);
-      } else {
-        setProfile(null);
-      }
     });
 
     return () => {
-      isMounted = false;
-      listener?.subscription?.unsubscribe();
+      mounted = false;
+      subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, []);
 
-  const signOut = useCallback(async () => {
+  useEffect(() => {
+    let cancelled = false;
+
+    async function syncProfile() {
+      const userId = session?.user?.id;
+
+      if (!userId) {
+        setProfile(null);
+        return;
+      }
+
+      setProfileLoading(true);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, role, foundation_id, created_at, updated_at")
+        .eq("id", userId)
+        .single();
+
+      if (cancelled) return;
+
+      setProfileLoading(false);
+
+      if (error) {
+        console.warn("No se pudo cargar el perfil:", error.message);
+        setProfile(null);
+        return;
+      }
+
+      setProfile(data);
+    }
+
+    syncProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
+
+  const refreshProfile = async () => loadProfileByUserId(session?.user?.id);
+
+  const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     setProfile(null);
-  }, []);
-
-  const refreshProfile = useCallback(async () => {
-    if (user?.id) {
-      await fetchProfile(user.id);
-    }
-  }, [user?.id, fetchProfile]);
-
-  const value = {
-    user,
-    session,
-    profile,
-    loading,
-    profileLoading,
-    signOut,
-    refreshProfile,
   };
+
+  const value = useMemo(
+    () => ({
+      session,
+      user: session?.user ?? null,
+      profile,
+      loading,
+      profileLoading,
+      refreshProfile,
+      signOut,
+    }),
+    [session, profile, loading, profileLoading]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth debe usarse dentro de un <AuthProvider>");
+
+  if (!context) {
+    throw new Error("useAuth debe utilizarse dentro de AuthProvider");
   }
+
   return context;
 }

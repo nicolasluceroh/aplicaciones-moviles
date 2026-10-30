@@ -4,13 +4,9 @@ import { CARD_RADIUS, COLORS, RADIUS, SHADOW, TYPE } from "../constants/theme";
 export default function ProductCard({ product, onPress }) {
   return (
     <Pressable style={styles.card} onPress={onPress}>
-      {product.image ? (
-        <Image source={{ uri: product.image }} style={styles.image} resizeMode="cover" />
-      ) : (
-        <View style={styles.imagePlaceholder}>
-          <Text style={styles.emoji}>{product.emoji || "🎁"}</Text>
-        </View>
-      )}
+      <View style={styles.imagePlaceholder}>
+        <Text style={styles.emoji}>{product.emoji || "🎁"}</Text>
+      </View>
 
       <Text style={styles.name} numberOfLines={2}>
         {product.name}
@@ -33,52 +29,41 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
     borderRadius: RADIUS.card,
     borderWidth: 1,
-    borderColor: COLORS.borderStrong,
-    padding: 10,
-    marginBottom: 14,
-    ...SHADOW.card,
-  },
-
-  image: {
-    width: "100%",
-    height: 90,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.surfaceAlt,
+    borderColor: COLORS.border,
+    padding: 8,
     marginBottom: 10,
   },
 
   imagePlaceholder: {
-    height: 90,
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.surfaceAlt,
+    height: 86,
+    borderRadius: RADIUS.sm,
+    backgroundColor: COLORS.primarySoft,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 10,
+    marginBottom: 8,
   },
 
   emoji: {
-    fontSize: 36,
+    fontSize: 38,
   },
 
   name: {
-    ...TYPE.bodyStrong,
     fontSize: 13,
+    fontWeight: "700",
     color: COLORS.text,
     minHeight: 32,
   },
 
   category: {
-    ...TYPE.caption,
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 10,
     color: COLORS.textSecondary,
     marginTop: 2,
   },
 
   price: {
     fontSize: 15,
-    fontWeight: "700",
-    color: COLORS.text,
-    marginTop: 6,
+    fontWeight: "800",
+    color: COLORS.primary,
+    marginTop: 5,
   },
 });

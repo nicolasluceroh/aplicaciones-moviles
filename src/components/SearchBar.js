@@ -5,11 +5,11 @@ import { COLORS, RADIUS, TYPE } from "../constants/theme";
 export default function SearchBar({
   value,
   onChangeText,
-  placeholder = "Buscar producto...",
+  placeholder = "Buscar productos para donar...",
 }) {
   return (
     <View style={styles.container}>
-      <Feather name="search" size={16} color={COLORS.textSecondary} style={styles.icon} />
+      <Text style={styles.icon}>⌕</Text>
 
       <TextInput
         value={value}
@@ -26,12 +26,12 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    height: 42,
-    backgroundColor: COLORS.surfaceAlt,
-    borderRadius: RADIUS.pill,
+    height: 40,
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: COLORS.border,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
   },
 
   icon: {

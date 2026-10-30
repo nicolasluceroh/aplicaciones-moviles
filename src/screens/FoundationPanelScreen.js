@@ -181,6 +181,37 @@ export default function FoundationPanelScreen({ navigation }) {
     );
   }
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigation.reset({ index: 0, routes: [{ name: "Account" }] });
+    } catch (error) {
+      Alert.alert("Error", "No se pudo cerrar la sesión.");
+    }
+  };
+
+  if (profileLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator color={COLORS.primary} size="large" />
+      </View>
+    );
+  }
+
+  if (!canAccess) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.accessTitle}>Acceso restringido</Text>
+        <Text style={styles.accessText}>
+          Esta cuenta no está habilitada como fundación o no tiene una fundación asociada.
+        </Text>
+        <Pressable style={styles.secondaryButton} onPress={handleLogout}>
+          <Text style={styles.secondaryButtonText}>Volver a mi cuenta</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   if (cameraOpen) {
     return (
       <View style={styles.cameraScreen}>

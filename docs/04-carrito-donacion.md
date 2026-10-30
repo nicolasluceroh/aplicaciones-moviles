@@ -1,53 +1,62 @@
 # Carrito y donación
 
-**Responsable:** Joaquín  
-**Requisitos relacionados:** RF-004, RF-005, RF-009
-
-> Completar esta documentación con el código real implementado en la rama `feature/joaquin-cart-donation`.
+**Responsable:** Joaquín Pajon  
+**Requisitos relacionados:** RF-004, RF-005, RF-009, RF-010
 
 ## Archivos principales
 
+- `src/screens/ProductScreen.js`
 - `src/screens/CartScreen.js`
 - `src/screens/CheckoutScreen.js`
 - `src/screens/ConfirmationScreen.js`
-- Contexto utilizado: `src/context/CartContext.js`
+- `src/context/CartContext.js`
+- `src/config/supabase.js`
 
 ## Qué hace el módulo
 
-[COMPLETAR EN 2 O 3 FRASES]
+Implementa el flujo de donación desde la selección de productos hasta la confirmación. El usuario puede definir cantidades, asignar una fundación distinta a cada producto, revisar el resumen y confirmar una donación. Al confirmar, la donación y sus ítems se persisten en Supabase y luego quedan disponibles en `Mis donaciones`.
 
 ## Funciones principales
 
 | Función | Archivo | Qué hace | Datos que usa/cambia |
 |---|---|---|---|
-| [COMPLETAR] | [COMPLETAR] | [COMPLETAR] | [COMPLETAR] |
+| `addToCart(product, quantity)` | `CartContext.js` | Agrega un producto o suma la cantidad seleccionada si ya existe | `cart` |
+| `increaseQuantity(productId)` | `CartContext.js` | Incrementa la cantidad de un producto | `cart` |
+| `decreaseQuantity(productId)` | `CartContext.js` | Disminuye la cantidad sin bajar de 1 | `cart` |
+| `removeFromCart(productId)` | `CartContext.js` | Elimina un producto del carrito | `cart` |
+| `assignFoundation(productId, foundationId)` | `CartContext.js` | Asigna o cambia la fundación destinataria de un producto | `cart` |
+| `clearCart()` | `CartContext.js` | Vacía el carrito después de una confirmación exitosa | `cart` |
+| `handleConfirm()` | `CheckoutScreen.js` | Valida sesión/carrito y guarda la donación mediante `create_donation` | Supabase + `cart` |
 
 ## Selección de fundación
 
-Explicar cómo se asigna una fundación a cada producto del carrito.
-
-[COMPLETAR]
+Cada producto del carrito puede tener una fundación destinataria diferente. `CartScreen` abre un selector modal y guarda la elección en `foundationId` mediante `assignFoundation`.
 
 ## Validaciones
 
-Documentar solamente las validaciones realmente implementadas. Ejemplo: impedir continuar si un producto no tiene fundación asignada.
-
-- [COMPLETAR]
+- El carrito debe contener al menos un producto.
+- Cada producto debe tener una fundación asignada antes de continuar.
+- Para confirmar y guardar la donación el usuario debe iniciar sesión.
+- Si Supabase devuelve un error, el carrito no se vacía y la app informa el problema.
 
 ## Checkout y confirmación
 
-Explicar qué información se muestra antes de confirmar y qué ocurre al finalizar la donación.
+`CheckoutScreen` muestra los productos, cantidades, fundaciones destinatarias, subtotales, total y la leyenda de pago simulado. Al confirmar, llama a la función RPC `create_donation` de Supabase. Si el guardado finaliza correctamente, se vacía el carrito y se navega a `ConfirmationScreen` con el ID y total de la donación.
 
-[COMPLETAR]
+`ConfirmationScreen` muestra el mensaje de éxito, el total, un identificador corto de la donación y accesos para ir a `Mis donaciones` o volver al inicio.
 
 ## Prueba manual
 
-1. Agregar dos productos al carrito.
-2. Cambiar cantidades.
-3. Seleccionar fundación para cada producto.
-4. Continuar al checkout.
-5. Confirmar la donación.
-6. Resultado esperado: [COMPLETAR]
+1. Abrir un producto y seleccionar una cantidad mayor a 1.
+2. Agregarlo al carrito y verificar que se conserve la cantidad elegida.
+3. Agregar otro producto si se desea.
+4. Cambiar cantidades con `+` y `-`.
+5. Asignar una fundación a cada producto.
+6. Verificar que no se pueda continuar mientras falte una fundación.
+7. Continuar al checkout y revisar el resumen.
+8. Confirmar la donación con una cuenta iniciada.
+9. Verificar la pantalla de confirmación.
+10. Abrir `Mis donaciones` y comprobar que la donación recién creada aparezca en el historial.
 
 ## Capturas
 
