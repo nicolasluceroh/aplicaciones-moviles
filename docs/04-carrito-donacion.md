@@ -14,7 +14,7 @@
 
 ## Qué hace el módulo
 
-Implementa el flujo de donación desde la selección de productos hasta la confirmación. El usuario puede definir cantidades, asignar una fundación distinta a cada producto, revisar el resumen y confirmar una donación. Al confirmar, la donación y sus ítems se persisten en Supabase y luego quedan disponibles en `Mis donaciones`.
+Implementa el flujo de donación desde la selección de productos hasta la confirmación. El usuario define cantidades y revisa el resumen. Para los productos comerciales, la fundación destinataria viene determinada por la necesidad que motivó su publicación y no puede cambiarse. Al confirmar, la donación y sus ítems se persisten en Supabase y luego quedan disponibles en `Mis donaciones`.
 
 ## Funciones principales
 
@@ -30,7 +30,7 @@ Implementa el flujo de donación desde la selección de productos hasta la confi
 
 ## Selección de fundación
 
-Cada producto del carrito puede tener una fundación destinataria diferente. `CartScreen` abre un selector modal y guarda la elección en `foundationId` mediante `assignFoundation`.
+Cada producto comercial tiene una fundación destinataria determinada por su necesidad en `foundation_needs`. Aunque el carrito admite productos de distintas fundaciones, el usuario no puede reasignar manualmente el destino de una publicación comercial. `assignFoundation` conserva su uso para ítems que no tengan el destino bloqueado.
 
 ## Validaciones
 
@@ -51,8 +51,8 @@ Cada producto del carrito puede tener una fundación destinataria diferente. `Ca
 2. Agregarlo al carrito y verificar que se conserve la cantidad elegida.
 3. Agregar otro producto si se desea.
 4. Cambiar cantidades con `+` y `-`.
-5. Asignar una fundación a cada producto.
-6. Verificar que no se pueda continuar mientras falte una fundación.
+5. Verificar que cada publicación comercial ya tenga asignada la fundación de su necesidad y que no pueda cambiarse.
+6. Verificar que la app valide el destino de todos los productos antes de continuar.
 7. Continuar al checkout y revisar el resumen.
 8. Confirmar la donación con una cuenta iniciada.
 9. Verificar la pantalla de confirmación.

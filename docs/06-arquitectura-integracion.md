@@ -10,8 +10,9 @@ src/
 ├── config/       Configuración del cliente de Supabase
 ├── constants/    Tema y valores visuales comunes
 ├── context/      Estado global de autenticación y carrito
-├── data/         Datos locales del catálogo y fundaciones
+├── data/         Datos locales de fundaciones y muestras históricas (no catálogo público)
 ├── hooks/        Consultas compartidas del catálogo
+├── utils/        Carga y eliminación de fotografías comerciales
 └── screens/      Pantallas de la aplicación
 
 supabase/
@@ -87,9 +88,15 @@ La app utiliza Supabase para:
 - historial del donante;
 - necesidades de las fundaciones;
 - ofertas publicadas por comercios para necesidades pendientes;
-- control de acceso mediante Row Level Security.
+- fotografías comerciales en Supabase Storage (`merchant-products`);
+- perfiles comerciales y nombres públicos sincronizados con los productos;
+- control de acceso mediante Row Level Security en tablas y objetos de Storage.
 
 El checkout llama a la función `create_donation`, que registra la cabecera y los ítems de la donación dentro de una misma operación.
+
+## Compatibilidad de ejecución
+
+La rama de este PR actualiza el proyecto de **Expo SDK 57 a SDK 58** para probarlo con Expo Go en iOS. Se incluyen `expo-image-picker` y `@expo/vector-icons`, junto con las dependencias fijadas en `package.json` y `package-lock.json`. La versión efectiva se comprueba en esos archivos.
 
 ## Integración por módulos
 
@@ -109,4 +116,4 @@ El checkout llama a la función `create_donation`, que registra la cabecera y lo
 
 ## Comercio y catálogo persistido
 
-La pantalla `MerchantPanel` valida el rol `merchant` y permite crear, pausar y eliminar ofertas asociadas a `foundation_needs`. Las políticas RLS de `merchant_products` imponen propiedad y necesidad vigente. El hook `useCatalogProducts` incorpora estas ofertas al catálogo local. Ver `09-comercios.md`.
+La pantalla `MerchantPanelScreen` valida el rol `merchant`, selecciona primero fundación y luego necesidad pendiente, y permite crear, **editar**, pausar, reactivar o eliminar ofertas propias asociadas a `foundation_needs`. `ProfileScreen` guarda `business_name` para comercios habilitados; los triggers de Supabase lo publican como `merchant_products.merchant_name`. `merchantImages.js` administra hasta tres fotografías por producto en Storage. Las políticas RLS restringen las modificaciones a cada propietario; el hook `useCatalogProducts` consulta exclusivamente ofertas comerciales activas, sin combinar el catálogo local de demostración. Ver `09-comercios.md`.

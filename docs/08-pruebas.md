@@ -3,7 +3,7 @@
 **Responsable de consolidación:** Nicolás  
 **Aportes:** todo el equipo
 
-La tabla reúne los recorridos que deben probarse desde la versión integrada de `main`. La columna Estado debe completarse después de ejecutar cada caso en Expo Go.
+La tabla reúne los recorridos que deben probarse en la rama de este PR y luego desde `main`, una vez integrado. La columna Estado debe completarse **solo después** de ejecutar cada caso en Expo Go; la incorporación de código no constituye una prueba funcional.
 
 | ID | Requisito | Funcionalidad | Pasos resumidos | Resultado esperado | Estado |
 |---|---|---|---|---|---|
@@ -39,6 +39,15 @@ La tabla reúne los recorridos que deben probarse desde la versión integrada de
 | CP-030 | RF-021 | Fundación fija | Agregar producto comercial al carrito | El destino es la fundación de la necesidad | Pendiente de probar |
 | CP-031 | RF-019 | Protección RLS | Editar publicación de otro comercio | Operación denegada o sin filas afectadas | Pendiente de probar |
 | CP-032 | RF-019 | Necesidad agotada | Cambiar `pending` a cero | No admite nueva publicación y la anterior deja de mostrarse | Pendiente de probar |
+| CP-033 | RF-025 | Selectores dependientes | Elegir fundación y luego necesidad; cambiar fundación | Se muestran solo necesidades pendientes de la seleccionada y se borra la selección anterior | Pendiente de probar |
+| CP-034 | RF-021 | Necesidades fuera del catálogo | Crear una necesidad sin publicación comercial | No aparece en Inicio ni Catálogo como producto | Pendiente de probar |
+| CP-035 | RF-023 | Fotografías | Crear producto con entre una y tres fotos | Las imágenes se guardan en Storage y aparecen en catálogo/detalle | Pendiente de probar |
+| CP-036 | RF-022 | Editar publicación | Cambiar título y precio de una oferta propia | La ficha y la base reflejan los cambios | Pendiente de probar |
+| CP-037 | RF-022 | Editar fotografías | Conservar unas fotos y sustituir otra | Se conservan las no modificadas y se actualizan las reemplazadas | Pendiente de probar |
+| CP-038 | RF-024 | Nombre comercial | Cambiar `business_name` desde Mis datos | La ficha del producto muestra «Vendido por: ...» con el nuevo nombre | Pendiente de probar |
+| CP-039 | RF-022 | Aislamiento entre comercios | Intentar editar una publicación ajena | Las políticas RLS impiden el cambio | Pendiente de probar |
+| CP-040 | RF-023 | Aislamiento de imágenes | Intentar modificar fotos bajo carpeta de otro comercio | La política de Storage impide la operación | Pendiente de probar |
+| CP-041 | RNF-002 | Compatibilidad SDK 58 | Abrir aplicación en Expo Go para iOS | La aplicación carga y permite navegar sin error de compatibilidad | Pendiente de registrar |
 
 ## Validaciones técnicas realizadas
 

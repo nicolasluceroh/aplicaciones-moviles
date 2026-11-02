@@ -1,6 +1,5 @@
 # Cuenta, autenticación y fundación
 
-**Responsables:** Facundo (UI) + Nicolás (integración Supabase)
 **Responsables:** Facundo (UI) + Nicolás (integración Supabase)  
 **Requisitos relacionados:** RF-007, RF-008, RF-010, RF-011, RF-012, RF-013, RF-014, RF-015, RF-016
 
@@ -25,7 +24,7 @@ Agrupa el acceso de donantes y fundaciones. El catálogo y el carrito pueden usa
 
 ### AccountScreen
 
-Muestra dos estados: sin sesión y con sesión. Con sesión permite abrir Mis datos, Mis donaciones y cerrar sesión.
+Muestra dos estados: sin sesión y con sesión. Con sesión permite abrir Mis datos, Mis donaciones y cerrar sesión. Cuando corresponde, incorpora el acceso diferenciado al panel de comercios.
 
 ### ProfileScreen
 
@@ -33,7 +32,8 @@ Permite actualizar:
 
 - nombre y apellido;
 - email;
-- contraseña de forma opcional.
+- contraseña de forma opcional;
+- nombre comercial (`profiles.business_name`), solo para cuentas `merchant`, publicado como `merchant_name` en los productos.
 
 El nombre se guarda en `public.profiles` y en metadata de Supabase Auth. Si se cambia el email, Supabase solicita confirmar la nueva dirección.
 
@@ -82,6 +82,10 @@ Consulta exclusivamente las donaciones del usuario autenticado mediante RLS. Si 
 ### DonationDetailScreen
 
 Muestra datos reales de la donación seleccionada: fecha, total, productos, cantidades, precio unitario y fundación destinataria.
+
+## Cuenta de comercio
+
+Las cuentas se registran inicialmente como `donor` y se habilitan administrativamente con el rol `merchant`. Un comercio puede editar su nombre público en **Mis datos**, además de acceder al panel para crear y editar publicaciones propias. El comercio no puede modificar su rol ni publicaciones ajenas. La descripción completa está en `09-comercios.md`.
 
 ## Cuenta de Fundación
 
@@ -149,7 +153,11 @@ Las imágenes están en `docs/img/`.
 
 ![Detalle de la donación](img/detalle-donacion.png)
 
-### Cuenta de Fundación
+### Cuenta de comercio
+
+Las cuentas se registran inicialmente como `donor` y se habilitan administrativamente con el rol `merchant`. Un comercio puede editar su nombre público en **Mis datos**, además de acceder al panel para crear y editar publicaciones propias. El comercio no puede modificar su rol ni publicaciones ajenas. La descripción completa está en `09-comercios.md`.
+
+## Cuenta de Fundación
 
 **Panel de fundación** — métricas de donaciones y necesidades, herramientas de cámara y ubicación, y necesidades publicadas.
 
