@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { COLORS, RADIUS, SPACING } from "../constants/theme";
 import { useCart } from "../context/CartContext";
 import { useCatalogProducts } from "../hooks/useCatalogProducts";
@@ -28,9 +28,17 @@ export default function ProductScreen({ route, navigation }) {
 
   return <View style={styles.root}>
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <View style={styles.imagePlaceholder}><Text style={styles.emoji}>{product.emoji || "🎁"}</Text></View>
+      {product.images?.length > 0 ? (
+        <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.gallery}>
+          {product.images.map((uri, index) => <Image key={`${uri}-${index}`}
+            source={{ uri }} resizeMode="contain" style={styles.productImage} />)}
+        </ScrollView>
+      ) : product.image ? <Image source={{ uri: product.image }} resizeMode="contain" style={styles.productImage} /> :
+        <View style={styles.imagePlaceholder}><Text style={styles.emoji}>{product.emoji || "🎁"}</Text></View>}
       <Text style={styles.category}>{product.category}</Text>
       <Text style={styles.title}>{product.name}</Text>
+      <Text style={styles.merchant}>Vendido por: {product.merchantName || "Comercio"}</Text>
       <Text style={styles.price}>${Number(product.price).toLocaleString("es-AR")}</Text>
       <Text style={styles.description}>{product.description}</Text>
       {product.foundationId && <Text style={styles.note}>Este artículo se destina a la fundación que publicó la necesidad: {product.needName}.</Text>}
@@ -55,9 +63,12 @@ const styles = StyleSheet.create({
   content: { padding: SPACING.md, paddingBottom: 40 },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   imagePlaceholder: { height: 230, borderRadius: RADIUS.md, backgroundColor: COLORS.surfaceAlt, alignItems: "center", justifyContent: "center", marginBottom: 20 },
+  gallery: { gap: 8, paddingBottom: 8 },
+  productImage: { width: 285, height: 230, borderRadius: RADIUS.md, marginBottom: 20, backgroundColor: COLORS.surfaceAlt },
   emoji: { fontSize: 78 },
   category: { fontSize: 12, color: COLORS.secondary, fontWeight: "700" },
   title: { fontSize: 26, fontWeight: "800", color: COLORS.text, marginTop: 4 },
+  merchant: { fontSize: 14, color: COLORS.textSecondary, fontWeight: "600", marginTop: 7 },
   price: { fontSize: 24, fontWeight: "800", color: COLORS.primary, marginTop: 10 },
   description: { fontSize: 15, lineHeight: 22, color: COLORS.textSecondary, marginTop: 16 },
   button: { backgroundColor: COLORS.primary, padding: 16, borderRadius: RADIUS.md, alignItems: "center", marginTop: 26 },

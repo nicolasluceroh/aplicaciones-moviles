@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { COLORS, RADIUS, SPACING, TYPE } from "../constants/theme";
-import { categories as localCategories } from "../data/products";
 import { useCatalogProducts } from "../hooks/useCatalogProducts";
 import SearchBar from "../components/SearchBar";
 import ProductCard from "../components/ProductCard";
@@ -62,7 +61,7 @@ export default function CatalogScreen({ navigation }) {
             <Feather name="search" size={22} color={COLORS.primary} />
           </View>
           <Text style={styles.emptyTitle}>Sin resultados</Text>
-          <Text style={styles.emptyText}>Probá con otra categoría o buscá otro producto.</Text>
+          <Text style={styles.emptyText}>{products.length === 0 ? "Los comercios todavía no publicaron productos." : "Probá con otra categoría o buscá otro producto."}</Text>
         </View>
       ) : (
         <>

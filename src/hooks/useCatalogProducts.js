@@ -1,52 +1,52 @@
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { products as localProducts } from "../data/products";
 import { supabase } from "../config/supabase";
+import { getMerchantImageUrl } from "../utils/merchantImages";
 
-// Los productos locales siguen disponibles. Las ofertas de comercios se cargan
-// desde Supabase al volver a Inicio/Catálogo (incluidos los cambios de fundaciones).
+// El catálogo muestra únicamente productos que publicaron los comercios.
+// Las necesidades se consultan desde foundation_needs por separado.
 export function useCatalogProducts() {
-  const [offers, setOffers] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      async function load() {
-        setLoading(true);
-        const { data, error: queryError } = await supabase
-          .from("merchant_products")
-          .select("id, name, description, price, category, emoji, need_id, foundation_needs!inner(foundation_id, name, pending)")
-          .eq("is_active", true)
-          .gt("foundation_needs.pending", 0)
-          .order("created_at", { ascending: false });
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    async function load() {
+      setLoading(true);
+      const { data, error: queryError } = await supabase
+        .from("merchant_products")
+        .select("id, name, description, price, category, merchant_name, need_id, image_paths, foundation_needs!inner(foundation_id, name, pending)")
+        .eq("is_active", true)
+        .gt("foundation_needs.pending", 0)
+        .order("created_at", { ascending: false });
 
-        if (!active) return;
-        if (queryError) {
-          setError("No se pudieron cargar los productos de comercios.");
-          setOffers([]);
-        } else {
-          setError(null);
-          setOffers((data || []).map((p) => ({
-            id: `merchant:${p.id}`,
-            name: p.name,
-            description: p.description,
-            price: Number(p.price),
-            category: p.category,
-            emoji: p.emoji || "🎁",
-            foundationId: p.foundation_needs?.foundation_id,
-            needId: p.need_id,
-            needName: p.foundation_needs?.name,
-            merchantProductId: p.id,
-          })));
-        }
-        setLoading(false);
+      if (!active) return;
+      if (queryError) {
+        setError("No se pudieron cargar los productos. Intentá nuevamente.");
+        setProducts([]);
+      } else {
+        setError(null);
+        setProducts((data || []).map((p) => ({
+          id: `merchant:${p.id}`,
+          name: p.name,
+          description: p.description,
+          price: Number(p.price),
+          category: p.category,
+          merchantName: p.merchant_name || "Comercio",
+          images: (p.image_paths || []).map(getMerchantImageUrl),
+          image: getMerchantImageUrl(p.image_paths?.[0]),
+          foundationId: p.foundation_needs?.foundation_id,
+          needId: p.need_id,
+          needName: p.foundation_needs?.name,
+          merchantProductId: p.id,
+        })));
       }
-      load();
-      return () => { active = false; };
-    }, [])
-  );
+      setLoading(false);
+    }
+    load();
+    return () => { active = false; };
+  }, []));
 
-  return { products: [...offers, ...localProducts], loading, error };
+  return { products, loading, error };
 }

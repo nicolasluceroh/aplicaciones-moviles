@@ -1,4 +1,7 @@
+import { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Text, View, Pressable, Image, Linking } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import { supabase } from "../config/supabase";
 import { Feather } from "@expo/vector-icons";
 import { COLORS, RADIUS, SHADOW, SPACING, TYPE } from "../constants/theme";
 import { foundations } from "../data/foundations";
@@ -9,8 +12,22 @@ import BottomNav from "../components/BottomNav";
 export default function FoundationScreen({ route, navigation }) {
   const { products: allProducts, error } = useCatalogProducts();
   const foundationId = route.params?.foundationId || foundations[0]?.id;
-  const products = allProducts.filter((product) => !product.foundationId || product.foundationId === foundationId);
+  const products = allProducts.filter((product) => product.foundationId === foundationId);
+  const [needs, setNeeds] = useState([]);
+  const [needsError, setNeedsError] = useState(null);
   const foundation = foundations.find((item) => item.id === foundationId);
+
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    supabase.from("foundation_needs").select("id, name, pending")
+      .eq("foundation_id", foundationId).gt("pending", 0).order("created_at", { ascending: true })
+      .then(({ data, error: queryError }) => {
+        if (!active) return;
+        setNeeds(data || []);
+        setNeedsError(queryError ? "No se pudieron cargar las necesidades." : null);
+      });
+    return () => { active = false; };
+  }, [foundationId]));
 
   if (!foundation) {
     return (
@@ -45,7 +62,7 @@ export default function FoundationScreen({ route, navigation }) {
           <View style={styles.heroBadge}>
             <Feather name="package" size={13} color={COLORS.secondaryDark} />
             <Text style={styles.heroBadgeText}>
-              {products.length} {products.length === 1 ? "necesidad" : "necesidades"}
+              {needs.length} {needs.length === 1 ? "necesidad" : "necesidades"}
             </Text>
           </View>
           <View style={styles.heroBadge}>
@@ -84,20 +101,21 @@ export default function FoundationScreen({ route, navigation }) {
         <Feather name="package" size={16} color={COLORS.secondaryDark} />
         <Text style={styles.needsTitle}>Lo que están necesitando</Text>
       </View>
-      <Text style={styles.note}>
-        Productos del catálogo, incluidas las ofertas de comercios para esta fundación.
-      </Text>
-
+      <Text style={styles.note}>Pedidos de la fundación. Estas necesidades no son productos a la venta.</Text>
+      {needsError && <Text style={styles.note}>{needsError}</Text>}
+      {needs.length === 0 ? <Text style={styles.note}>La fundación no tiene necesidades pendientes.</Text> :
+        needs.map((need) => <View key={need.id} style={styles.needCard}>
+          <Text style={styles.needLabel}>{need.name}</Text>
+          <Text style={styles.note}>{need.pending} unidades pendientes</Text>
+        </View>)}
+      <Text style={styles.sectionTitle}>Productos ofrecidos para esta fundación</Text>
+      <Text style={styles.note}>Solo aparecen productos publicados por comercios para estas necesidades.</Text>
       {!!error && <Text style={styles.note}>{error}</Text>}
-      <View style={styles.grid}>
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            onPress={() => navigation.navigate("Product", { product })}
-          />
-        ))}
-      </View>
+      {products.length === 0 ? <Text style={styles.note}>Todavía no hay productos disponibles para esta fundación.</Text> :
+        <View style={styles.grid}>
+          {products.map((product) => <ProductCard key={product.id} product={product}
+            onPress={() => navigation.navigate("Product", { product })} />)}
+        </View>}
     </ScrollView>
     <BottomNav navigation={navigation} active="Foundations" />
     </View>
@@ -192,5 +210,7 @@ const styles = StyleSheet.create({
   needsHeader: { flexDirection: "row", alignItems: "center", gap: 7, marginTop: 26 },
   needsTitle: { ...TYPE.h1, fontSize: 17, color: COLORS.text },
   note: { ...TYPE.caption, fontSize: 12, color: COLORS.textSecondary, marginTop: 5, marginBottom: 12, lineHeight: 17 },
+  needCard: { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md, padding: 14, marginTop: 8 },
+  needLabel: { fontSize: 14, fontWeight: "700", color: COLORS.text },
   grid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
 });

@@ -119,7 +119,7 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>No encontramos productos</Text>
             <Text style={styles.emptyText}>
-              Probá con otra búsqueda o categoría.
+              {products.length === 0 ? "Todavía no hay productos publicados por comercios." : "Probá con otra búsqueda o categoría."}
             </Text>
           </View>
         )}
