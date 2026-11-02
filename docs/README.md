@@ -16,3 +16,5 @@ Esta carpeta reúne la documentación funcional y técnica de la versión actual
 - `img/` - capturas utilizadas como evidencia visual.
 
 La documentación debe reflejar el comportamiento que existe en `main`. Los archivos de migración de Supabase se encuentran en `supabase/migrations/`.
+
+- `09-comercios.md` - login de comercios, ofertas según necesidades, SQL, RLS y pruebas.

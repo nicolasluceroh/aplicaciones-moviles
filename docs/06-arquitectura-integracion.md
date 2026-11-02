@@ -11,6 +11,7 @@ src/
 ├── constants/    Tema y valores visuales comunes
 ├── context/      Estado global de autenticación y carrito
 ├── data/         Datos locales del catálogo y fundaciones
+├── hooks/        Consultas compartidas del catálogo
 └── screens/      Pantallas de la aplicación
 
 supabase/
@@ -29,7 +30,7 @@ Las secciones principales son:
 - Mis donaciones
 - Cuenta
 
-Estas pantallas muestran el componente `BottomNav`. Además existen pantallas internas para catálogo, detalle de producto, detalle de fundación, login, registro, perfil, checkout, confirmación, detalle de donación, panel de fundación y gestión de necesidades.
+Estas pantallas muestran el componente `BottomNav`. Además existen pantallas internas para catálogo, detalle de producto, detalle de fundación, login, registro, perfil, checkout, confirmación, detalle de donación, panel de fundación y gestión de necesidades y panel comercial.
 
 ## Contextos globales
 
@@ -85,6 +86,7 @@ La app utiliza Supabase para:
 - donaciones e ítems de donación;
 - historial del donante;
 - necesidades de las fundaciones;
+- ofertas publicadas por comercios para necesidades pendientes;
 - control de acceso mediante Row Level Security.
 
 El checkout llama a la función `create_donation`, que registra la cabecera y los ítems de la donación dentro de una misma operación.
@@ -104,3 +106,7 @@ El checkout llama a la función `create_donation`, que registra la cabecera y lo
 3. Se revisa el código y se prueba la funcionalidad.
 4. Se realiza el merge.
 5. Se vuelve a probar desde `main` antes de mover la tarjeta de Trello a `Hecho`.
+
+## Comercio y catálogo persistido
+
+La pantalla `MerchantPanel` valida el rol `merchant` y permite crear, pausar y eliminar ofertas asociadas a `foundation_needs`. Las políticas RLS de `merchant_products` imponen propiedad y necesidad vigente. El hook `useCatalogProducts` incorpora estas ofertas al catálogo local. Ver `09-comercios.md`.

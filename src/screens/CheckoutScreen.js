@@ -13,11 +13,14 @@ import { foundations } from "../data/foundations";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../config/supabase";
+import { Feather } from "@expo/vector-icons";
+import BottomNav from "../components/BottomNav";
 
 export default function CheckoutScreen({ navigation }) {
   const { cart, totalPrice, hasMissingFoundation, clearCart } = useCart();
   const { user, loading: authLoading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const foundationName = (id) => foundations.find((f) => f.id === id)?.name || "Fundación";
 
   const handleConfirm = async () => {
     if (authLoading) return;
@@ -54,6 +57,11 @@ export default function CheckoutScreen({ navigation }) {
         "Cada producto debe tener una fundación destinataria antes de continuar."
       );
       navigation.navigate("Cart");
+      return;
+    }
+
+    if (cart.some((item) => item.product.foundationId && item.product.foundationId !== item.foundationId)) {
+      Alert.alert("Fundación incorrecta", "La oferta de un comercio solo se puede donar a la fundación que publicó la necesidad.");
       return;
     }
 

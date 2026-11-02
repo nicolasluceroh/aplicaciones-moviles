@@ -26,6 +26,7 @@ Facilitar el vínculo entre personas que quieren colaborar y las necesidades con
 - Historial y detalle de donaciones reales.
 - Acceso diferenciado para cuentas de fundación.
 - Gestión de necesidades de una fundación.
+- Acceso para comercios habilitados y publicación de productos vinculados a necesidades pendientes.
 - Cámara y geolocalización en el panel de fundación.
 
 ## Tecnologías

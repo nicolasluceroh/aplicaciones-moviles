@@ -50,7 +50,7 @@ export function CartProvider({ children }) {
         {
           product,
           quantity: safeQuantity,
-          foundationId: null,
+          foundationId: product.foundationId || null,
         },
       ];
     });
@@ -98,7 +98,7 @@ export function CartProvider({ children }) {
     setCart((current) =>
       current.map((item) =>
         item.product.id === productId
-          ? { ...item, foundationId }
+          ? { ...item, foundationId: item.product.foundationId || foundationId }
           : item
       )
     );

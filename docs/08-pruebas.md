@@ -30,6 +30,15 @@ La tabla reúne los recorridos que deben probarse desde la versión integrada de
 | CP-021 | RF-014 | Gestionar necesidades | Agregar, modificar y eliminar | Los cambios persisten en Supabase | Pendiente de registrar |
 | CP-022 | RF-015 | Cámara | Abrir cámara y tomar foto | Se solicita permiso y se muestra la imagen | Pendiente de registrar |
 | CP-023 | RF-016 | GPS | Solicitar ubicación | Se obtienen coordenadas | Pendiente de registrar |
+| CP-024 | RF-017 | Login comercio | Ingresar con cuenta `donor` desde acceso comercio | Se rechaza el acceso | Pendiente de probar |
+| CP-025 | RF-017 | Login comercio autorizado | Ingresar con cuenta `merchant` | Se abre Panel Comercio | Pendiente de probar |
+| CP-026 | RF-018 | Necesidades pendientes | Abrir panel comercial | Se muestran necesidades con `pending > 0` | Pendiente de probar |
+| CP-027 | RF-019 | Publicar producto | Completar formulario ligado a necesidad | Se guarda en `merchant_products` | Pendiente de probar |
+| CP-028 | RF-020 | Pausar / reactivar / borrar | Gestionar oferta propia | Supabase y catálogo reflejan estado | Pendiente de probar |
+| CP-029 | RF-021 | Mostrar en catálogo | Abrir Inicio y Catálogo | La oferta activa aparece | Pendiente de probar |
+| CP-030 | RF-021 | Fundación fija | Agregar producto comercial al carrito | El destino es la fundación de la necesidad | Pendiente de probar |
+| CP-031 | RF-019 | Protección RLS | Editar publicación de otro comercio | Operación denegada o sin filas afectadas | Pendiente de probar |
+| CP-032 | RF-019 | Necesidad agotada | Cambiar `pending` a cero | No admite nueva publicación y la anterior deja de mostrarse | Pendiente de probar |
 
 ## Validaciones técnicas realizadas
 

@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, full_name, role, foundation_id, created_at, updated_at")
+      .select("id, full_name, role, foundation_id, business_name, created_at, updated_at")
       .eq("id", userId)
       .single();
 
@@ -105,7 +105,7 @@ export function AuthProvider({ children }) {
       setProfileLoading(true);
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, role, foundation_id, created_at, updated_at")
+        .select("id, full_name, role, foundation_id, business_name, created_at, updated_at")
         .eq("id", userId)
         .single();
 

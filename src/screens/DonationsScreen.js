@@ -7,9 +7,10 @@ import {
   StyleSheet,
   Text,
   View,
+  RefreshControl,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { COLORS, RADIUS, SPACING } from "../constants/theme";
+import { COLORS, RADIUS, SPACING, SHADOW, TYPE } from "../constants/theme";
 import BottomNav from "../components/BottomNav";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../config/supabase";
@@ -84,8 +85,8 @@ export default function DonationsScreen({ navigation }) {
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => loadDonations({ isRefresh: true })}
+            refreshing={loading}
+            onRefresh={loadDonations}
             tintColor={COLORS.primary}
           />
         }

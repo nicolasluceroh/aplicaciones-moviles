@@ -22,6 +22,11 @@ Los códigos de esta tabla se usan también en la documentación de módulos y e
 | RF-014 | Gestionar necesidades/productos de una fundación. |
 | RF-015 | Utilizar la cámara del dispositivo. |
 | RF-016 | Obtener la ubicación mediante GPS/geolocalización. |
+| RF-017 | Ingresar con una cuenta habilitada como comercio. |
+| RF-018 | Consultar necesidades pendientes de las fundaciones. |
+| RF-019 | Publicar productos vinculados a una necesidad. |
+| RF-020 | Pausar, reactivar o eliminar publicaciones propias. |
+| RF-021 | Mostrar productos comerciales en catálogo y asignar automáticamente su fundación destinataria. |
 
 ## Requisitos no funcionales básicos
 

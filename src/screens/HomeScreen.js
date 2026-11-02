@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { CARD_RADIUS, COLORS, RADIUS, SHADOW, SPACING, TYPE } from "../constants/theme";
-import { products } from "../data/products";
+import { useCatalogProducts } from "../hooks/useCatalogProducts";
 import { foundations } from "../data/foundations";
 import BottomNav from "../components/BottomNav";
 import SearchBar from "../components/SearchBar";
@@ -11,7 +11,9 @@ import FoundationCard from "../components/FoundationCard";
 import logoImage from "../assets/logo.png";
 
 export default function HomeScreen({ navigation }) {
+  const { products, loading: loadingProducts, error: productsError } = useCatalogProducts();
   const [search, setSearch] = useState("");
+  const categories = ["Todos", ...new Set(products.map((p) => p.category))];
   const [category, setCategory] = useState("Todos");
 
   const visibleProducts = useMemo(() => {
@@ -29,7 +31,7 @@ export default function HomeScreen({ navigation }) {
 
       return matchesSearch && matchesCategory;
     });
-  }, [search, category]);
+  }, [search, category, products]);
 
   return (
     <View style={styles.screen}>
@@ -67,7 +69,7 @@ export default function HomeScreen({ navigation }) {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categories}
         >
-          {["Todos", "Escolar", "Juguetes"].map((item) => (
+          {categories.map((item) => (
             <Pressable
               key={item}
               style={[
@@ -97,6 +99,8 @@ export default function HomeScreen({ navigation }) {
           </Pressable>
         </View>
 
+        {productsError && <Text style={styles.emptyText}>{productsError}</Text>}
+        {loadingProducts && <Text style={styles.emptyText}>Actualizando productos...</Text>}
         {visibleProducts.length > 0 ? (
           <View style={styles.grid}>
             {visibleProducts.map((product) => (
@@ -105,7 +109,7 @@ export default function HomeScreen({ navigation }) {
                 product={product}
                 onPress={() =>
                   navigation.navigate("Product", {
-                    productId: product.id,
+                    product,
                   })
                 }
               />

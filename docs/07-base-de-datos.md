@@ -11,7 +11,7 @@
 |---|---|---|
 | `id` | uuid | PK y referencia a `auth.users.id`. |
 | `full_name` | text | Nombre visible del usuario. |
-| `role` | text | `donor`, `foundation` o `admin`. |
+| `role` | text | `donor`, `foundation` , `merchant` o `admin`. |
 | `foundation_id` | text | Fundación asociada cuando corresponde. |
 | `created_at` | timestamptz | Alta del perfil. |
 | `updated_at` | timestamptz | Última modificación. |
@@ -25,6 +25,10 @@ Guarda la cabecera de cada donación: usuario donante, total, estado y fecha.
 ### `donation_items`
 
 Guarda el detalle histórico de cada producto: producto, fundación, cantidad y precio unitario. Los nombres se almacenan como snapshot para que el historial anterior no cambie si luego se modifica el catálogo local.
+
+### `merchant_products`
+
+Ofertas de comercios: `merchant_id`, `need_id`, nombre, descripción, precio, categoría, estado y fechas. RLS permite publicar solo al propietario con rol `merchant`, para necesidades con cantidad pendiente; el catálogo público solo lee ofertas activas vinculadas a necesidades vigentes.
 
 ### `foundation_needs`
 
@@ -52,6 +56,7 @@ Guarda las necesidades publicadas por una fundación y la cantidad pendiente.
 - `supabase/migrations/20260921_validate_donation_items.sql`
 - `supabase/migrations/20260921_add_foundation_account_data.sql`
 - `supabase/migrations/20260921_fix_donation_rls_recursion.sql`
+- `supabase/migrations/20261102_add_merchant_products.sql`
 
 ## Variables de entorno
 
@@ -59,3 +64,5 @@ Guarda las necesidades publicadas por una fundación y la cantidad pendiente.
 - `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
 La aplicación utiliza únicamente la clave publicable. Las claves secretas o `service_role` no forman parte del código móvil.
+
+Los pasos de migración y habilitación administrativa están en `09-comercios.md`.
