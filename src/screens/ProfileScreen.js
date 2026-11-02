@@ -15,6 +15,7 @@ import { useAuth } from "../context/AuthContext";
 export default function ProfileScreen({ navigation }) {
   const { user, profile, profileLoading, refreshProfile } = useAuth();
   const [fullName, setFullName] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -22,8 +23,9 @@ export default function ProfileScreen({ navigation }) {
 
   useEffect(() => {
     setFullName(profile?.full_name || user?.user_metadata?.full_name || "");
+    setBusinessName(profile?.business_name || "");
     setEmail(user?.email || "");
-  }, [profile?.full_name, user?.email, user?.user_metadata?.full_name]);
+  }, [profile?.full_name, profile?.business_name, user?.email, user?.user_metadata?.full_name]);
 
   if (!user) {
     return (
@@ -43,6 +45,12 @@ export default function ProfileScreen({ navigation }) {
   const handleSave = async () => {
     const cleanName = fullName.trim();
     const cleanEmail = email.trim().toLowerCase();
+    const cleanBusinessName = businessName.trim();
+
+    if (profile?.role === "merchant" && (cleanBusinessName.length < 2 || cleanBusinessName.length > 100)) {
+      Alert.alert("Nombre comercial inválido", "Ingresá un nombre de comercio de entre 2 y 100 caracteres.");
+      return;
+    }
 
     if (!cleanName || !cleanEmail) {
       Alert.alert("Datos incompletos", "Completá nombre y email.");
@@ -64,7 +72,9 @@ export default function ProfileScreen({ navigation }) {
 
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({ full_name: cleanName })
+        .update(profile?.role === "merchant"
+          ? { full_name: cleanName, business_name: cleanBusinessName }
+          : { full_name: cleanName })
         .eq("id", user.id);
 
       if (profileError) throw profileError;
@@ -126,6 +136,23 @@ export default function ProfileScreen({ navigation }) {
         placeholderTextColor={COLORS.textSecondary}
         editable={!saving}
       />
+
+      {profile?.role === "merchant" && <>
+        <Text style={styles.sectionTitle}>Datos del comercio</Text>
+        <Text style={styles.helpText}>
+          El nombre comercial será público y aparecerá en las fichas de tus productos.
+        </Text>
+        <Text style={styles.label}>Nombre del comercio</Text>
+        <TextInput
+          style={styles.input}
+          value={businessName}
+          onChangeText={setBusinessName}
+          placeholder="Ej.: Librería del Centro"
+          placeholderTextColor={COLORS.textSecondary}
+          editable={!saving}
+          maxLength={100}
+        />
+      </>}
 
       <Text style={styles.label}>Email</Text>
       <TextInput

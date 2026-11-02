@@ -92,6 +92,16 @@ export default function AccountScreen({ navigation }) {
             </Pressable>
 
             {profile?.role === "merchant" && (
+              <Pressable style={styles.row} onPress={() => navigation.navigate("Profile")}>
+                <View style={styles.rowLeft}>
+                  <Feather name="shopping-bag" size={16} color={COLORS.textSecondary} />
+                  <Text style={styles.rowText}>Configuración del comercio</Text>
+                </View>
+                <Feather name="chevron-right" size={18} color={COLORS.textSecondary} />
+              </Pressable>
+            )}
+
+            {profile?.role === "merchant" && (
               <Pressable style={styles.primaryButton} onPress={() => navigation.navigate("MerchantPanel")}>
                 <Text style={styles.primaryButtonText}>Panel de comercio · Mis productos</Text>
               </Pressable>

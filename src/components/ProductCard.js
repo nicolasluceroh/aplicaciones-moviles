@@ -4,9 +4,13 @@ import { CARD_RADIUS, COLORS, RADIUS, SHADOW, TYPE } from "../constants/theme";
 export default function ProductCard({ product, onPress }) {
   return (
     <Pressable style={styles.card} onPress={onPress}>
-      <View style={styles.imagePlaceholder}>
-        <Text style={styles.emoji}>{product.emoji || "🎁"}</Text>
-      </View>
+      {product.image ? (
+        <Image source={{ uri: product.image }} style={styles.productImage} resizeMode="cover" />
+      ) : (
+        <View style={styles.imagePlaceholder}>
+          <Text style={styles.emoji}>{product.emoji || "🎁"}</Text>
+        </View>
+      )}
 
       <Text style={styles.name} numberOfLines={2}>
         {product.name}
@@ -43,6 +47,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
+  productImage: { height: 86, width: "100%", borderRadius: RADIUS.sm, marginBottom: 8, backgroundColor: COLORS.primarySoft },
   emoji: {
     fontSize: 38,
   },

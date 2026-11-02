@@ -28,7 +28,7 @@ Guarda el detalle histórico de cada producto: producto, fundación, cantidad y 
 
 ### `merchant_products`
 
-Ofertas de comercios: `merchant_id`, `need_id`, nombre, descripción, precio, categoría, estado y fechas. RLS permite publicar solo al propietario con rol `merchant`, para necesidades con cantidad pendiente; el catálogo público solo lee ofertas activas vinculadas a necesidades vigentes.
+Ofertas de comercios: `merchant_id`, `need_id`, nombre, descripción, precio, categoría, estado, fechas y `image_paths` (hasta tres fotografías almacenadas en Supabase Storage). RLS permite publicar solo al propietario con rol `merchant`, para necesidades con cantidad pendiente; el catálogo público solo lee ofertas activas vinculadas a necesidades vigentes.
 
 ### `foundation_needs`
 
@@ -57,6 +57,7 @@ Guarda las necesidades publicadas por una fundación y la cantidad pendiente.
 - `supabase/migrations/20260921_add_foundation_account_data.sql`
 - `supabase/migrations/20260921_fix_donation_rls_recursion.sql`
 - `supabase/migrations/20261102_add_merchant_products.sql`
+- `supabase/migrations/20261102120000_add_merchant_product_images.sql`
 
 ## Variables de entorno
 
