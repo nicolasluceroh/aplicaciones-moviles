@@ -15,7 +15,7 @@ Permitir que un comercio habilitado inicie sesión con Supabase Auth, vea necesi
 4. En **Panel Comercio**, elige primero la fundación y luego una de sus necesidades con `pending > 0`; completa nombre, descripción, categoría, precio y fotografías, y publica.
 5. La app guarda la oferta en `public.merchant_products` con `merchant_id` y `need_id`. La publicación activa aparece en Inicio, Catálogo y la pantalla de la fundación correspondiente.
 6. El donante puede agregar el producto al carrito. La fundación queda asignada automáticamente según la necesidad; no puede cambiarse por otra desde el carrito.
-7. El comercio puede pausar, reactivar o eliminar sus propias ofertas. Al quedar una necesidad sin unidades pendientes, la oferta deja de mostrarse públicamente aunque siga registrada.
+7. El comercio puede **editar**, pausar, reactivar o eliminar sus propias ofertas. También puede actualizar el nombre comercial desde **Mis datos**, que se muestra en la ficha del producto. Al quedar una necesidad sin unidades pendientes, la oferta deja de mostrarse públicamente aunque siga registrada.
 
 > El comercio puede crear su cuenta pública como donante y luego pedir habilitación. Un parámetro de navegación o la metadata de registro NO habilitan por sí solos un rol de comercio.
 
@@ -66,6 +66,7 @@ where u.id = p.id
 | `need_id` | Necesidad atendida; FK a `foundation_needs`. |
 | `name`, `description`, `category` | Información del producto. |
 | `image_paths` | Hasta tres rutas de fotos en Supabase Storage. |
+| `merchant_name` | Nombre comercial público sincronizado desde `profiles.business_name`. |
 | `price` | Precio unitario positivo en ARS. |
 | `is_active` | Estado de publicación. |
 | `created_at`, `updated_at` | Auditoría temporal. |
@@ -82,6 +83,14 @@ Si una fundación **elimina** una necesidad, sus ofertas relacionadas se elimina
 - `src/context/CartContext.js`, `src/screens/CartScreen.js`, `CheckoutScreen.js`: destino de una publicación vinculado a la fundación de su necesidad.
 - `src/context/AuthContext.js`: lectura de `business_name`.
 - `App.js`: ruta `MerchantPanel`.
+
+## Secuencia de migraciones comerciales
+
+1. `supabase/migrations/20261102_add_merchant_products.sql` — rol y tabla de ofertas.
+2. `supabase/migrations/20261102120000_add_merchant_product_images.sql` — bucket Storage, fotos y políticas.
+3. `supabase/migrations/20261102143000_merchant_business_identity.sql` — edición de nombre comercial y sincronización pública.
+
+El despliegue del código **no ejecuta automáticamente** estas migraciones en Supabase. Deben aplicarse en orden y verificarse antes de utilizar la funcionalidad.
 
 ## Restricciones y pendientes
 
@@ -121,7 +130,7 @@ npx expo install expo-image-picker
 npx expo start -c
 ```
 
-`npx expo install` selecciona la versión compatible con el SDK del proyecto que esté instalado (el repositorio base usa SDK 57; una rama local puede utilizar SDK 58). Registrar en Git los cambios que esa instalación haga a `package.json` y `package-lock.json` antes de abrir el PR.
+`npx expo install` selecciona versiones compatibles con el SDK instalado. **La rama de este PR actualiza Expo a SDK 58**; `package.json`, `package-lock.json` y `app.json` forman parte del cambio. Esto permite probar la aplicación desde Expo Go en iOS, sin requerir una versión anterior del cliente. Antes de abrir el PR, verificar la instalación con `npx expo-doctor` y probar la navegación en el dispositivo.
 
 ### Migración adicional
 

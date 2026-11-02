@@ -11,7 +11,7 @@
 
 ## Qué hace el módulo
 
-Permite a los usuarios visualizar el listado general de productos disponibles para donar (con su categoría, título y precio) y acceder a una vista detallada de cada producto para consultar su descripción completa y seleccionar la cantidad antes de agregarlo al carrito.
+Permite visualizar **únicamente** productos activos publicados por comercios para necesidades de fundaciones aún pendientes, con foto, categoría, título y precio. La ficha muestra también el nombre público del comercio ("Vendido por: ..."), la descripción y la cantidad seleccionada. Las necesidades de las fundaciones se consultan en la ficha de cada fundación, no en el catálogo.
 
 ## Funciones principales
 
@@ -27,7 +27,7 @@ El módulo cuenta con una barra de búsqueda superior que permite filtrar los pr
 
 ## Integración con el carrito
 
-Permite enviar el producto seleccionado junto con la cantidad elegida directamente al `CartContext` mediante la acción de agregar al carro al presionar el botón correspondiente en la vista de detalle.
+Permite enviar al `CartContext` el producto y la cantidad elegida. En las publicaciones comerciales, el destino se obtiene de `foundation_needs` mediante `merchant_products.need_id`; no se permite reasignarlo arbitrariamente a otra fundación desde el carrito.
 
 ## Navegación
 
@@ -37,11 +37,11 @@ Permite enviar el producto seleccionado junto con la cantidad elegida directamen
 
 ## Prueba manual
 
-1. Abrir el catálogo.
-2. Buscar o filtrar un producto (ej. "Mochila escolar").
-3. Abrir su detalle.
-4. Ajustar la cantidad y agregarlo al carrito.
-5. Resultado esperado: El producto se añade correctamente al carrito y se visualiza en la pantalla correspondiente.
+1. Publicar una necesidad desde una cuenta de fundación y confirmar que no aparece como producto en el catálogo.
+2. Publicar desde una cuenta comercial un producto asociado a esa necesidad, con imágenes.
+3. Abrir el catálogo, buscar el producto publicado y abrir su detalle.
+4. Verificar fotos, precio y texto «Vendido por: ...», ajustar la cantidad y agregarlo al carrito.
+5. Resultado esperado: el producto aparece en el carrito con la fundación de la necesidad asignada automáticamente.
 
 ## Capturas
 
@@ -49,4 +49,4 @@ Permite enviar el producto seleccionado junto con la cantidad elegida directamen
 ![Detalle de producto](./img/producto.png)
 ## Integración de ofertas de comercios
 
-`src/hooks/useCatalogProducts.js` consulta `merchant_products` y combina las ofertas activas (con necesidad pendiente) con los productos locales anteriores. Las ofertas persistidas tienen ID `merchant:<uuid>` y `foundationId` fijado por su necesidad. El detalle y el carrito mantienen esa asignación. Ver `09-comercios.md`.
+`src/hooks/useCatalogProducts.js` consulta `merchant_products` y expone **solo** las ofertas activas vinculadas a necesidades con unidades pendientes; **no** mezcla los datos locales de `src/data/products.js`. Las ofertas persistidas tienen ID `merchant:<uuid>`, fotografías en Supabase Storage, `merchant_name` público y `foundationId` fijado por su necesidad. El detalle y el carrito mantienen esa asociación. Ver `09-comercios.md`.

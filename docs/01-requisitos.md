@@ -10,7 +10,7 @@ Los códigos de esta tabla se usan también en la documentación de módulos y e
 | RF-002 | Buscar productos. |
 | RF-003 | Consultar el detalle de un producto. |
 | RF-004 | Agregar, quitar y modificar productos del carrito. |
-| RF-005 | Seleccionar una fundación destinataria para cada producto. |
+| RF-005 | Asignar automáticamente la fundación destinataria según la necesidad vinculada a cada producto comercial. |
 | RF-006 | Consultar información de las fundaciones. |
 | RF-007 | Registrar una cuenta de donante. |
 | RF-008 | Iniciar y cerrar sesión. |
@@ -26,7 +26,11 @@ Los códigos de esta tabla se usan también en la documentación de módulos y e
 | RF-018 | Consultar necesidades pendientes de las fundaciones. |
 | RF-019 | Publicar productos vinculados a una necesidad. |
 | RF-020 | Pausar, reactivar o eliminar publicaciones propias. |
-| RF-021 | Mostrar productos comerciales en catálogo y asignar automáticamente su fundación destinataria. |
+| RF-021 | Mostrar exclusivamente productos comerciales activos en catálogo y asignar automáticamente su fundación destinataria. |
+| RF-022 | Editar publicaciones propias, incluidos sus datos y fotografías. |
+| RF-023 | Adjuntar hasta tres fotografías a una publicación comercial. |
+| RF-024 | Configurar el nombre comercial y mostrarlo en la ficha de cada producto. |
+| RF-025 | Seleccionar una fundación y después una necesidad pendiente de esa fundación al publicar. |
 
 ## Requisitos no funcionales básicos
 

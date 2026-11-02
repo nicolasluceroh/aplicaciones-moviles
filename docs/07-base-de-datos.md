@@ -1,7 +1,7 @@
 # Base de datos - Supabase
 
 **Responsable:** Nicolás  
-**Estado:** autenticación, perfiles, donaciones, historial y necesidades de fundación implementados
+**Estado:** autenticación, perfiles, donaciones, necesidades de fundación y catálogo comercial implementados (con Storage y RLS)
 
 ## Tablas implementadas
 
@@ -13,6 +13,7 @@
 | `full_name` | text | Nombre visible del usuario. |
 | `role` | text | `donor`, `foundation` , `merchant` o `admin`. |
 | `foundation_id` | text | Fundación asociada cuando corresponde. |
+| `business_name` | text | Nombre público configurable por comercios habilitados; sincronizado con sus publicaciones. |
 | `created_at` | timestamptz | Alta del perfil. |
 | `updated_at` | timestamptz | Última modificación. |
 
@@ -28,11 +29,15 @@ Guarda el detalle histórico de cada producto: producto, fundación, cantidad y 
 
 ### `merchant_products`
 
-Ofertas de comercios: `merchant_id`, `need_id`, nombre, descripción, precio, categoría, estado, fechas y `image_paths` (hasta tres fotografías almacenadas en Supabase Storage). RLS permite publicar solo al propietario con rol `merchant`, para necesidades con cantidad pendiente; el catálogo público solo lee ofertas activas vinculadas a necesidades vigentes.
+Ofertas de comercios: `merchant_id`, `need_id`, `merchant_name` (copia pública sincronizada desde el perfil), nombre, descripción, precio, categoría, estado, fechas y `image_paths` (hasta tres fotografías almacenadas en Supabase Storage). RLS permite publicar y editar únicamente al propietario con rol `merchant`, para necesidades con cantidad pendiente; el catálogo público solo lee ofertas activas vinculadas a necesidades vigentes.
 
 ### `foundation_needs`
 
-Guarda las necesidades publicadas por una fundación y la cantidad pendiente.
+Guarda las necesidades publicadas por una fundación y la cantidad pendiente. Las necesidades no constituyen productos del catálogo.
+
+### Supabase Storage: `merchant-products`
+
+Bucket público para servir fotografías comerciales. Las cargas se guardan bajo la carpeta del comercio propietario y sus permisos de escritura/eliminación se controlan mediante políticas sobre `storage.objects`. Las publicaciones almacenan las rutas en `merchant_products.image_paths`.
 
 ## Función `create_donation`
 
@@ -43,7 +48,8 @@ Guarda las necesidades publicadas por una fundación y la cantidad pendiente.
 - un donante solo puede leer sus propias donaciones e ítems;
 - una cuenta de fundación puede leer los registros asociados a su `foundation_id`;
 - una fundación solo puede administrar sus propias necesidades;
-- un usuario normal solo puede actualizar `full_name` en `profiles`;
+- los donantes y fundaciones pueden modificar sus datos de perfil permitidos; una cuenta `merchant` puede actualizar además su propio `business_name`, sin cambiar `role` ni `foundation_id`;
+- los triggers validan y propagan el nombre comercial a `merchant_products.merchant_name`, sin exponer la tabla de perfiles públicamente;
 - `role` y `foundation_id` no pueden modificarse desde la app por un usuario común;
 - `handle_new_user()` no es ejecutable directamente por `public`, `anon` ni `authenticated`;
 - las comprobaciones de acceso entre `donations` y `donation_items` usan funciones auxiliares del esquema `private` para evitar dependencias recursivas entre políticas RLS.
@@ -58,6 +64,7 @@ Guarda las necesidades publicadas por una fundación y la cantidad pendiente.
 - `supabase/migrations/20260921_fix_donation_rls_recursion.sql`
 - `supabase/migrations/20261102_add_merchant_products.sql`
 - `supabase/migrations/20261102120000_add_merchant_product_images.sql`
+- `supabase/migrations/20261102143000_merchant_business_identity.sql`
 
 ## Variables de entorno
 

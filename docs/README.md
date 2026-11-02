@@ -13,8 +13,7 @@ Esta carpeta reúne la documentación funcional y técnica de la versión actual
 - `06-arquitectura-integracion.md` - navegación, contextos e integración.
 - `07-base-de-datos.md` - tablas, seguridad y migraciones de Supabase.
 - `08-pruebas.md` - casos de prueba funcionales.
+- `09-comercios.md` - login de comercios, publicación y edición, imágenes, nombre comercial, SQL, RLS y pruebas.
 - `img/` - capturas utilizadas como evidencia visual.
 
-La documentación debe reflejar el comportamiento que existe en `main`. Los archivos de migración de Supabase se encuentran en `supabase/migrations/`.
-
-- `09-comercios.md` - login de comercios, ofertas según necesidades, SQL, RLS y pruebas.
+La documentación debe reflejar la rama que se propone integrar a `main`. Los archivos de migración de Supabase se encuentran en `supabase/migrations/`.
