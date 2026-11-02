@@ -47,3 +47,6 @@ Permite enviar el producto seleccionado junto con la cantidad elegida directamen
 
 ![Catálogo](./img/catalogo.png)
 ![Detalle de producto](./img/producto.png)
+## Integración de ofertas de comercios
+
+`src/hooks/useCatalogProducts.js` consulta `merchant_products` y combina las ofertas activas (con necesidad pendiente) con los productos locales anteriores. Las ofertas persistidas tienen ID `merchant:<uuid>` y `foundationId` fijado por su necesidad. El detalle y el carrito mantienen esa asignación. Ver `09-comercios.md`.

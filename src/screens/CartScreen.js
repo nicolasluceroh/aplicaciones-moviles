@@ -11,7 +11,7 @@ import { COLORS, RADIUS, SPACING } from "../constants/theme";
 import { foundations } from "../data/foundations";
 import { useCart } from "../context/CartContext";
 import BottomNav from "../components/BottomNav";
-import PressableScale from "../components/PressableScale";
+import { Feather } from "@expo/vector-icons";
 
 export default function CartScreen({ navigation }) {
   const {
@@ -134,6 +134,7 @@ export default function CartScreen({ navigation }) {
 
                 <Pressable
                   style={styles.foundationButton}
+                  disabled={!!item.product.foundationId}
                   onPress={() => abrirSelectorFundacion(item.product.id)}
                 >
                   <Text
@@ -142,7 +143,7 @@ export default function CartScreen({ navigation }) {
                   >
                     {foundation ? foundation.name : "Elegí una fundación"}
                   </Text>
-                  <Feather name="chevron-down" size={16} color={COLORS.textSecondary} />
+                  {!item.product.foundationId && <Feather name="chevron-down" size={16} color={COLORS.textSecondary} />}
                 </Pressable>
               </View>
             );

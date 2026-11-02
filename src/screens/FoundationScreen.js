@@ -2,12 +2,14 @@ import { ScrollView, StyleSheet, Text, View, Pressable, Image, Linking } from "r
 import { Feather } from "@expo/vector-icons";
 import { COLORS, RADIUS, SHADOW, SPACING, TYPE } from "../constants/theme";
 import { foundations } from "../data/foundations";
-import { products } from "../data/products";
+import { useCatalogProducts } from "../hooks/useCatalogProducts";
 import ProductCard from "../components/ProductCard";
 import BottomNav from "../components/BottomNav";
 
 export default function FoundationScreen({ route, navigation }) {
+  const { products: allProducts, error } = useCatalogProducts();
   const foundationId = route.params?.foundationId || foundations[0]?.id;
+  const products = allProducts.filter((product) => !product.foundationId || product.foundationId === foundationId);
   const foundation = foundations.find((item) => item.id === foundationId);
 
   if (!foundation) {
@@ -83,16 +85,16 @@ export default function FoundationScreen({ route, navigation }) {
         <Text style={styles.needsTitle}>Lo que están necesitando</Text>
       </View>
       <Text style={styles.note}>
-        Por ahora se utilizan productos locales. Esta sección quedará preparada para
-        Supabase.
+        Productos del catálogo, incluidas las ofertas de comercios para esta fundación.
       </Text>
 
+      {!!error && <Text style={styles.note}>{error}</Text>}
       <View style={styles.grid}>
         {products.map((product) => (
           <ProductCard
             key={product.id}
             product={product}
-            onPress={() => navigation.navigate("Product", { productId: product.id })}
+            onPress={() => navigation.navigate("Product", { product })}
           />
         ))}
       </View>

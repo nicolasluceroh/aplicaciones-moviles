@@ -2,13 +2,16 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { COLORS, RADIUS, SPACING, TYPE } from "../constants/theme";
-import { categories, products } from "../data/products";
+import { categories as localCategories } from "../data/products";
+import { useCatalogProducts } from "../hooks/useCatalogProducts";
 import SearchBar from "../components/SearchBar";
 import ProductCard from "../components/ProductCard";
 import BottomNav from "../components/BottomNav";
 
 export default function CatalogScreen({ navigation }) {
+  const { products, loading: loadingProducts, error: productsError } = useCatalogProducts();
   const [search, setSearch] = useState("");
+  const categories = ["Todos", ...new Set(products.map((p) => p.category))];
   const [category, setCategory] = useState("Todos");
 
   const visibleProducts = useMemo(() => {
@@ -23,7 +26,7 @@ export default function CatalogScreen({ navigation }) {
       const matchesCategory = category === "Todos" || product.category === category;
       return matchesSearch && matchesCategory;
     });
-  }, [search, category]);
+  }, [search, category, products]);
 
   return (
     <View style={styles.root}>
@@ -51,6 +54,8 @@ export default function CatalogScreen({ navigation }) {
         <SearchBar value={search} onChangeText={setSearch} />
       </View>
 
+      {productsError && <Text style={styles.emptyText}>{productsError}</Text>}
+      {loadingProducts && <Text style={styles.count}>Actualizando productos...</Text>}
       {visibleProducts.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={styles.emptyIcon}>
@@ -70,7 +75,7 @@ export default function CatalogScreen({ navigation }) {
               <ProductCard
                 key={product.id}
                 product={product}
-                onPress={() => navigation.navigate("Product", { productId: product.id })}
+                onPress={() => navigation.navigate("Product", { product })}
               />
             ))}
           </View>

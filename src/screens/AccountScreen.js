@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { COLORS, RADIUS, SPACING } from "../constants/theme";
+import { COLORS, RADIUS, SPACING, SHADOW, TYPE } from "../constants/theme";
+import { Feather } from "@expo/vector-icons";
 import BottomNav from "../components/BottomNav";
 import { useAuth } from "../context/AuthContext";
 
@@ -90,6 +91,17 @@ export default function AccountScreen({ navigation }) {
               <Feather name="chevron-right" size={18} color={COLORS.textSecondary} />
             </Pressable>
 
+            {profile?.role === "merchant" && (
+              <Pressable style={styles.primaryButton} onPress={() => navigation.navigate("MerchantPanel")}>
+                <Text style={styles.primaryButtonText}>Panel de comercio · Mis productos</Text>
+              </Pressable>
+            )}
+            {profile?.role === "foundation" && (
+              <Pressable style={styles.primaryButton} onPress={() => navigation.navigate("FoundationPanel")}>
+                <Text style={styles.primaryButtonText}>Panel de fundación</Text>
+              </Pressable>
+            )}
+
             <Pressable
               style={[styles.secondaryButton, loggingOut && styles.disabledButton]}
               onPress={handleLogout}
@@ -169,6 +181,20 @@ export default function AccountScreen({ navigation }) {
           </Pressable>
         </View>
 
+        <Text style={styles.sectionTitle}>Comercios</Text>
+        <View style={styles.foundationBox}>
+          <Text style={styles.foundationTitle}>¿Representás a un comercio?</Text>
+          <Text style={styles.foundationText}>
+            Publicá productos relacionados con las necesidades de las fundaciones.
+            El acceso requiere habilitación de la cuenta.
+          </Text>
+          <Pressable style={styles.foundationLinkRow}
+            onPress={() => navigation.navigate(profile?.role === "merchant" ? "MerchantPanel" : "Login", profile?.role === "merchant" ? undefined : { userType: "merchant" })}>
+            <Text style={styles.foundationLink}>{profile?.role === "merchant" ? "Ir al panel" : "Acceso para comercios"}</Text>
+            <Feather name="arrow-right" size={16} color={COLORS.secondaryDark} />
+          </Pressable>
+        </View>
+
         <Text style={styles.sectionTitle}>Acerca de Pilar de Sonrisas</Text>
 
         <View style={styles.card}>
@@ -194,23 +220,6 @@ export default function AccountScreen({ navigation }) {
           </Pressable>
         </View>
       </ScrollView>
-
-      <Modal
-        visible={!!infoModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setInfoModal(null)}
-      >
-        <Pressable style={styles.modalBackdrop} onPress={() => setInfoModal(null)}>
-          <Pressable style={styles.modalCard} onPress={() => {}}>
-            <Text style={styles.modalTitle}>{infoModal?.title}</Text>
-            <Text style={styles.modalMessage}>{infoModal?.message}</Text>
-            <Pressable style={styles.modalCloseButton} onPress={() => setInfoModal(null)}>
-              <Text style={styles.modalCloseText}>Entendido</Text>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
 
       <BottomNav navigation={navigation} active="Account" />
     </View>
