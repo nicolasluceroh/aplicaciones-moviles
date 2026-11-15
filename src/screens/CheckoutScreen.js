@@ -70,6 +70,7 @@ export default function CheckoutScreen({ navigation }) {
 
       return {
         product_id: String(item.product.id),
+        merchant_product_id: item.product.merchantProductId || null,
         product_name: item.product.name,
         foundation_id: String(item.foundationId),
         foundation_name: foundation?.name || "Fundación",
@@ -87,10 +88,17 @@ export default function CheckoutScreen({ navigation }) {
 
       if (error) throw error;
 
+      const { data: savedDonation, error: totalError } = await supabase
+        .from("donations")
+        .select("total")
+        .eq("id", donationId)
+        .single();
+      if (totalError) throw totalError;
+
       clearCart();
       navigation.replace("Confirmation", {
         donationId,
-        total: totalPrice,
+        total: Number(savedDonation?.total ?? totalPrice),
       });
     } catch (error) {
       Alert.alert(

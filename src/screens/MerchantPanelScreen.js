@@ -25,6 +25,7 @@ export default function MerchantPanelScreen({ navigation }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [stock, setStock] = useState("1");
   const [category, setCategory] = useState("Otros");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,7 +42,7 @@ export default function MerchantPanelScreen({ navigation }) {
         supabase.from("foundation_needs").select("id, foundation_id, name, pending")
           .gt("pending", 0).order("name"),
         supabase.from("merchant_products")
-          .select("id, need_id, name, description, price, category, image_paths, is_active, created_at")
+          .select("id, need_id, name, description, price, stock, category, image_paths, is_active, created_at")
           .eq("merchant_id", user.id).order("created_at", { ascending: false }),
       ]);
       if (needsResult.error || offersResult.error) {
@@ -76,6 +77,7 @@ export default function MerchantPanelScreen({ navigation }) {
     setName("");
     setDescription("");
     setPrice("");
+    setStock("1");
     setCategory("Otros");
     setSelectedFoundationId(null);
     setSelectedNeedId(null);
@@ -89,6 +91,7 @@ export default function MerchantPanelScreen({ navigation }) {
     setName(offer.name);
     setDescription(offer.description || "");
     setPrice(String(offer.price));
+    setStock(String(offer.stock ?? 0));
     setCategory(offer.category || "Otros");
     setImages((offer.image_paths || []).map((path) => ({
       path, uri: getMerchantImageUrl(path),
@@ -135,6 +138,13 @@ export default function MerchantPanelScreen({ navigation }) {
       return;
     }
 
+    const normalizedStock = Number(stock.trim());
+
+    if (!Number.isInteger(normalizedStock) || normalizedStock < 0) {
+      Alert.alert("Stock inválido", "Ingresá una cantidad entera igual o mayor a cero.");
+      return;
+    }
+
     const wasEditing = Boolean(editingId);
     const original = editingId ? offers.find((offer) => offer.id === editingId) : null;
     if (editingId && !original) {
@@ -154,6 +164,7 @@ export default function MerchantPanelScreen({ navigation }) {
         description: description.trim(),
         category: category.trim(),
         price: normalizedPrice,
+        stock: normalizedStock,
         image_paths: [...retainedPaths, ...uploaded],
       };
       const query = editingId
@@ -188,6 +199,10 @@ export default function MerchantPanelScreen({ navigation }) {
   };
 
   const toggleOffer = async (offer) => {
+    if (!offer.is_active && Number(offer.stock) <= 0) {
+      Alert.alert("Sin stock", "Actualizá el stock antes de reactivar esta publicación.");
+      return;
+    }
     setSaving(true);
     try {
       const { error } = await supabase.from("merchant_products")
@@ -263,6 +278,10 @@ export default function MerchantPanelScreen({ navigation }) {
       <Text style={styles.label}>Precio (ARS)</Text>
       <TextInput style={styles.input} value={price} onChangeText={setPrice}
         editable={!saving} keyboardType="decimal-pad" placeholder="Ej.: 15000" placeholderTextColor={COLORS.textSecondary} />
+      <Text style={styles.label}>Stock disponible</Text>
+      <TextInput style={styles.input} value={stock} onChangeText={setStock}
+        editable={!saving} keyboardType="number-pad" placeholder="Ej.: 10" placeholderTextColor={COLORS.textSecondary} />
+      <Text style={styles.helper}>Con stock 0 la publicación se conserva, pero deja de aparecer en el catálogo.</Text>
       <Text style={styles.label}>Fotos del producto (1 a {MAX_IMAGES})</Text>
       {editingLegacyWithoutPhotos && <Text style={styles.helper}>
         Esta publicación anterior no tiene fotos. Podés agregarlas cuando quieras.
@@ -299,7 +318,7 @@ export default function MerchantPanelScreen({ navigation }) {
             <Text style={styles.helper}>
               {needs.find((n) => n.id === offer.need_id)?.name || "Necesidad cerrada o eliminada"} · ${Number(offer.price).toLocaleString("es-AR")}
             </Text>
-            <Text style={styles.helper}>{offer.is_active ? "Publicación activa" : "Publicación pausada"}</Text>
+            <Text style={styles.helper}>Stock: {Number(offer.stock || 0)} · {offer.is_active ? "Publicación activa" : "Publicación pausada"}</Text>
           </View>
         </View>
         <View style={styles.actions}>

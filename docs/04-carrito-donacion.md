@@ -14,14 +14,14 @@
 
 ## Qué hace el módulo
 
-Implementa el flujo de donación desde la selección de productos hasta la confirmación. El usuario define cantidades y revisa el resumen. Para los productos comerciales, la fundación destinataria viene determinada por la necesidad que motivó su publicación y no puede cambiarse. Al confirmar, la donación y sus ítems se persisten en Supabase y luego quedan disponibles en `Mis donaciones`.
+Implementa el flujo de donación desde la selección de productos hasta la confirmación. El usuario define cantidades y revisa el resumen. Para productos comerciales, la cantidad se limita visualmente al menor valor entre el stock publicado y las unidades que todavía necesita la fundación. Para los productos comerciales, la fundación destinataria viene determinada por la necesidad que motivó su publicación y no puede cambiarse. Al confirmar, la donación y sus ítems se persisten en Supabase y luego quedan disponibles en `Mis donaciones`.
 
 ## Funciones principales
 
 | Función | Archivo | Qué hace | Datos que usa/cambia |
 |---|---|---|---|
 | `addToCart(product, quantity)` | `CartContext.js` | Agrega un producto o suma la cantidad seleccionada si ya existe | `cart` |
-| `increaseQuantity(productId)` | `CartContext.js` | Incrementa la cantidad de un producto | `cart` |
+| `increaseQuantity(productId)` | `CartContext.js` | Incrementa la cantidad sin superar la disponibilidad conocida | `cart` |
 | `decreaseQuantity(productId)` | `CartContext.js` | Disminuye la cantidad sin bajar de 1 | `cart` |
 | `removeFromCart(productId)` | `CartContext.js` | Elimina un producto del carrito | `cart` |
 | `assignFoundation(productId, foundationId)` | `CartContext.js` | Asigna o cambia la fundación destinataria de un producto | `cart` |
@@ -37,11 +37,13 @@ Cada producto comercial tiene una fundación destinataria determinada por su nec
 - El carrito debe contener al menos un producto.
 - Cada producto debe tener una fundación asignada antes de continuar.
 - Para confirmar y guardar la donación el usuario debe iniciar sesión.
+- La interfaz no permite superar la disponibilidad conocida al agregar o incrementar cantidades.
+- El checkout vuelve a validar en la base el producto, su estado, stock y necesidad para cubrir cambios concurrentes.
 - Si Supabase devuelve un error, el carrito no se vacía y la app informa el problema.
 
 ## Checkout y confirmación
 
-`CheckoutScreen` muestra los productos, cantidades, fundaciones destinatarias, subtotales, total y la leyenda de pago simulado. Al confirmar, llama a la función RPC `create_donation` de Supabase. Si el guardado finaliza correctamente, se vacía el carrito y se navega a `ConfirmationScreen` con el ID y total de la donación.
+`CheckoutScreen` muestra los productos, cantidades, fundaciones destinatarias, subtotales, total y la leyenda de pago simulado. Al confirmar, llama a la función RPC `create_donation` de Supabase. La función toma el precio vigente desde la base, bloquea las publicaciones/necesidades involucradas, valida stock y cantidades pendientes, registra la donación y descuenta `merchant_products.stock` y `foundation_needs.pending` dentro de la misma transacción. Si el guardado finaliza correctamente, el cliente vuelve a leer el total persistido en `donations` (por si el precio cambió desde que se agregó al carrito), vacía el carrito y navega a `ConfirmationScreen` con el ID y total confirmado.
 
 `ConfirmationScreen` muestra el mensaje de éxito, el total, un identificador corto de la donación y accesos para ir a `Mis donaciones` o volver al inicio.
 
@@ -50,13 +52,14 @@ Cada producto comercial tiene una fundación destinataria determinada por su nec
 1. Abrir un producto y seleccionar una cantidad mayor a 1.
 2. Agregarlo al carrito y verificar que se conserve la cantidad elegida.
 3. Agregar otro producto si se desea.
-4. Cambiar cantidades con `+` y `-`.
+4. Cambiar cantidades con `+` y `-` y comprobar que no se pueda superar el máximo disponible.
 5. Verificar que cada publicación comercial ya tenga asignada la fundación de su necesidad y que no pueda cambiarse.
 6. Verificar que la app valide el destino de todos los productos antes de continuar.
 7. Continuar al checkout y revisar el resumen.
 8. Confirmar la donación con una cuenta iniciada.
-9. Verificar la pantalla de confirmación.
-10. Abrir `Mis donaciones` y comprobar que la donación recién creada aparezca en el historial.
+9. Verificar en Supabase que disminuyeron tanto el stock como las unidades pendientes.
+10. Verificar la pantalla de confirmación.
+11. Abrir `Mis donaciones` y comprobar que la donación recién creada aparezca en el historial.
 
 ## Capturas
 

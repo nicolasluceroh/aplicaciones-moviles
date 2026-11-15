@@ -4,6 +4,11 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 const CartContext = createContext(null);
 const STORAGE_KEY = "@pilar_de_sonrisas_cart";
 
+const getMaxQuantity = (product) => {
+  const value = Number(product?.availableQuantity);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : Number.POSITIVE_INFINITY;
+};
+
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
   // Evita pisar el storage con el carrito vacío inicial antes de terminar de
@@ -32,7 +37,8 @@ export function CartProvider({ children }) {
   }, [cart]);
 
   const addToCart = (product, quantity = 1) => {
-    const safeQuantity = Math.max(1, Number(quantity) || 1);
+    const maxQuantity = getMaxQuantity(product);
+    const safeQuantity = Math.min(maxQuantity, Math.max(1, Number(quantity) || 1));
 
     setCart((current) => {
       const existing = current.find((item) => item.product.id === product.id);
@@ -40,7 +46,7 @@ export function CartProvider({ children }) {
       if (existing) {
         return current.map((item) =>
           item.product.id === product.id
-            ? { ...item, quantity: item.quantity + safeQuantity }
+            ? { ...item, quantity: Math.min(maxQuantity, item.quantity + safeQuantity) }
             : item
         );
       }
@@ -63,14 +69,15 @@ export function CartProvider({ children }) {
   };
 
   const updateQuantity = (productId, quantity) => {
-    const safeQuantity = Math.max(1, Number(quantity) || 1);
-
     setCart((current) =>
-      current.map((item) =>
-        item.product.id === productId
-          ? { ...item, quantity: safeQuantity }
-          : item
-      )
+      current.map((item) => {
+        if (item.product.id !== productId) return item;
+        const safeQuantity = Math.min(
+          getMaxQuantity(item.product),
+          Math.max(1, Number(quantity) || 1)
+        );
+        return { ...item, quantity: safeQuantity };
+      })
     );
   };
 
@@ -78,7 +85,7 @@ export function CartProvider({ children }) {
     setCart((current) =>
       current.map((item) =>
         item.product.id === productId
-          ? { ...item, quantity: item.quantity + 1 }
+          ? { ...item, quantity: Math.min(getMaxQuantity(item.product), item.quantity + 1) }
           : item
       )
     );

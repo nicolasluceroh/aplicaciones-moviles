@@ -12,10 +12,10 @@ Permitir que un comercio habilitado inicie sesión con Supabase Auth, vea necesi
 1. Una persona registra una cuenta con email y contraseña (la creación pública mantiene `role = 'donor'`).
 2. Un administrador verifica la cuenta y le asigna `role = 'merchant'` y `business_name` en Supabase.
 3. Desde **Mi cuenta → Comercios → Acceso para comercios**, el comercio inicia sesión.
-4. En **Panel Comercio**, elige primero la fundación y luego una de sus necesidades con `pending > 0`; completa nombre, descripción, categoría, precio y fotografías, y publica.
-5. La app guarda la oferta en `public.merchant_products` con `merchant_id` y `need_id`. La publicación activa aparece en Inicio, Catálogo y la pantalla de la fundación correspondiente.
+4. En **Panel Comercio**, elige primero la fundación y luego una de sus necesidades con `pending > 0`; completa nombre, descripción, categoría, precio, stock y fotografías, y publica.
+5. La app guarda la oferta en `public.merchant_products` con `merchant_id` y `need_id`. La publicación activa aparece en Inicio, Catálogo y la pantalla de la fundación correspondiente mientras tenga stock y la necesidad continúe pendiente.
 6. El donante puede agregar el producto al carrito. La fundación queda asignada automáticamente según la necesidad; no puede cambiarse por otra desde el carrito.
-7. El comercio puede **editar**, pausar, reactivar o eliminar sus propias ofertas. También puede actualizar el nombre comercial desde **Mis datos**, que se muestra en la ficha del producto. Al quedar una necesidad sin unidades pendientes, la oferta deja de mostrarse públicamente aunque siga registrada.
+7. El comercio puede **editar**, pausar, reactivar o eliminar sus propias ofertas. También puede actualizar el nombre comercial desde **Mis datos**, que se muestra en la ficha del producto. Al quedar una necesidad sin unidades pendientes, las publicaciones asociadas se desactivan. Un producto con stock 0 se conserva pero deja de mostrarse hasta que el comercio reponga stock.
 
 > El comercio puede crear su cuenta pública como donante y luego pedir habilitación. Un parámetro de navegación o la metadata de registro NO habilitan por sí solos un rol de comercio.
 
@@ -68,6 +68,7 @@ where u.id = p.id
 | `image_paths` | Hasta tres rutas de fotos en Supabase Storage. |
 | `merchant_name` | Nombre comercial público sincronizado desde `profiles.business_name`. |
 | `price` | Precio unitario positivo en ARS. |
+| `stock` | Unidades disponibles del comercio; no puede ser negativo. |
 | `is_active` | Estado de publicación. |
 | `created_at`, `updated_at` | Auditoría temporal. |
 
@@ -89,6 +90,8 @@ Si una fundación **elimina** una necesidad, sus ofertas relacionadas se elimina
 1. `supabase/migrations/20261102_add_merchant_products.sql` — rol y tabla de ofertas.
 2. `supabase/migrations/20261102120000_add_merchant_product_images.sql` — bucket Storage, fotos y políticas.
 3. `supabase/migrations/20261102143000_merchant_business_identity.sql` — edición de nombre comercial y sincronización pública.
+4. `supabase/migrations/20261114130000_inventory_database_objects.sql` — stock, vista del catálogo, procedimiento y auditoría.
+5. `supabase/migrations/20261114131500_inventory_donation_flow.sql` — vínculo de ítems con publicaciones y descuento transaccional de stock/necesidad.
 
 El despliegue del código **no ejecuta automáticamente** estas migraciones en Supabase. Deben aplicarse en orden y verificarse antes de utilizar la funcionalidad.
 
@@ -96,8 +99,8 @@ El despliegue del código **no ejecuta automáticamente** estas migraciones en S
 
 - Esta versión no implementa verificación documental ni alta automática de comercios: la habilitación es manual, como para las fundaciones.
 - `src/data/products.js` conserva datos de muestra pero ya no se usa en el catálogo público.
-- La aplicación admite hasta tres fotos por producto; no implementa stock independiente de las cantidades pendientes que registra la fundación.
-- El checkout continúa siendo simulado y el procedimiento `create_donation` preexistente confía en los precios remitidos por el cliente. Para cobrar importes reales debe validarse oferta, precio y disponibilidad del lado del servidor.
+- La aplicación admite hasta tres fotos por producto y mantiene stock comercial independiente de las unidades pendientes de la fundación.
+- El pago continúa siendo simulado. La función `create_donation` valida oferta, precio y disponibilidad del lado de PostgreSQL antes de confirmar.
 - No se han ejecutado pruebas end-to-end contra un proyecto Supabase remoto desde esta entrega. Se requieren pruebas en Expo Go con migración aplicada y cuentas reales.
 
 ## Pruebas manuales prioritarias
@@ -172,3 +175,23 @@ Ejecutar **una sola vez**, después de las migraciones de productos y fotos. Con
 4. Intentar editar una oferta de otro comercio: las políticas de Supabase deben impedirlo.
 5. Confirmar que un donante o una fundación no puede cambiar su rol ni el nombre comercial de otra cuenta.
 6. Verificar que el catálogo, el carrito, la creación de necesidades y las publicaciones antiguas siguen funcionando.
+
+
+## Actualización: inventario y consistencia de la compra
+
+- Cada publicación comercial incorpora `stock` entero no negativo. Las publicaciones previas a esta migración se inicializan con el `pending` actual de su necesidad para conservar su visibilidad; luego el comercio puede ajustar el valor real.
+- El catálogo consume `v_catalogo_productos_disponibles`, que solo devuelve productos activos con stock y necesidad pendiente.
+- La cantidad disponible para el donante es `min(stock, pending)`.
+- `donation_items.merchant_product_id` referencia de forma opcional la publicación real y usa `ON DELETE SET NULL` para conservar el historial.
+- `create_donation` vuelve a validar todo en PostgreSQL, usa bloqueos `FOR UPDATE`, toma el precio vigente desde la base y descuenta `stock` y `pending` dentro de la misma transacción.
+- Si una necesidad llega a cero, sus publicaciones se desactivan automáticamente.
+- El trigger de auditoría registra cada cambio real de `foundation_needs.pending`.
+
+### Casos de regresión de inventario
+
+1. Publicar con stock 5 y necesidad pendiente 10: el catálogo muestra disponibilidad 5.
+2. Intentar subir la cantidad del carrito por encima de 5: la interfaz no lo permite.
+3. Confirmar 2 unidades: el stock queda 3 y la necesidad queda 8.
+4. Probar una compra mayor al stock mediante una llamada directa: `create_donation` debe rechazarla y no crear registros parciales.
+5. Probar dos productos asociados a la misma necesidad cuya suma supere `pending`: la operación completa debe rechazarse.
+6. Llevar `pending` a 0: se registra auditoría y las publicaciones de esa necesidad quedan inactivas.
