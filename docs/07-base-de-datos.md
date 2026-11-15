@@ -25,11 +25,11 @@ Guarda la cabecera de cada donación: usuario donante, total, estado y fecha.
 
 ### `donation_items`
 
-Guarda el detalle histórico de cada producto: producto, fundación, cantidad y precio unitario. Los nombres se almacenan como snapshot para que el historial anterior no cambie si luego se modifica el catálogo local.
+Guarda el detalle histórico de cada producto: producto, fundación, cantidad y precio unitario. Las compras comerciales agregan `merchant_product_id` como FK nullable a `merchant_products`; usa `ON DELETE SET NULL` para que eliminar una publicación no elimine el historial. Los nombres se almacenan como snapshot para que el historial anterior no cambie si luego se modifica el catálogo local.
 
 ### `merchant_products`
 
-Ofertas de comercios: `merchant_id`, `need_id`, `merchant_name` (copia pública sincronizada desde el perfil), nombre, descripción, precio, categoría, estado, fechas y `image_paths` (hasta tres fotografías almacenadas en Supabase Storage). RLS permite publicar y editar únicamente al propietario con rol `merchant`, para necesidades con cantidad pendiente; el catálogo público solo lee ofertas activas vinculadas a necesidades vigentes.
+Ofertas de comercios: `merchant_id`, `need_id`, `stock`, `merchant_name` (copia pública sincronizada desde el perfil), nombre, descripción, precio, categoría, estado, fechas y `image_paths` (hasta tres fotografías almacenadas en Supabase Storage). RLS permite publicar y editar únicamente al propietario con rol `merchant`, para necesidades con cantidad pendiente; el catálogo público solo lee ofertas activas vinculadas a necesidades vigentes.
 
 ### `foundation_needs`
 
@@ -39,9 +39,21 @@ Guarda las necesidades publicadas por una fundación y la cantidad pendiente. La
 
 Bucket público para servir fotografías comerciales. Las cargas se guardan bajo la carpeta del comercio propietario y sus permisos de escritura/eliminación se controlan mediante políticas sobre `storage.objects`. Las publicaciones almacenan las rutas en `merchant_products.image_paths`.
 
+## Vista `v_catalogo_productos_disponibles`
+
+Une `merchant_products` con `foundation_needs` para evitar repetir el `JOIN` desde cada pantalla. Expone únicamente publicaciones activas con `stock > 0` y necesidades con `pending > 0`. Se crea con `security_invoker = true`, por lo que se aplican las políticas RLS de las tablas subyacentes.
+
 ## Función `create_donation`
 
-`public.create_donation(p_items jsonb)` crea la donación y sus ítems dentro de una misma transacción. La función valida que exista un usuario autenticado y que el listado contenga ítems válidos. El total se calcula en la base a partir de cantidades y precios.
+`public.create_donation(p_items jsonb)` crea la donación y sus ítems dentro de una misma transacción. La versión de inventario toma el precio desde `merchant_products`, bloquea filas con `FOR UPDATE`, valida publicación, stock y necesidad, y descuenta `stock` y `pending`. Si cualquier paso falla, PostgreSQL revierte toda la operación. Es `SECURITY DEFINER` de forma intencional porque el donante no posee permisos directos de `UPDATE` sobre inventario; `EXECUTE` está revocado a `public` y `anon` y concedido únicamente a `authenticated`.
+
+## Procedimiento `sp_cerrar_necesidad`
+
+`CALL public.sp_cerrar_necesidad(uuid)` valida que una necesidad exista y siga pendiente, la marca con `pending = 0` y desactiva sus publicaciones comerciales. Se mantiene para uso administrativo/controlado y no se expone a `anon` ni a usuarios autenticados comunes.
+
+## Trigger y auditoría de necesidades
+
+`trg_auditar_necesidad` se ejecuta `AFTER UPDATE OF pending` únicamente cuando `OLD.pending IS DISTINCT FROM NEW.pending`. La función de trigger guarda valor anterior, valor nuevo, fecha y `auth.uid()` en `auditoria_necesidades`. La tabla de auditoría tiene RLS habilitado y no se expone al cliente móvil.
 
 ## Seguridad / RLS
 
@@ -65,6 +77,8 @@ Bucket público para servir fotografías comerciales. Las cargas se guardan bajo
 - `supabase/migrations/20261102_add_merchant_products.sql`
 - `supabase/migrations/20261102120000_add_merchant_product_images.sql`
 - `supabase/migrations/20261102143000_merchant_business_identity.sql`
+- `supabase/migrations/20261114130000_inventory_database_objects.sql`
+- `supabase/migrations/20261114131500_inventory_donation_flow.sql`
 
 ## Variables de entorno
 

@@ -97,6 +97,9 @@ export default function CartScreen({ navigation }) {
                     <Text style={styles.price}>
                       ${item.product.price.toLocaleString("es-AR")} c/u
                     </Text>
+                    {Number.isFinite(Number(item.product.availableQuantity)) && (
+                      <Text style={styles.stockText}>Disponible: {item.product.availableQuantity}</Text>
+                    )}
                   </View>
                   <Pressable
                     style={styles.removeButton}
@@ -117,7 +120,12 @@ export default function CartScreen({ navigation }) {
                     </Pressable>
                     <Text style={styles.quantity}>{item.quantity}</Text>
                     <Pressable
-                      style={styles.quantityButton}
+                      style={[
+                        styles.quantityButton,
+                        Number.isFinite(Number(item.product.availableQuantity)) &&
+                          item.quantity >= item.product.availableQuantity && styles.quantityButtonDisabled,
+                      ]}
+                      disabled={Number.isFinite(Number(item.product.availableQuantity)) && item.quantity >= item.product.availableQuantity}
                       onPress={() => increaseQuantity(item.product.id)}
                     >
                       <Text style={styles.quantityButtonText}>+</Text>
@@ -250,6 +258,7 @@ const styles = StyleSheet.create({
   },
   flex: { flex: 1, paddingRight: 10 },
   productName: { fontSize: 16, fontWeight: "800", color: COLORS.text },
+  stockText: { fontSize: 12, color: COLORS.textSecondary, marginTop: 4 },
   price: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4 },
   remove: { color: COLORS.danger, fontSize: 12, fontWeight: "700" },
   quantityRow: {
@@ -269,6 +278,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  quantityButtonDisabled: { opacity: 0.35 },
   quantityButtonText: { fontSize: 20, color: COLORS.text },
   quantity: { minWidth: 36, textAlign: "center", fontWeight: "800", color: COLORS.text },
   foundationSelected: { color: COLORS.text, fontWeight: "700", marginTop: 6 },

@@ -48,11 +48,21 @@ La tabla reúne los recorridos que deben probarse en la rama de este PR y luego 
 | CP-039 | RF-022 | Aislamiento entre comercios | Intentar editar una publicación ajena | Las políticas RLS impiden el cambio | Pendiente de probar |
 | CP-040 | RF-023 | Aislamiento de imágenes | Intentar modificar fotos bajo carpeta de otro comercio | La política de Storage impide la operación | Pendiente de probar |
 | CP-041 | RNF-002 | Compatibilidad SDK 58 | Abrir aplicación en Expo Go para iOS | La aplicación carga y permite navegar sin error de compatibilidad | Pendiente de registrar |
+| CP-042 | RF-019 | Stock comercial | Crear/editar una publicación con stock entero | El stock se guarda y no admite valores negativos | Pendiente de probar |
+| CP-043 | RF-026 | Límite por disponibilidad | Abrir producto y aumentar cantidad | No supera `min(stock, pending)` | Pendiente de probar |
+| CP-044 | RF-027 | Descuento transaccional | Confirmar una donación comercial | Se crean donación/ítems y disminuyen stock y necesidad | Pendiente de probar |
+| CP-045 | RF-027 | Stock insuficiente concurrente | Intentar confirmar más unidades que el stock vigente | La RPC rechaza la operación y no deja cambios parciales | Pendiente de probar |
+| CP-046 | RF-027 | Necesidad insuficiente | Comprar cantidades que en conjunto superen `pending` | La RPC rechaza toda la operación | Pendiente de probar |
+| CP-047 | RF-027 | Auditoría de necesidad | Confirmar una compra que reduzca `pending` | `auditoria_necesidades` registra valor anterior y nuevo | Pendiente de probar |
+| CP-048 | RF-021 | Vista de catálogo | Consultar `v_catalogo_productos_disponibles` | Solo devuelve ofertas activas con stock y necesidad pendiente | Pendiente de probar |
+| CP-049 | RF-027 | Cierre administrativo | Ejecutar `CALL sp_cerrar_necesidad(...)` dentro de una transacción de prueba | `pending=0`, ofertas inactivas y auditoría; `ROLLBACK` revierte todo | Pendiente de probar |
 
 ## Validaciones técnicas realizadas
 
 - Los archivos JS/JSX del proyecto fueron parseados después de la integración sin errores de sintaxis.
 - Los imports relativos utilizados por la aplicación resuelven a archivos existentes.
-- La función `create_donation()` fue ejecutada en una transacción de prueba con rol `authenticated` y luego revertida.
+- La función `create_donation()` se verificó contra Supabase dentro de una transacción y `ROLLBACK`: tomó el precio vigente desde la base, creó donación/ítem, descontó stock y necesidad y generó auditoría; el rollback restauró los valores originales.
+- También se probaron los rechazos por stock insuficiente y necesidad insuficiente, comprobando que no quedaran cambios parciales.
+- `sp_cerrar_necesidad()` y `trg_auditar_necesidad` se verificaron con `BEGIN` / `ROLLBACK` para demostrar atomicidad sin conservar datos de prueba.
 - Se verificó que un usuario autenticado puede actualizar `full_name` pero no elevar su propio `role`.
 - Se verificó que las políticas RLS de donaciones no generen recursión entre `donations` y `donation_items`.

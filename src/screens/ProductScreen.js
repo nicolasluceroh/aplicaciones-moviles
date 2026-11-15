@@ -8,7 +8,9 @@ import BottomNav from "../components/BottomNav";
 export default function ProductScreen({ route, navigation }) {
   const { products, loading } = useCatalogProducts();
   const { product: param, productId } = route.params || {};
-  const product = param || products.find((p) => p.id === productId);
+  const requestedId = productId || param?.id;
+  const refreshedProduct = products.find((p) => p.id === requestedId);
+  const product = refreshedProduct || (loading ? param : null);
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
 
@@ -18,8 +20,10 @@ export default function ProductScreen({ route, navigation }) {
     </Text></View>;
   }
 
+  const maxQuantity = Math.max(1, Number(product.availableQuantity || 1));
+
   const handleAdd = () => {
-    addToCart(product, quantity);
+    addToCart(product, Math.min(quantity, maxQuantity));
     Alert.alert("Producto agregado", `Se agregaron ${quantity} unidad(es) al carrito.`, [
       { text: "Seguir mirando" },
       { text: "Ver carrito", onPress: () => navigation.navigate("Cart") },
@@ -42,12 +46,15 @@ export default function ProductScreen({ route, navigation }) {
       <Text style={styles.price}>${Number(product.price).toLocaleString("es-AR")}</Text>
       <Text style={styles.description}>{product.description}</Text>
       {product.foundationId && <Text style={styles.note}>Este artículo se destina a la fundación que publicó la necesidad: {product.needName}.</Text>}
+      <Text style={styles.stock}>Disponibles para esta necesidad: {maxQuantity}</Text>
       <View style={styles.quantityContainer}>
         <Text style={styles.quantityLabel}>Cantidad</Text>
         <View style={styles.quantityControls}>
           <Pressable style={styles.qtyButton} onPress={() => setQuantity((q) => Math.max(1, q - 1))}><Text style={styles.qtyButtonText}>−</Text></Pressable>
           <Text style={styles.qtyValue}>{quantity}</Text>
-          <Pressable style={styles.qtyButton} onPress={() => setQuantity((q) => q + 1)}><Text style={styles.qtyButtonText}>+</Text></Pressable>
+          <Pressable style={[styles.qtyButton, quantity >= maxQuantity && styles.qtyButtonDisabled]}
+            disabled={quantity >= maxQuantity}
+            onPress={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}><Text style={styles.qtyButtonText}>+</Text></Pressable>
         </View>
       </View>
       <Pressable style={styles.button} onPress={handleAdd}><Text style={styles.buttonText}>Agregar al carrito</Text></Pressable>
@@ -74,10 +81,12 @@ const styles = StyleSheet.create({
   button: { backgroundColor: COLORS.primary, padding: 16, borderRadius: RADIUS.md, alignItems: "center", marginTop: 26 },
   buttonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
   note: { fontSize: 12, color: COLORS.textSecondary, marginTop: 12 },
+  stock: { fontSize: 13, color: COLORS.text, fontWeight: "700", marginTop: 14 },
   quantityContainer: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 20, backgroundColor: COLORS.surface, padding: 12, borderRadius: RADIUS.md },
   quantityLabel: { fontSize: 16, fontWeight: "700", color: COLORS.text },
   quantityControls: { flexDirection: "row", alignItems: "center" },
   qtyButton: { width: 32, height: 32, backgroundColor: COLORS.primarySoft, borderRadius: RADIUS.sm, alignItems: "center", justifyContent: "center" },
   qtyButtonText: { fontSize: 18, fontWeight: "800", color: COLORS.primary },
+  qtyButtonDisabled: { opacity: 0.35 },
   qtyValue: { marginHorizontal: 16, fontSize: 16, fontWeight: "800", color: COLORS.text },
 });

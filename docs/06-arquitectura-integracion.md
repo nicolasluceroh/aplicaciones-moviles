@@ -56,7 +56,7 @@ Responsabilidades principales:
 
 **Archivo:** `src/context/CartContext.js`
 
-El contexto centraliza el estado del carrito para que Producto, Carrito y Checkout trabajen con la misma información.
+El contexto centraliza el estado del carrito para que Producto, Carrito y Checkout trabajen con la misma información. Para publicaciones comerciales conserva también la disponibilidad conocida y evita incrementos por encima de ese límite; la validación definitiva se realiza en PostgreSQL al confirmar.
 
 | Función | Qué hace |
 |---|---|
@@ -87,12 +87,13 @@ La app utiliza Supabase para:
 - donaciones e ítems de donación;
 - historial del donante;
 - necesidades de las fundaciones;
-- ofertas publicadas por comercios para necesidades pendientes;
+- ofertas publicadas por comercios para necesidades pendientes y su stock;
+- vista `v_catalogo_productos_disponibles` como modelo de lectura del catálogo;
 - fotografías comerciales en Supabase Storage (`merchant-products`);
 - perfiles comerciales y nombres públicos sincronizados con los productos;
 - control de acceso mediante Row Level Security en tablas y objetos de Storage.
 
-El checkout llama a la función `create_donation`, que registra la cabecera y los ítems de la donación dentro de una misma operación.
+El checkout llama a la función `create_donation`, que registra cabecera e ítems y mantiene consistentes stock y cantidades pendientes dentro de una única operación transaccional. El cliente envía el identificador de `merchant_products`, pero la función vuelve a obtener precio, necesidad y disponibilidad desde PostgreSQL antes de confirmar.
 
 ## Compatibilidad de ejecución
 

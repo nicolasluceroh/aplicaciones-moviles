@@ -24,13 +24,15 @@ Los códigos de esta tabla se usan también en la documentación de módulos y e
 | RF-016 | Obtener la ubicación mediante GPS/geolocalización. |
 | RF-017 | Ingresar con una cuenta habilitada como comercio. |
 | RF-018 | Consultar necesidades pendientes de las fundaciones. |
-| RF-019 | Publicar productos vinculados a una necesidad. |
+| RF-019 | Publicar productos vinculados a una necesidad, indicando su stock disponible. |
 | RF-020 | Pausar, reactivar o eliminar publicaciones propias. |
 | RF-021 | Mostrar exclusivamente productos comerciales activos en catálogo y asignar automáticamente su fundación destinataria. |
 | RF-022 | Editar publicaciones propias, incluidos sus datos y fotografías. |
 | RF-023 | Adjuntar hasta tres fotografías a una publicación comercial. |
 | RF-024 | Configurar el nombre comercial y mostrarlo en la ficha de cada producto. |
 | RF-025 | Seleccionar una fundación y después una necesidad pendiente de esa fundación al publicar. |
+| RF-026 | Limitar la cantidad comprable al stock del comercio y a las unidades pendientes de la necesidad. |
+| RF-027 | Al confirmar una donación, descontar de forma atómica el stock comercial y las unidades pendientes de la fundación. |
 
 ## Requisitos no funcionales básicos
 
@@ -41,6 +43,7 @@ Los códigos de esta tabla se usan también en la documentación de módulos y e
 | RNF-003 | La navegación principal debe mantenerse accesible mediante el menú inferior. |
 | RNF-004 | El código debe organizarse por pantallas, componentes, contexto y datos compartidos. |
 | RNF-005 | Las operaciones que dependan de autenticación/base de datos deberán validar errores y mostrar mensajes comprensibles al usuario. |
+| RNF-006 | La confirmación de una donación debe mantener consistentes `donations`, `donation_items`, stock y cantidades pendientes dentro de una única transacción. |
 
 ## Nota de actualización
 

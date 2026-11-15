@@ -20,13 +20,14 @@ Facilitar el vínculo entre personas que quieren colaborar y las necesidades con
 - Carrito compartido entre pantallas.
 - Asignación automática de fundación destinataria desde la necesidad asociada a cada producto comercial.
 - Checkout con pago simulado.
-- Registro real de donaciones e ítems en Supabase.
+- Registro real de donaciones e ítems en Supabase, con validación transaccional de stock y necesidad.
 - Registro, login, logout y persistencia de sesión.
 - Edición de datos básicos del usuario.
 - Historial y detalle de donaciones reales.
 - Acceso diferenciado para cuentas de fundación.
 - Gestión de necesidades de una fundación.
 - Acceso para comercios habilitados y publicación de productos vinculados a necesidades pendientes.
+- Control de stock por publicación comercial y disponibilidad limitada por stock y necesidad pendiente.
 - Edición, pausa, reactivación y eliminación de publicaciones propias.
 - Selección de fundación y necesidad mediante desplegables dependientes.
 - Carga de hasta tres fotografías por producto en Supabase Storage.
